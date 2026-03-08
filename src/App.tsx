@@ -15,6 +15,7 @@ import Revision from "@/pages/Revision";
 import Analytics from "@/pages/Analytics";
 import SettingsPage from "@/pages/Settings";
 import NotFound from "./pages/NotFound";
+import { NotificationPrompt } from "@/components/NotificationPrompt";
 
 const queryClient = new QueryClient();
 
