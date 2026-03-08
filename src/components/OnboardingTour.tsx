@@ -56,7 +56,9 @@ export function OnboardingTour() {
   useEffect(() => {
     const done = localStorage.getItem(ONBOARDING_KEY);
     if (!done) {
-      const timer = setTimeout(() => setShow(true), 1800);
+      // Wait for splash screen (2800ms) + buffer
+      const delay = localStorage.getItem("penzo_splashed") ? 1200 : 3500;
+      const timer = setTimeout(() => setShow(true), delay);
       return () => clearTimeout(timer);
     }
   }, []);
