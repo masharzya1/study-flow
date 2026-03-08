@@ -16,6 +16,7 @@ import Analytics from "@/pages/Analytics";
 import SettingsPage from "@/pages/Settings";
 import NotFound from "./pages/NotFound";
 import { NotificationPrompt } from "@/components/NotificationPrompt";
+import { NotificationScheduler } from "@/components/NotificationScheduler";
 
 const queryClient = new QueryClient();
 
