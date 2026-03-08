@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useStudy } from "@/contexts/StudyContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play, Pause, RotateCcw, Coffee, Brain, Settings2 } from "lucide-react";
+import { AmbientSounds } from "@/components/AmbientSounds";
 import type { StudySession } from "@/types/study";
 
 const Timer = () => {
@@ -100,6 +101,7 @@ const Timer = () => {
           >
             <Coffee className="w-4 h-4" /> Break
           </button>
+          <AmbientSounds isPlaying={isRunning} />
           <button
             onClick={() => setShowSettings(!showSettings)}
             className="p-2 rounded-lg text-muted-foreground hover:text-foreground transition-colors"

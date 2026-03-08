@@ -1,13 +1,21 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutDashboard, BookOpen, Timer, BarChart3, Settings } from "lucide-react";
+import { LayoutDashboard, BookOpen, Timer, BarChart3, Settings, CalendarDays, Sparkles, RotateCcw } from "lucide-react";
 
 const navItems = [
   { to: "/", icon: LayoutDashboard, label: "Home" },
   { to: "/subjects", icon: BookOpen, label: "Subjects" },
   { to: "/timer", icon: Timer, label: "Focus" },
-  { to: "/analytics", icon: BarChart3, label: "Analytics" },
+  { to: "/plan", icon: Sparkles, label: "Plan" },
+  { to: "/calendar", icon: CalendarDays, label: "Calendar" },
+  { to: "/revision", icon: RotateCcw, label: "Revision" },
+  { to: "/analytics", icon: BarChart3, label: "Stats" },
   { to: "/settings", icon: Settings, label: "Settings" },
 ];
+
+// Show fewer items on mobile bottom nav
+const mobileNavItems = navItems.filter(item =>
+  ["/", "/subjects", "/timer", "/plan", "/analytics"].includes(item.to)
+);
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
@@ -54,7 +62,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       {/* Mobile Bottom Nav — iOS style */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-xl border-t border-border z-50 safe-area-bottom">
         <div className="flex items-center justify-around py-1.5">
-          {navItems.map(item => {
+          {mobileNavItems.map(item => {
             const active = location.pathname === item.to;
             return (
               <NavLink

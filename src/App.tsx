@@ -8,6 +8,9 @@ import { AppLayout } from "@/components/AppLayout";
 import Dashboard from "@/pages/Dashboard";
 import Subjects from "@/pages/Subjects";
 import Timer from "@/pages/Timer";
+import StudyPlan from "@/pages/StudyPlan";
+import CalendarView from "@/pages/CalendarView";
+import Revision from "@/pages/Revision";
 import Analytics from "@/pages/Analytics";
 import SettingsPage from "@/pages/Settings";
 import NotFound from "./pages/NotFound";
@@ -26,6 +29,9 @@ const App = () => (
               <Route path="/" element={<Dashboard />} />
               <Route path="/subjects" element={<Subjects />} />
               <Route path="/timer" element={<Timer />} />
+              <Route path="/plan" element={<StudyPlan />} />
+              <Route path="/calendar" element={<CalendarView />} />
+              <Route path="/revision" element={<Revision />} />
               <Route path="/analytics" element={<Analytics />} />
               <Route path="/settings" element={<SettingsPage />} />
               <Route path="*" element={<NotFound />} />
