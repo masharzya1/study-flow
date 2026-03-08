@@ -92,6 +92,7 @@ export interface AppState {
   xp: number;
   level: number;
   totalTopicsCompleted: number;
+  celebratedMilestones: number[];
 }
 
 export interface DifficultyLevel {
