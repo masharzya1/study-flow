@@ -37,7 +37,8 @@ interface StudyContextValue {
   deleteSubject: (id: string) => void;
   addSession: (session: StudySession) => void;
   updateSettings: (settings: Partial<AppSettings>) => void;
-  toggleTopicComplete: (subjectId: string, chapterId: string, topicId: string) => void;
+  toggleTopicComplete: (subjectId: string, chapterId: string, topicId: string) => boolean; // returns true if completed (not uncompleted)
+  gainXp: (amount: number) => { newLevel: number; isLevelUp: boolean };
   updateTopicNotes: (subjectId: string, chapterId: string, topicId: string, notes: string) => void;
   addStudyPlan: (plan: StudyPlan) => void;
   completePlanTask: (topicId: string) => void;
