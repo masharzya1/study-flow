@@ -2,27 +2,26 @@ import { NavLink, useLocation } from "react-router-dom";
 import { LayoutDashboard, BookOpen, Timer, BarChart3, Settings, CalendarDays, Sparkles, RotateCcw, MoreHorizontal } from "lucide-react";
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-
-const navItems = [
-  { to: "/", icon: LayoutDashboard, label: "Home" },
-  { to: "/subjects", icon: BookOpen, label: "Subjects" },
-  { to: "/timer", icon: Timer, label: "Focus" },
-  { to: "/plan", icon: Sparkles, label: "Plan" },
-  { to: "/calendar", icon: CalendarDays, label: "Calendar" },
-  { to: "/revision", icon: RotateCcw, label: "Revision" },
-  { to: "/analytics", icon: BarChart3, label: "Stats" },
-  { to: "/settings", icon: Settings, label: "Settings" },
-];
-
-// Primary 4 items + More button on mobile
-const mobileMainItems = navItems.slice(0, 4);
-const mobileMoreItems = navItems.slice(4);
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const [showMore, setShowMore] = useState(false);
+  const { t } = useLanguage();
 
-  // Check if current route is in the "more" section
+  const navItems = [
+    { to: "/", icon: LayoutDashboard, labelKey: "nav.home" },
+    { to: "/subjects", icon: BookOpen, labelKey: "nav.subjects" },
+    { to: "/timer", icon: Timer, labelKey: "nav.focus" },
+    { to: "/plan", icon: Sparkles, labelKey: "nav.plan" },
+    { to: "/calendar", icon: CalendarDays, labelKey: "nav.calendar" },
+    { to: "/revision", icon: RotateCcw, labelKey: "nav.revision" },
+    { to: "/analytics", icon: BarChart3, labelKey: "nav.stats" },
+    { to: "/settings", icon: Settings, labelKey: "nav.settings" },
+  ];
+
+  const mobileMainItems = navItems.slice(0, 4);
+  const mobileMoreItems = navItems.slice(4);
   const isMoreActive = mobileMoreItems.some(item => item.to === location.pathname);
 
   return (
@@ -49,13 +48,13 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 }`}
               >
                 <item.icon className="w-[18px] h-[18px] flex-shrink-0" />
-                <span className="hidden lg:block">{item.label}</span>
+                <span className="hidden lg:block">{t(item.labelKey)}</span>
               </NavLink>
             );
           })}
         </nav>
         <div className="p-4 hidden lg:block">
-          <p className="text-[11px] text-muted-foreground">Free & Open Source</p>
+          <p className="text-[11px] text-muted-foreground">{t("nav.freeOpenSource")}</p>
         </div>
       </aside>
 
@@ -93,7 +92,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                     }`}
                   >
                     <item.icon className="w-[18px] h-[18px]" />
-                    <span>{item.label}</span>
+                    <span>{t(item.labelKey)}</span>
                   </NavLink>
                 );
               })}
@@ -102,7 +101,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         )}
       </AnimatePresence>
 
-      {/* Mobile Bottom Nav — iOS style */}
+      {/* Mobile Bottom Nav */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-xl border-t border-border z-50 safe-area-bottom">
         <div className="flex items-center justify-around py-1.5">
           {mobileMainItems.map(item => {
@@ -117,19 +116,18 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                 }`}
               >
                 <item.icon className={`w-[22px] h-[22px] ${active ? "text-foreground" : ""}`} strokeWidth={active ? 2.2 : 1.8} />
-                <span>{item.label}</span>
+                <span>{t(item.labelKey)}</span>
               </NavLink>
             );
           })}
-          {/* More button */}
           <button
             onClick={() => setShowMore(prev => !prev)}
             className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-[10px] font-medium transition-all ${
               isMoreActive || showMore ? "text-foreground" : "text-muted-foreground"
             }`}
           >
-            <MoreHorizontal className={`w-[22px] h-[22px]`} strokeWidth={isMoreActive || showMore ? 2.2 : 1.8} />
-            <span>More</span>
+            <MoreHorizontal className="w-[22px] h-[22px]" strokeWidth={isMoreActive || showMore ? 2.2 : 1.8} />
+            <span>{t("nav.more")}</span>
           </button>
         </div>
       </nav>

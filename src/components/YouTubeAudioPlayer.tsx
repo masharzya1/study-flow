@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef } from "react";
 
 declare global {
   interface Window {
@@ -13,6 +13,7 @@ interface YouTubeAudioPlayerProps {
   repeat: boolean;
   onReady?: () => void;
   onEnded?: () => void;
+  onError?: () => void;
 }
 
 let apiLoaded = false;
@@ -36,10 +37,15 @@ function loadYouTubeAPI(): Promise<void> {
   });
 }
 
-export function YouTubeAudioPlayer({ videoId, isPlaying, repeat, onReady, onEnded }: YouTubeAudioPlayerProps) {
+export function YouTubeAudioPlayer({ videoId, isPlaying, repeat, onReady, onEnded, onError }: YouTubeAudioPlayerProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const playerRef = useRef<any>(null);
   const videoIdRef = useRef(videoId);
+  const isPlayingRef = useRef(isPlaying);
+  const playerReadyRef = useRef(false);
+
+  // Keep ref in sync
+  useEffect(() => { isPlayingRef.current = isPlaying; }, [isPlaying]);
 
   useEffect(() => {
     let destroyed = false;
@@ -48,7 +54,6 @@ export function YouTubeAudioPlayer({ videoId, isPlaying, repeat, onReady, onEnde
       await loadYouTubeAPI();
       if (destroyed || !containerRef.current) return;
 
-      // Create a child div for the player
       const el = document.createElement("div");
       containerRef.current.appendChild(el);
 
@@ -63,11 +68,13 @@ export function YouTubeAudioPlayer({ videoId, isPlaying, repeat, onReady, onEnde
           fs: 0,
           modestbranding: 1,
           playsinline: 1,
+          origin: window.location.origin,
         },
         events: {
           onReady: (e: any) => {
+            playerReadyRef.current = true;
             onReady?.();
-            if (isPlaying) e.target.playVideo();
+            if (isPlayingRef.current) e.target.playVideo();
           },
           onStateChange: (e: any) => {
             if (e.data === window.YT.PlayerState.ENDED) {
@@ -79,6 +86,9 @@ export function YouTubeAudioPlayer({ videoId, isPlaying, repeat, onReady, onEnde
               }
             }
           },
+          onError: () => {
+            onError?.();
+          },
         },
       });
     };
@@ -86,6 +96,7 @@ export function YouTubeAudioPlayer({ videoId, isPlaying, repeat, onReady, onEnde
     init();
     return () => {
       destroyed = true;
+      playerReadyRef.current = false;
       playerRef.current?.destroy();
       playerRef.current = null;
     };
@@ -95,15 +106,16 @@ export function YouTubeAudioPlayer({ videoId, isPlaying, repeat, onReady, onEnde
   useEffect(() => {
     if (videoId !== videoIdRef.current) {
       videoIdRef.current = videoId;
-      playerRef.current?.loadVideoById(videoId);
-      onReady?.(); // Will fire again via onReady event
+      if (playerReadyRef.current && playerRef.current?.loadVideoById) {
+        playerRef.current.loadVideoById(videoId);
+      }
     }
   }, [videoId]);
 
   // Handle play/pause
   useEffect(() => {
     const p = playerRef.current;
-    if (!p?.getPlayerState) return;
+    if (!playerReadyRef.current || !p?.getPlayerState) return;
     if (isPlaying) {
       p.playVideo();
     } else {
@@ -114,7 +126,8 @@ export function YouTubeAudioPlayer({ videoId, isPlaying, repeat, onReady, onEnde
   return (
     <div
       ref={containerRef}
-      className="fixed -left-[9999px] -top-[9999px] w-1 h-1 opacity-0 pointer-events-none"
+      className="fixed left-0 top-0 w-px h-px overflow-hidden opacity-0 pointer-events-none"
+      style={{ zIndex: -1 }}
       aria-hidden="true"
     />
   );
