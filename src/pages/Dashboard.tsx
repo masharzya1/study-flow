@@ -115,6 +115,20 @@ const Dashboard = () => {
         </p>
       </motion.div>
 
+      {/* Daily Quote */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.03 }}
+        className="glass-card p-4 flex gap-3 items-start"
+      >
+        <Quote className="w-5 h-5 text-muted-foreground flex-shrink-0 mt-0.5" />
+        <div>
+          <p className="text-sm italic leading-relaxed">"{dailyQuote.text}"</p>
+          <p className="text-[11px] text-muted-foreground mt-1">— {dailyQuote.author}</p>
+        </div>
+      </motion.div>
+
       {/* Daily Progress + Quick Actions */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
