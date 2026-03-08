@@ -193,8 +193,21 @@ export function AmbientSounds({ isPlaying, currentMode, onAudioStateChange }: Am
 
   const isYoutubeActive = (audioSource === "music" || audioSource === "quran") && isTrackPlaying && activeTrack;
 
+  const pickerRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!showPicker) return;
+    const handler = (e: MouseEvent) => {
+      if (pickerRef.current && !pickerRef.current.contains(e.target as Node)) {
+        setShowPicker(false);
+      }
+    };
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, [showPicker]);
+
   return (
-    <div className="relative">
+    <div className="relative" ref={pickerRef}>
       <button
         onClick={() => setShowPicker(!showPicker)}
         className={`p-2 rounded-lg transition-colors ${
