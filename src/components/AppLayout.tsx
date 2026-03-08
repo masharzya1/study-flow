@@ -62,7 +62,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       {/* Mobile Bottom Nav — iOS style */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-xl border-t border-border z-50 safe-area-bottom">
         <div className="flex items-center justify-around py-1.5">
-          {navItems.map(item => {
+          {mobileNavItems.map(item => {
             const active = location.pathname === item.to;
             return (
               <NavLink
