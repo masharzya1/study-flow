@@ -133,12 +133,7 @@ const Timer = () => {
               <p className="text-sm font-medium truncate">{suggestedTopic.topicName}</p>
               <p className="text-[10px] text-muted-foreground">{suggestedTopic.subjectName} · {suggestedTopic.minutes}m</p>
             </div>
-            <button
-              onClick={() => navigate("/plan")}
-              className="text-muted-foreground hover:text-foreground transition-colors"
-            >
-              <ArrowRight className="w-4 h-4" />
-            </button>
+            <span className="chip-accent">{suggestedTopic.type === "revision" ? "Review" : "Planned"}</span>
           </motion.div>
         )}
 
