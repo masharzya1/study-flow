@@ -45,6 +45,7 @@ const App = () => (
       <StudyProvider>
         <Toaster />
         <Sonner />
+        <NotificationPrompt />
         <BrowserRouter>
           <AppLayout>
             <AnimatedRoutes />
