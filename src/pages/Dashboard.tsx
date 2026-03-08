@@ -51,6 +51,12 @@ const Dashboard = () => {
 
   const greeting = new Date().getHours() < 12 ? "morning" : new Date().getHours() < 18 ? "afternoon" : "evening";
 
+  // Daily quote based on day of year
+  const dailyQuote = useMemo(() => {
+    const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+    return MOTIVATIONAL_QUOTES[dayOfYear % MOTIVATIONAL_QUOTES.length];
+  }, []);
+
   // Revision items due today or overdue
   const revisionDue = useMemo(() => {
     const INTERVALS = [1, 3, 7, 14, 30];
