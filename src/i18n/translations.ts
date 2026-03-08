@@ -211,7 +211,7 @@ const translations: Record<Language, Record<string, string>> = {
     "comp.sessionComplete": "SESSION COMPLETE",
 
     // Onboarding
-    "onboard.welcome": "Welcome to Paideia",
+    "onboard.welcome": "Welcome to Penzó",
     "onboard.welcomeDesc": "Your personal study companion. Let's get you started!",
     "onboard.step1Title": "Create Subjects",
     "onboard.step1Desc": "Add your subjects, chapters, and topics to organize your study material.",
@@ -227,11 +227,17 @@ const translations: Record<Language, Record<string, string>> = {
     "onboard.of": "of",
 
     // Install prompt
-    "install.title": "Install Paideia",
+    "install.title": "Install Penzó",
     "install.desc": "Install this app on your device for the best experience — works offline!",
-    "install.iosDesc": "Tap Share → Add to Home Screen to install Paideia on your device.",
+    "install.iosDesc": "Tap Share → Add to Home Screen to install Penzó on your device.",
     "install.install": "Install App",
     "install.later": "Maybe later",
+
+    // 404
+    "notFound.title": "Page not found",
+    "notFound.desc": "The page you're looking for has been moved or doesn't exist.",
+    "notFound.home": "Go Home",
+    "notFound.back": "Go Back",
   },
 
   bn: {
@@ -444,7 +450,7 @@ const translations: Record<Language, Record<string, string>> = {
     "comp.sessionComplete": "সেশন সম্পন্ন",
 
     // Onboarding
-    "onboard.welcome": "Paideia-তে স্বাগতম",
+    "onboard.welcome": "Penzó-তে স্বাগতম",
     "onboard.welcomeDesc": "তোমার ব্যক্তিগত পড়ার সঙ্গী। চলো শুরু করি!",
     "onboard.step1Title": "বিষয় তৈরি করো",
     "onboard.step1Desc": "তোমার বিষয়, অধ্যায় এবং টপিক যোগ করো।",
@@ -460,11 +466,17 @@ const translations: Record<Language, Record<string, string>> = {
     "onboard.of": "এর",
 
     // Install prompt
-    "install.title": "Paideia ইনস্টল করুন",
+    "install.title": "Penzó ইনস্টল করুন",
     "install.desc": "সেরা অভিজ্ঞতার জন্য আপনার ডিভাইসে অ্যাপটি ইনস্টল করুন — অফলাইনে কাজ করে!",
-    "install.iosDesc": "Share → Add to Home Screen ট্যাপ করে Paideia ইনস্টল করুন।",
+    "install.iosDesc": "Share → Add to Home Screen ট্যাপ করে Penzó ইনস্টল করুন।",
     "install.install": "ইনস্টল করুন",
     "install.later": "পরে করবো",
+
+    // 404
+    "notFound.title": "পেজটি পাওয়া যায়নি",
+    "notFound.desc": "তুমি যে পেজটি খুঁজছো সেটি সরানো হয়েছে বা এটির অস্তিত্ব নেই।",
+    "notFound.home": "হোমে ফিরে যাও",
+    "notFound.back": "আগের পেজে যাও",
   },
 };
 
