@@ -1,10 +1,13 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutDashboard, BookOpen, Timer, BarChart3, Settings } from "lucide-react";
+import { LayoutDashboard, BookOpen, Timer, BarChart3, Settings, CalendarDays, Sparkles, RotateCcw } from "lucide-react";
 
 const navItems = [
   { to: "/", icon: LayoutDashboard, label: "Home" },
   { to: "/subjects", icon: BookOpen, label: "Subjects" },
   { to: "/timer", icon: Timer, label: "Focus" },
+  { to: "/plan", icon: Sparkles, label: "Plan" },
+  { to: "/calendar", icon: CalendarDays, label: "Calendar" },
+  { to: "/revision", icon: RotateCcw, label: "Revision" },
   { to: "/analytics", icon: BarChart3, label: "Analytics" },
   { to: "/settings", icon: Settings, label: "Settings" },
 ];
