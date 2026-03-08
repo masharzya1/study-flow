@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useStudy } from "@/contexts/StudyContext";
 import { motion, AnimatePresence } from "framer-motion";
-import { Play, Pause, RotateCcw, Coffee, Brain, Settings2, ChevronDown, Check } from "lucide-react";
+import { Play, Pause, RotateCcw, Coffee, Brain, Settings2, ChevronDown, Check, BookOpen, List } from "lucide-react";
 import { AmbientSounds, type AudioState } from "@/components/AmbientSounds";
 import { NetworkIndicator } from "@/components/NetworkIndicator";
 import { MiniPlayer } from "@/components/MiniPlayer";
