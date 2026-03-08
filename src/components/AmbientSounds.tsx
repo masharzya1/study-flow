@@ -150,6 +150,24 @@ export function AmbientSounds({ isPlaying, currentMode, onAudioStateChange }: Am
     setIsTrackPlaying(true); // Always start playing when user selects
   };
 
+  const togglePlay = useCallback(() => setIsTrackPlaying(p => !p), []);
+
+  // Report audio state to parent
+  useEffect(() => {
+    if ((audioSource === "music" || audioSource === "quran") && activeTrack) {
+      onAudioStateChange?.({
+        trackTitle: activeTrack.title,
+        type: audioSource as "music" | "quran",
+        isPlaying: isTrackPlaying,
+        isLoading,
+        onTogglePlay: togglePlay,
+        onNext: nextTrack,
+      });
+    } else {
+      onAudioStateChange?.(null);
+    }
+  }, [audioSource, activeTrack, isTrackPlaying, isLoading, onAudioStateChange, togglePlay, nextTrack]);
+
   const sounds = [
     { id: "none" as const, label: "Off", icon: VolumeX },
     { id: "rain" as const, label: "Rain", icon: CloudRain },
