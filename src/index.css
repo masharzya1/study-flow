@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=SF+Pro+Display:wght@400;500;600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
 
 @tailwind base;
 @tailwind components;
@@ -107,7 +107,10 @@
 
 @layer components {
   .glass-card {
-    @apply bg-card border border-border rounded-2xl shadow-sm;
+    @apply bg-card/80 backdrop-blur-sm border border-border/60 rounded-2xl shadow-sm;
+  }
+  .glass-card-elevated {
+    @apply bg-card/90 backdrop-blur-md border border-border/50 rounded-2xl shadow-md;
   }
   .gradient-primary {
     @apply bg-foreground;
@@ -116,13 +119,34 @@
     @apply text-foreground font-bold;
   }
   .hover-lift {
-    @apply transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md;
+    @apply transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md active:scale-[0.98];
   }
   .animate-glow {
     box-shadow: 0 0 20px hsl(var(--accent) / 0.15), 0 0 60px hsl(var(--accent) / 0.05);
   }
   .accent-dot {
     @apply w-2 h-2 rounded-full bg-accent;
+  }
+  .section-header {
+    @apply text-xs font-semibold uppercase tracking-widest text-muted-foreground;
+  }
+  .stat-value {
+    @apply text-2xl font-bold tracking-tight tabular-nums;
+  }
+  .chip {
+    @apply text-[10px] font-medium px-2 py-0.5 rounded-full;
+  }
+  .chip-accent {
+    @apply chip bg-accent/12 text-accent;
+  }
+  .chip-muted {
+    @apply chip bg-secondary text-muted-foreground;
+  }
+  .chip-danger {
+    @apply chip bg-destructive/10 text-destructive;
+  }
+  .chip-success {
+    @apply chip bg-success/10 text-success;
   }
 }
 

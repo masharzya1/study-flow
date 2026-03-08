@@ -1,11 +1,14 @@
 import { useStudy } from "@/contexts/StudyContext";
 import { motion } from "framer-motion";
-import { Clock, BarChart3, TrendingUp, Target } from "lucide-react";
+import { Clock, BarChart3, TrendingUp, Target, Flame, CalendarDays, ArrowRight } from "lucide-react";
 import { useMemo } from "react";
+import { useNavigate } from "react-router-dom";
 import { SubjectIcon } from "@/components/SubjectIcon";
 
 const Analytics = () => {
-  const { state } = useStudy();
+  const { state, getStreak } = useStudy();
+  const navigate = useNavigate();
+  const streak = getStreak();
 
   const stats = useMemo(() => {
     const now = new Date();
@@ -39,6 +42,14 @@ const Analytics = () => {
     return { weekMinutes, monthMinutes, dailyData, maxDaily, consistencyScore, completedTopics, totalTopics: allTopics.length };
   }, [state.sessions, state.subjects]);
 
+  // Plan progress
+  const planStats = useMemo(() => {
+    const activePlans = state.studyPlans.filter(p => new Date(p.examDate) >= new Date());
+    const totalTasks = activePlans.reduce((sum, p) => sum + p.tasks.length, 0);
+    const completedTasks = activePlans.reduce((sum, p) => sum + p.tasks.filter(t => t.completed).length, 0);
+    return { activePlans: activePlans.length, totalTasks, completedTasks };
+  }, [state.studyPlans]);
+
   return (
     <div className="p-5 md:p-8 max-w-3xl mx-auto space-y-6 pb-28 md:pb-8">
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
@@ -49,22 +60,23 @@ const Analytics = () => {
       {/* Overview */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
         {[
-          { label: "This Week", value: `${Math.round(stats.weekMinutes / 60 * 10) / 10}h`, icon: Clock },
-          { label: "This Month", value: `${Math.round(stats.monthMinutes / 60 * 10) / 10}h`, icon: BarChart3 },
-          { label: "Consistency", value: `${stats.consistencyScore}%`, icon: TrendingUp },
-          { label: "Topics Done", value: `${stats.completedTopics}/${stats.totalTopics}`, icon: Target },
+          { label: "This Week", value: `${Math.round(stats.weekMinutes / 60 * 10) / 10}h`, icon: Clock, action: () => navigate("/calendar") },
+          { label: "Streak", value: `${streak}d`, icon: Flame, action: () => {} },
+          { label: "Consistency", value: `${stats.consistencyScore}%`, icon: TrendingUp, action: () => {} },
+          { label: "Topics Done", value: `${stats.completedTopics}/${stats.totalTopics}`, icon: Target, action: () => navigate("/subjects") },
         ].map((stat, i) => (
-          <motion.div
+          <motion.button
             key={stat.label}
             initial={{ opacity: 0, y: 12 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: i * 0.04 }}
-            className="glass-card p-4"
+            onClick={stat.action}
+            className="glass-card p-4 text-left hover-lift"
           >
             <stat.icon className="w-4 h-4 text-muted-foreground mb-3" strokeWidth={1.8} />
-            <p className="text-2xl font-semibold tracking-tight">{stat.value}</p>
+            <p className="stat-value">{stat.value}</p>
             <p className="text-[11px] text-muted-foreground mt-0.5">{stat.label}</p>
-          </motion.div>
+          </motion.button>
         ))}
       </div>
 
@@ -75,22 +87,57 @@ const Analytics = () => {
         transition={{ delay: 0.15 }}
         className="glass-card p-5"
       >
-        <h2 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground mb-5">Weekly Hours</h2>
+        <h2 className="section-header mb-5">Weekly Hours</h2>
         <div className="flex items-end gap-2 h-36">
           {stats.dailyData.map((d, i) => (
             <div key={i} className="flex-1 flex flex-col items-center gap-1.5">
-              <span className="text-[10px] text-muted-foreground">{d.minutes > 0 ? `${d.minutes}m` : ""}</span>
+              <span className="text-[10px] text-muted-foreground tabular-nums">{d.minutes > 0 ? `${d.minutes}m` : ""}</span>
               <motion.div
                 initial={{ height: 0 }}
                 animate={{ height: `${Math.max((d.minutes / stats.maxDaily) * 100, 3)}%` }}
                 transition={{ delay: 0.2 + i * 0.04, duration: 0.5 }}
-                className="w-full rounded-md bg-foreground/80 min-h-[3px]"
+                className="w-full rounded-lg bg-foreground/80 min-h-[3px]"
               />
               <span className="text-[10px] text-muted-foreground">{d.day}</span>
             </div>
           ))}
         </div>
       </motion.div>
+
+      {/* Plan Progress */}
+      {planStats.activePlans > 0 && (
+        <motion.button
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.18 }}
+          onClick={() => navigate("/plan")}
+          className="glass-card p-5 w-full text-left hover-lift"
+        >
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="section-header">Study Plans</h2>
+            <div className="flex items-center gap-1 text-[10px] text-muted-foreground">
+              <span>{planStats.activePlans} active</span>
+              <ArrowRight className="w-3 h-3" />
+            </div>
+          </div>
+          <div className="flex items-center gap-4">
+            <div>
+              <p className="stat-value">{planStats.completedTasks}/{planStats.totalTasks}</p>
+              <p className="text-[10px] text-muted-foreground mt-0.5">tasks completed</p>
+            </div>
+            <div className="flex-1">
+              <div className="h-2 rounded-full bg-secondary overflow-hidden">
+                <motion.div
+                  initial={{ width: 0 }}
+                  animate={{ width: `${planStats.totalTasks > 0 ? (planStats.completedTasks / planStats.totalTasks) * 100 : 0}%` }}
+                  transition={{ duration: 0.8, delay: 0.3 }}
+                  className="h-full rounded-full bg-accent"
+                />
+              </div>
+            </div>
+          </div>
+        </motion.button>
+      )}
 
       {/* Subject Progress */}
       <motion.div
@@ -99,9 +146,14 @@ const Analytics = () => {
         transition={{ delay: 0.2 }}
         className="glass-card p-5"
       >
-        <h2 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground mb-4">Subject Progress</h2>
+        <h2 className="section-header mb-4">Subject Progress</h2>
         {state.subjects.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-4 text-center">Add subjects to see progress</p>
+          <div className="text-center py-6">
+            <p className="text-sm text-muted-foreground">Add subjects to see progress</p>
+            <button onClick={() => navigate("/subjects")} className="text-xs text-accent hover:underline mt-1">
+              Go to Subjects →
+            </button>
+          </div>
         ) : (
           <div className="space-y-4">
             {state.subjects.map(subject => {
@@ -110,12 +162,16 @@ const Analytics = () => {
               const total = allTopics.length;
               const pct = total > 0 ? Math.round((completed / total) * 100) : 0;
               return (
-                <div key={subject.id} className="space-y-1.5">
+                <button
+                  key={subject.id}
+                  onClick={() => navigate("/subjects")}
+                  className="w-full space-y-1.5 text-left hover:opacity-80 transition-opacity"
+                >
                   <div className="flex items-center justify-between">
                     <span className="text-sm font-medium flex items-center gap-2">
                       <SubjectIcon name={subject.icon} className="w-3.5 h-3.5 text-muted-foreground" /> {subject.name}
                     </span>
-                    <span className="text-[11px] text-muted-foreground">{completed}/{total} · {pct}%</span>
+                    <span className="text-[11px] text-muted-foreground tabular-nums">{completed}/{total} · {pct}%</span>
                   </div>
                   <div className="h-1.5 rounded-full bg-secondary overflow-hidden">
                     <motion.div
@@ -126,7 +182,7 @@ const Analytics = () => {
                       style={{ backgroundColor: `hsl(${subject.color})` }}
                     />
                   </div>
-                </div>
+                </button>
               );
             })}
           </div>
