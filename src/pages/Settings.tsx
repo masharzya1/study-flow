@@ -16,7 +16,7 @@ const SettingsPage = () => {
 
   const updateLevel = (id: number, field: "label" | "minutes", value: string | number) => {
     const updated = levels.map(l =>
-      l.id === id ? { ...l, [field]: field === "minutes" ? Math.max(5, Math.min(300, Number(value))) : value } : l
+      l.id === id ? { ...l, [field]: field === "minutes" ? Math.max(1, Math.min(300, Number(value))) : value } : l
     );
     updateSettings({ difficultyLevels: updated });
   };
