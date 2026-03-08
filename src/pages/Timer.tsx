@@ -141,17 +141,19 @@ const Timer = () => {
               incrementSessionsCompleted();
               sessionStartRef.current = null;
 
-              // 🎉 Celebration!
-              fireSessionComplete();
-              // Timer complete
+              // 🎮 Gaming Victory Screen!
+              const topicDisplayName = topicInfo 
+                ? ('topicName' in topicInfo ? topicInfo.topicName : topicInfo.topicName) 
+                : "Focus Session";
               const currentStreak = getStreak();
-              if (currentStreak > 0 && currentStreak % 3 === 0) {
-                setTimeout(() => fireStreakCelebration(currentStreak), 800);
-                
-              }
               setCelebrationStreak(currentStreak);
-              setShowCelebration(true);
-              setTimeout(() => setShowCelebration(false), 3000);
+              setVictoryData({
+                show: true,
+                topicName: topicDisplayName,
+                xpGained: Math.round(focusDuration * 2),
+                newLevel: undefined,
+                isLevelUp: false,
+              });
 
               const nextTask = incompleteTasks.find(t => t.taskId !== selectedTaskId);
               if (nextTask) setSelectedTaskId(nextTask.taskId);
