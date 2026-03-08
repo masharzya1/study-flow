@@ -209,7 +209,7 @@ const translations: Record<Language, Record<string, string>> = {
     "comp.sessionComplete": "SESSION COMPLETE",
 
     // Onboarding
-    "onboard.welcome": "Welcome to StudyForge",
+    "onboard.welcome": "Welcome to Paideia",
     "onboard.welcomeDesc": "Your personal study companion. Let's get you started!",
     "onboard.step1Title": "Create Subjects",
     "onboard.step1Desc": "Add your subjects, chapters, and topics to organize your study material.",
