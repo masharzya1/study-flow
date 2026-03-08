@@ -57,8 +57,12 @@ export interface AudioState {
   type: "music" | "quran";
   isPlaying: boolean;
   isLoading: boolean;
+  shuffle: boolean;
+  repeat: boolean;
   onTogglePlay: () => void;
   onNext: () => void;
+  onToggleShuffle: () => void;
+  onToggleRepeat: () => void;
 }
 
 type AudioSource = "none" | "rain" | "whitenoise" | "forest" | "music" | "quran";
@@ -73,6 +77,8 @@ export function AmbientSounds({ isPlaying, currentMode, onAudioStateChange }: Am
   const [isTrackPlaying, setIsTrackPlaying] = useState(false);
   const [musicCategory, setMusicCategory] = useState<"focus" | "break">("focus");
   const [isLoading, setIsLoading] = useState(false);
+  const [shuffle, setShuffle] = useState(false);
+  const [repeat, setRepeat] = useState(false);
   const ctxRef = useRef<AudioContext | null>(null);
   const nodeRef = useRef<AudioNode | null>(null);
   const gainRef = useRef<GainNode | null>(null);
@@ -141,8 +147,12 @@ export function AmbientSounds({ isPlaying, currentMode, onAudioStateChange }: Am
   const nextTrack = useCallback(() => {
     const list = audioSource === "quran" ? QURAN_TILAWAT : filteredMusic;
     setIsLoading(true);
-    setCurrentTrackIndex(prev => (prev + 1) % list.length);
-  }, [audioSource, filteredMusic]);
+    if (shuffle) {
+      setCurrentTrackIndex(Math.floor(Math.random() * list.length));
+    } else {
+      setCurrentTrackIndex(prev => (prev + 1) % list.length);
+    }
+  }, [audioSource, filteredMusic, shuffle]);
 
   const selectTrack = (index: number) => {
     setIsLoading(true);
@@ -151,6 +161,8 @@ export function AmbientSounds({ isPlaying, currentMode, onAudioStateChange }: Am
   };
 
   const togglePlay = useCallback(() => setIsTrackPlaying(p => !p), []);
+  const toggleShuffle = useCallback(() => setShuffle(p => !p), []);
+  const toggleRepeat = useCallback(() => setRepeat(p => !p), []);
 
   // Report audio state to parent
   useEffect(() => {
@@ -160,13 +172,17 @@ export function AmbientSounds({ isPlaying, currentMode, onAudioStateChange }: Am
         type: audioSource as "music" | "quran",
         isPlaying: isTrackPlaying,
         isLoading,
+        shuffle,
+        repeat,
         onTogglePlay: togglePlay,
         onNext: nextTrack,
+        onToggleShuffle: toggleShuffle,
+        onToggleRepeat: toggleRepeat,
       });
     } else {
       onAudioStateChange?.(null);
     }
-  }, [audioSource, activeTrack, isTrackPlaying, isLoading, onAudioStateChange, togglePlay, nextTrack]);
+  }, [audioSource, activeTrack, isTrackPlaying, isLoading, shuffle, repeat, onAudioStateChange, togglePlay, nextTrack, toggleShuffle, toggleRepeat]);
 
   const sounds = [
     { id: "none" as const, label: "Off", icon: VolumeX },
@@ -387,7 +403,7 @@ export function AmbientSounds({ isPlaying, currentMode, onAudioStateChange }: Am
       {/* Hidden YouTube audio player — NO video shown */}
       {isYoutubeActive && activeTrack && (
         <iframe
-          src={`https://www.youtube.com/embed/${activeTrack.youtubeId}?autoplay=1&loop=1&playlist=${activeTrack.youtubeId}`}
+          src={`https://www.youtube.com/embed/${activeTrack.youtubeId}?autoplay=1&loop=${repeat ? 1 : 0}${repeat ? `&playlist=${activeTrack.youtubeId}` : ""}`}
           allow="autoplay"
           onLoad={() => setIsLoading(false)}
           className="fixed -left-[9999px] -top-[9999px] w-1 h-1 opacity-0 pointer-events-none"
