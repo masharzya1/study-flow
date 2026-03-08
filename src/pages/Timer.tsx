@@ -500,6 +500,7 @@ const Timer = () => {
             </div>
           )}
         </div>
+        )}
 
         {/* Mode Toggle */}
         <div className="flex items-center justify-center gap-1.5 bg-secondary/80 rounded-2xl p-1.5">
