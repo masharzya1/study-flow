@@ -183,6 +183,7 @@ export function AmbientSounds({ isPlaying, currentMode, onAudioStateChange }: Am
         repeat,
         onTogglePlay: togglePlay,
         onNext: nextTrack,
+        onPrev: prevTrack,
         onToggleShuffle: toggleShuffle,
         onToggleRepeat: toggleRepeat,
       });
