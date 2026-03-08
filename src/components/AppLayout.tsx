@@ -32,9 +32,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       <aside className="hidden md:flex flex-col w-16 lg:w-56 border-r border-border bg-card fixed inset-y-0 left-0 z-40">
         <div className="p-4 lg:px-5 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-foreground flex items-center justify-center">
-            <span className="text-primary-foreground text-xs font-bold">P</span>
-          </div>
+            <div className="w-7 h-7 rounded-lg bg-foreground flex items-center justify-center overflow-hidden">
+              <img src={penzoLogo} alt="Penzó" className="w-5 h-5 object-contain invert dark:invert-0" />
+            </div>
             <h1 className="font-semibold text-base hidden lg:block tracking-tight">Penzó</h1>
           </div>
           <div className="hidden lg:flex">
