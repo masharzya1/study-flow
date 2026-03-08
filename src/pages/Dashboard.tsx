@@ -1,12 +1,35 @@
 import { useStudy } from "@/contexts/StudyContext";
 import { motion } from "framer-motion";
-import { Clock, Flame, Target, BookOpen, ArrowRight, Sparkles, RotateCcw, AlertTriangle, CalendarDays, Zap } from "lucide-react";
+import { Clock, Flame, Target, BookOpen, ArrowRight, Sparkles, RotateCcw, AlertTriangle, CalendarDays, Zap, Quote } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { StudyHeatmap } from "@/components/StudyHeatmap";
 import { QuickStats } from "@/components/QuickStats";
 import { TodayTasks } from "@/components/TodayTasks";
 import { SubjectCards } from "@/components/SubjectCards";
 import { useMemo } from "react";
+
+const MOTIVATIONAL_QUOTES = [
+  { text: "The secret of getting ahead is getting started.", author: "Mark Twain" },
+  { text: "It does not matter how slowly you go as long as you do not stop.", author: "Confucius" },
+  { text: "Success is the sum of small efforts repeated day in and day out.", author: "Robert Collier" },
+  { text: "The beautiful thing about learning is that nobody can take it away from you.", author: "B.B. King" },
+  { text: "Education is the passport to the future.", author: "Malcolm X" },
+  { text: "Push yourself, because no one else is going to do it for you.", author: "Unknown" },
+  { text: "Don't watch the clock; do what it does. Keep going.", author: "Sam Levenson" },
+  { text: "The expert in anything was once a beginner.", author: "Helen Hayes" },
+  { text: "Study hard, for the well is deep, and our brains are shallow.", author: "Richard Baxter" },
+  { text: "Small daily improvements over time lead to stunning results.", author: "Robin Sharma" },
+  { text: "You don't have to be great to start, but you have to start to be great.", author: "Zig Ziglar" },
+  { text: "The only way to do great work is to love what you do.", author: "Steve Jobs" },
+  { text: "Believe you can and you're halfway there.", author: "Theodore Roosevelt" },
+  { text: "Success is not final, failure is not fatal: it is the courage to continue that counts.", author: "Winston Churchill" },
+  { text: "তুমি পারবে, শুধু চেষ্টা চালিয়ে যাও।", author: "Proverb" },
+  { text: "A little progress each day adds up to big results.", author: "Satya Nani" },
+  { text: "The more that you read, the more things you will know.", author: "Dr. Seuss" },
+  { text: "Dream big, start small, act now.", author: "Robin Sharma" },
+  { text: "Hard work beats talent when talent doesn't work hard.", author: "Tim Notke" },
+  { text: "Your future is created by what you do today, not tomorrow.", author: "Robert Kiyosaki" },
+];
 
 const Dashboard = () => {
   const { state, getTodayMinutes, getStreak } = useStudy();
