@@ -375,64 +375,110 @@ const StudyPlanPage = () => {
             initial={{ opacity: 0, scale: 0.97 }}
             animate={{ opacity: 1, scale: 1 }}
             exit={{ opacity: 0 }}
-            className="space-y-4"
+            className="space-y-5"
           >
-            <div className="glass-card p-4">
-              <div className="flex items-center gap-3">
-                <Zap className="w-5 h-5 text-accent" />
+            {/* Header Summary */}
+            <div className="glass-card p-5 space-y-4">
+              <div className="flex items-center justify-between">
                 <div>
-                  <p className="font-medium text-sm">Plan Generated!</p>
-                  <p className="text-xs text-muted-foreground">
-                    {generatedPlan.tasks.filter(t => t.type === "study").length} study +{" "}
-                    {generatedPlan.tasks.filter(t => t.type === "revision").length} revision tasks
+                  <h2 className="font-semibold text-base">{generatedPlan.examName}</h2>
+                  <p className="text-xs text-muted-foreground mt-0.5">
+                    {Math.max(0, Math.ceil((new Date(generatedPlan.examDate).getTime() - Date.now()) / 86400000))} days until exam
                   </p>
+                </div>
+                <div className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-accent/10">
+                  <Zap className="w-3.5 h-3.5 text-accent" />
+                  <span className="text-xs font-medium text-accent">{generatedPlan.dailyHours}h/day</span>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div className="rounded-xl bg-secondary/60 p-3 text-center">
+                  <p className="text-lg font-semibold">{generatedPlan.tasks.filter(t => t.type === "study").length}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">Study</p>
+                </div>
+                <div className="rounded-xl bg-secondary/60 p-3 text-center">
+                  <p className="text-lg font-semibold">{generatedPlan.tasks.filter(t => t.type === "revision").length}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">Revision</p>
+                </div>
+                <div className="rounded-xl bg-secondary/60 p-3 text-center">
+                  <p className="text-lg font-semibold">{Object.keys(tasksByDate).length}</p>
+                  <p className="text-[10px] text-muted-foreground mt-0.5">Days</p>
                 </div>
               </div>
             </div>
 
-            <div className="space-y-2 max-h-[50vh] overflow-y-auto scrollbar-hide">
+            {/* Timeline */}
+            <div className="space-y-0 max-h-[55vh] overflow-y-auto scrollbar-hide pr-1">
               {Object.entries(tasksByDate)
                 .sort(([a], [b]) => a.localeCompare(b))
-                .slice(0, 10)
-                .map(([date, tasks]) => (
-                  <div key={date} className="glass-card p-3">
-                    <p className="text-xs font-medium text-muted-foreground mb-2">
-                      {new Date(date).toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
-                    </p>
-                    <div className="space-y-1">
-                      {tasks.map(task => (
-                        <div key={task.id} className="flex items-center gap-2 text-sm">
-                          <div
-                            className="w-1.5 h-1.5 rounded-full flex-shrink-0"
-                            style={{ backgroundColor: `hsl(${getSubjectColor(task.subjectId)})` }}
-                          />
-                          <span className="flex-1 truncate">{getTopicName(task.topicId)}</span>
-                          <span className={`text-[10px] px-1.5 py-0.5 rounded-md ${
-                            task.type === "revision" ? "bg-accent/15 text-accent" : "bg-secondary text-muted-foreground"
-                          }`}>
-                            {task.type === "revision" ? "Review" : `${task.estimatedMinutes}m`}
-                          </span>
+                .map(([date, tasks], idx) => {
+                  const isToday = date === new Date().toISOString().split("T")[0];
+                  return (
+                    <div key={date} className="relative flex gap-3">
+                      {/* Timeline line */}
+                      <div className="flex flex-col items-center pt-1">
+                        <div className={cn(
+                          "w-2.5 h-2.5 rounded-full flex-shrink-0 z-10",
+                          isToday ? "bg-accent ring-4 ring-accent/20" : "bg-muted-foreground/30"
+                        )} />
+                        {idx < Object.keys(tasksByDate).length - 1 && (
+                          <div className="w-px flex-1 bg-border mt-1" />
+                        )}
+                      </div>
+                      {/* Day content */}
+                      <div className="flex-1 pb-5">
+                        <p className={cn(
+                          "text-xs font-semibold mb-2",
+                          isToday ? "text-accent" : "text-muted-foreground"
+                        )}>
+                          {isToday ? "Today" : new Date(date + "T00:00:00").toLocaleDateString("en-US", { weekday: "short", month: "short", day: "numeric" })}
+                        </p>
+                        <div className="space-y-1.5">
+                          {tasks.map(task => (
+                            <motion.div
+                              key={task.id}
+                              initial={{ opacity: 0, x: -8 }}
+                              animate={{ opacity: 1, x: 0 }}
+                              className="flex items-center gap-2.5 py-1.5 px-3 rounded-xl bg-secondary/50 hover:bg-secondary/80 transition-colors"
+                            >
+                              <div
+                                className="w-2 h-2 rounded-full flex-shrink-0"
+                                style={{ backgroundColor: `hsl(${getSubjectColor(task.subjectId)})` }}
+                              />
+                              <span className="flex-1 text-sm truncate">{getTopicName(task.topicId)}</span>
+                              {task.type === "revision" ? (
+                                <span className="text-[10px] font-medium px-2 py-0.5 rounded-full bg-accent/10 text-accent">
+                                  Review
+                                </span>
+                              ) : (
+                                <span className="text-[10px] font-medium text-muted-foreground tabular-nums">
+                                  {task.estimatedMinutes}m
+                                </span>
+                              )}
+                            </motion.div>
+                          ))}
                         </div>
-                      ))}
+                      </div>
                     </div>
-                  </div>
-                ))}
-              {Object.keys(tasksByDate).length > 10 && (
-                <p className="text-xs text-muted-foreground text-center py-2">
-                  +{Object.keys(tasksByDate).length - 10} more days...
-                </p>
-              )}
+                  );
+                })}
             </div>
 
-            <div className="flex gap-2">
-              <button onClick={() => { setViewingPlanId(null); setGeneratedPlan(null); setStep(0); }} className="flex-1 py-2.5 rounded-xl bg-secondary text-foreground font-medium text-sm">
+            {/* Actions */}
+            <div className="flex gap-2 pt-1">
+              <button
+                onClick={() => { setViewingPlanId(null); setGeneratedPlan(null); setStep(0); }}
+                className="flex-1 py-2.5 rounded-xl bg-secondary text-foreground font-medium text-sm hover:bg-secondary/80 transition-colors"
+              >
                 ← Back
               </button>
-              <button onClick={resetWizard} className="flex-1 py-2.5 rounded-xl bg-foreground text-primary-foreground font-medium text-sm">
+              <button
+                onClick={resetWizard}
+                className="flex-1 py-2.5 rounded-xl bg-foreground text-primary-foreground font-medium text-sm hover:opacity-90 transition-opacity"
+              >
                 Create New
               </button>
             </div>
-            <p className="text-[10px] text-muted-foreground text-center">Plan saved automatically</p>
           </motion.div>
         )}
 
