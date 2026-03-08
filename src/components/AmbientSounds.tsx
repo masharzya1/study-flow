@@ -61,6 +61,7 @@ export interface AudioState {
   repeat: boolean;
   onTogglePlay: () => void;
   onNext: () => void;
+  onPrev: () => void;
   onToggleShuffle: () => void;
   onToggleRepeat: () => void;
 }
