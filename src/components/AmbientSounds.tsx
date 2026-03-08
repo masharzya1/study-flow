@@ -49,6 +49,16 @@ function createAmbientNode(ctx: AudioContext, type: "rain" | "whitenoise" | "for
 interface AmbientSoundsProps {
   isPlaying: boolean;
   currentMode: "focus" | "break";
+  onAudioStateChange?: (state: AudioState | null) => void;
+}
+
+export interface AudioState {
+  trackTitle: string;
+  type: "music" | "quran";
+  isPlaying: boolean;
+  isLoading: boolean;
+  onTogglePlay: () => void;
+  onNext: () => void;
 }
 
 type AudioSource = "none" | "rain" | "whitenoise" | "forest" | "music" | "quran";
