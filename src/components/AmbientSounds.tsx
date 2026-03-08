@@ -63,7 +63,7 @@ export interface AudioState {
 
 type AudioSource = "none" | "rain" | "whitenoise" | "forest" | "music" | "quran";
 
-export function AmbientSounds({ isPlaying, currentMode }: AmbientSoundsProps) {
+export function AmbientSounds({ isPlaying, currentMode, onAudioStateChange }: AmbientSoundsProps) {
   const { state } = useStudy();
   const [showPicker, setShowPicker] = useState(false);
   const [volume, setVolume] = useState(0.3);
