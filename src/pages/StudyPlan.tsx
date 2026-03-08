@@ -274,17 +274,33 @@ const StudyPlanPage = () => {
               <div>
                 <label className="text-xs text-muted-foreground mb-1 block">Daily Study Hours</label>
                 <div className="flex items-center gap-3">
-                  {[1, 2, 3, 4, 5, 6].map(h => (
-                    <button
-                      key={h}
-                      onClick={() => setDailyHours(h)}
-                      className={`flex-1 py-2 rounded-lg text-sm font-medium transition-all ${
-                        dailyHours === h ? "bg-foreground text-primary-foreground" : "bg-secondary text-muted-foreground"
-                      }`}
-                    >
-                      {h}h
-                    </button>
-                  ))}
+                  <button
+                    onClick={() => setDailyHours(Math.max(0.5, dailyHours - 0.5))}
+                    className="w-10 h-10 rounded-xl bg-secondary text-foreground font-medium text-lg flex items-center justify-center hover:bg-secondary/80 transition-all"
+                  >
+                    −
+                  </button>
+                  <div className="flex-1 text-center">
+                    <input
+                      type="number"
+                      value={dailyHours}
+                      onChange={e => {
+                        const val = parseFloat(e.target.value);
+                        if (!isNaN(val) && val >= 0.5 && val <= 16) setDailyHours(val);
+                      }}
+                      min={0.5}
+                      max={16}
+                      step={0.5}
+                      className="w-20 text-center px-2 py-2 rounded-xl bg-secondary text-foreground text-lg font-semibold border-0 outline-none focus:ring-2 focus:ring-foreground/20 [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    />
+                    <p className="text-[10px] text-muted-foreground mt-0.5">hours/day</p>
+                  </div>
+                  <button
+                    onClick={() => setDailyHours(Math.min(16, dailyHours + 0.5))}
+                    className="w-10 h-10 rounded-xl bg-secondary text-foreground font-medium text-lg flex items-center justify-center hover:bg-secondary/80 transition-all"
+                  >
+                    +
+                  </button>
                 </div>
               </div>
             </div>
