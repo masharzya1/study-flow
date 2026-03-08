@@ -139,6 +139,15 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
     setState(prev => ({ ...prev, studyPlans: [...prev.studyPlans, plan] }));
   }, []);
 
+  const incrementSessionsCompleted = useCallback(() => {
+    const today = new Date().toISOString().split("T")[0];
+    setState(prev => ({
+      ...prev,
+      todaySessionsCompleted: prev.todaySessionsDate === today ? prev.todaySessionsCompleted + 1 : 1,
+      todaySessionsDate: today,
+    }));
+  }, []);
+
   const getTodayMinutes = useCallback(() => {
     const today = new Date().toISOString().split("T")[0];
     return state.sessions
