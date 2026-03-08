@@ -6,7 +6,8 @@ import { StudyHeatmap } from "@/components/StudyHeatmap";
 import { QuickStats } from "@/components/QuickStats";
 import { TodayTasks } from "@/components/TodayTasks";
 import { SubjectCards } from "@/components/SubjectCards";
-import { useMemo } from "react";
+import { StreakMilestone, STREAK_MILESTONES } from "@/components/StreakMilestone";
+import { useMemo, useState, useEffect, useCallback } from "react";
 
 const MOTIVATIONAL_QUOTES = [
   { text: "The secret of getting ahead is getting started.", author: "Mark Twain" },
@@ -32,7 +33,7 @@ const MOTIVATIONAL_QUOTES = [
 ];
 
 const Dashboard = () => {
-  const { state, getTodayMinutes, getStreak } = useStudy();
+  const { state, getTodayMinutes, getStreak, celebrateMilestone } = useStudy();
   const navigate = useNavigate();
   const todayMinutes = getTodayMinutes();
   const streak = getStreak();
@@ -101,8 +102,26 @@ const Dashboard = () => {
   const today = new Date().toISOString().split("T")[0];
   const todaySessions = state.todaySessionsDate === today ? state.todaySessionsCompleted : 0;
 
+  // Streak milestone celebration
+  const [showMilestone, setShowMilestone] = useState(false);
+  const celebrated = state.celebratedMilestones || [];
+
+  useEffect(() => {
+    if (streak > 0 && STREAK_MILESTONES.includes(streak) && !celebrated.includes(streak)) {
+      const timer = setTimeout(() => setShowMilestone(true), 800);
+      return () => clearTimeout(timer);
+    }
+  }, [streak, celebrated]);
+
+  const handleCloseMilestone = useCallback(() => {
+    setShowMilestone(false);
+    celebrateMilestone(streak);
+  }, [streak, celebrateMilestone]);
+
   return (
     <div className="p-5 md:p-8 max-w-3xl mx-auto space-y-6 pb-28 md:pb-8">
+      {/* Streak Milestone Celebration */}
+      <StreakMilestone show={showMilestone} streak={streak} onClose={handleCloseMilestone} />
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-1">
         <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">

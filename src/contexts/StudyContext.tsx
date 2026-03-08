@@ -16,6 +16,7 @@ const defaultState: AppState = {
   xp: 0,
   level: 1,
   totalTopicsCompleted: 0,
+  celebratedMilestones: [],
 };
 
 function loadState(): AppState {
@@ -37,12 +38,13 @@ interface StudyContextValue {
   deleteSubject: (id: string) => void;
   addSession: (session: StudySession) => void;
   updateSettings: (settings: Partial<AppSettings>) => void;
-  toggleTopicComplete: (subjectId: string, chapterId: string, topicId: string) => boolean; // returns true if completed (not uncompleted)
+  toggleTopicComplete: (subjectId: string, chapterId: string, topicId: string) => boolean;
   gainXp: (amount: number) => { newLevel: number; isLevelUp: boolean };
   updateTopicNotes: (subjectId: string, chapterId: string, topicId: string, notes: string) => void;
   addStudyPlan: (plan: StudyPlan) => void;
   completePlanTask: (topicId: string) => void;
   incrementSessionsCompleted: () => void;
+  celebrateMilestone: (days: number) => void;
   getTodayMinutes: () => number;
   getStreak: () => number;
   getHeatmapData: () => Record<string, number>;
@@ -234,6 +236,13 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
     }));
   }, []);
 
+  const celebrateMilestone = useCallback((days: number) => {
+    setState(prev => ({
+      ...prev,
+      celebratedMilestones: [...(prev.celebratedMilestones || []), days],
+    }));
+  }, []);
+
   const incrementSessionsCompleted = useCallback(() => {
     const today = new Date().toISOString().split("T")[0];
     setState(prev => ({
@@ -300,7 +309,7 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
     <StudyContext.Provider value={{
       state, addSubject, updateSubject, deleteSubject, addSession, updateSettings,
       toggleTopicComplete, updateTopicNotes, addStudyPlan, completePlanTask,
-      incrementSessionsCompleted, gainXp,
+      incrementSessionsCompleted, celebrateMilestone, gainXp,
       getTodayMinutes, getStreak, getHeatmapData, getSubjectProgress, getTodayPlanTask, getTodayPlanTasks,
     }}>
       {children}
