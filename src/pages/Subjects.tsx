@@ -337,6 +337,16 @@ const Subjects = () => {
           );
         })}
       </div>
+
+      {/* Victory Screen */}
+      <VictoryScreen
+        show={victoryData.show}
+        onClose={() => setVictoryData(prev => ({ ...prev, show: false }))}
+        topicName={victoryData.topicName}
+        xpGained={victoryData.xpGained}
+        newLevel={victoryData.newLevel}
+        isLevelUp={victoryData.isLevelUp}
+      />
     </div>
   );
 };
