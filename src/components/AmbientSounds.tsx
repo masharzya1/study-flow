@@ -124,6 +124,7 @@ export function AmbientSounds({ isPlaying }: AmbientSoundsProps) {
             initial={{ opacity: 0, y: 8, scale: 0.97 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.97 }}
+            onClick={e => e.stopPropagation()}
             className="absolute bottom-full mb-2 right-0 glass-card p-3 space-y-3 min-w-[180px] z-50"
           >
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Ambient Sound</p>
