@@ -69,9 +69,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       <header className="md:hidden sticky top-0 z-40 flex items-center justify-between px-4 py-2.5 bg-card/90 backdrop-blur-xl border-b border-border/60">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-md bg-foreground flex items-center justify-center">
-            <span className="text-primary-foreground text-[10px] font-bold">π</span>
+            <span className="text-primary-foreground text-[10px] font-bold">P</span>
           </div>
-          <span className="font-semibold text-sm tracking-tight">Paideia</span>
+          <span className="font-semibold text-sm tracking-tight">Penzó</span>
         </div>
         <HeaderControls compact />
       </header>
