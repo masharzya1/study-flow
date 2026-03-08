@@ -428,14 +428,16 @@ export function AmbientSounds({ isPlaying, currentMode, onAudioStateChange }: Am
         )}
       </AnimatePresence>
 
-      {/* Hidden YouTube audio player — NO video shown */}
-      {isYoutubeActive && activeTrack && (
-        <iframe
-          src={`https://www.youtube.com/embed/${activeTrack.youtubeId}?autoplay=1&loop=${repeat ? 1 : 0}${repeat ? `&playlist=${activeTrack.youtubeId}` : ""}`}
-          allow="autoplay"
-          onLoad={() => setIsLoading(false)}
-          className="fixed -left-[9999px] -top-[9999px] w-1 h-1 opacity-0 pointer-events-none"
-          title="Audio Player"
+      {/* YouTube audio player using IFrame API */}
+      {(audioSource === "music" || audioSource === "quran") && activeTrack && (
+        <YouTubeAudioPlayer
+          videoId={activeTrack.youtubeId}
+          isPlaying={isTrackPlaying}
+          repeat={repeat}
+          onReady={() => setIsLoading(false)}
+          onEnded={() => {
+            if (!repeat) nextTrack();
+          }}
         />
       )}
     </div>
