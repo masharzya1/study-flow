@@ -257,7 +257,7 @@ const SettingsPage = () => {
         <p className="text-sm text-muted-foreground">{t("settings.restartTourDesc")}</p>
         <button
           onClick={() => {
-            localStorage.removeItem("manabu_onboarded");
+            localStorage.removeItem("penzo_onboarded");
             window.location.reload();
           }}
           className="flex items-center gap-2 px-3 py-2 rounded-xl bg-secondary text-sm hover-lift font-medium"
