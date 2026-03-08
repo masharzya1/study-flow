@@ -410,8 +410,12 @@ const Timer = () => {
             type={audioState.type}
             isPlaying={audioState.isPlaying}
             isLoading={audioState.isLoading}
+            shuffle={audioState.shuffle}
+            repeat={audioState.repeat}
             onTogglePlay={audioState.onTogglePlay}
             onNext={audioState.onNext}
+            onToggleShuffle={audioState.onToggleShuffle}
+            onToggleRepeat={audioState.onToggleRepeat}
           />
         )}
       </AnimatePresence>
