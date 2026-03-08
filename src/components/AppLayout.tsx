@@ -8,9 +8,14 @@ const navItems = [
   { to: "/plan", icon: Sparkles, label: "Plan" },
   { to: "/calendar", icon: CalendarDays, label: "Calendar" },
   { to: "/revision", icon: RotateCcw, label: "Revision" },
-  { to: "/analytics", icon: BarChart3, label: "Analytics" },
+  { to: "/analytics", icon: BarChart3, label: "Stats" },
   { to: "/settings", icon: Settings, label: "Settings" },
 ];
+
+// Show fewer items on mobile bottom nav
+const mobileNavItems = navItems.filter(item =>
+  ["/", "/subjects", "/timer", "/plan", "/analytics"].includes(item.to)
+);
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
