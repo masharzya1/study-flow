@@ -1,9 +1,14 @@
 import { useState } from "react";
 import { useStudy } from "@/contexts/StudyContext";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Calendar, Clock, BookOpen, ChevronRight, Check, RotateCcw, Zap } from "lucide-react";
+import { Sparkles, Calendar as CalendarIcon, Clock, BookOpen, ChevronRight, Check, RotateCcw, Zap } from "lucide-react";
 import { SubjectIcon } from "@/components/SubjectIcon";
 import type { StudyPlan, PlannedTask } from "@/types/study";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 const StudyPlanPage = () => {
   const { state, addStudyPlan } = useStudy();
