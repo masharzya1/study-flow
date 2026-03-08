@@ -112,9 +112,8 @@ const Dashboard = () => {
         </p>
       </motion.div>
 
-      {/* XP / Level Bar */}
-      {state.xp > 0 && (
-        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.02 }} className="glass-card p-4">
+      {/* XP / Level Bar — always visible */}
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.02 }} className="glass-card p-4">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
               <Trophy className="w-4 h-4 text-accent" />
