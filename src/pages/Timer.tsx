@@ -26,6 +26,7 @@ const Timer = () => {
   const [useTopicTime, setUseTopicTime] = useState(true);
   const [showCelebration, setShowCelebration] = useState(false);
   const [celebrationStreak, setCelebrationStreak] = useState(0);
+  const [audioState, setAudioState] = useState<AudioState | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const sessionStartRef = useRef<string | null>(null);
 
