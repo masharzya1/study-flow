@@ -207,7 +207,7 @@ export function AmbientSounds({ isPlaying, currentMode, onAudioStateChange }: Am
     { id: "forest" as const, label: "Forest", icon: TreePine },
   ];
 
-  const isYoutubeActive = (audioSource === "music" || audioSource === "quran") && isTrackPlaying && activeTrack;
+  const isMediaActive = (audioSource === "music" || audioSource === "quran") && activeTrack;
 
   const pickerRef = useRef<HTMLDivElement>(null);
 
