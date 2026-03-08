@@ -234,20 +234,32 @@ export function AmbientSounds({ isPlaying, currentMode }: AmbientSoundsProps) {
 
                 {/* Now Playing */}
                 {audioSource === "music" && currentMusicTrack && (
-                  <div className="bg-secondary/60 rounded-xl p-2.5 flex items-center gap-2">
-                    <button
-                      onClick={() => setIsTrackPlaying(!isTrackPlaying)}
-                      className="w-7 h-7 rounded-full bg-foreground text-primary-foreground flex items-center justify-center flex-shrink-0"
-                    >
-                      {isTrackPlaying ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3 ml-0.5" />}
-                    </button>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[10px] text-muted-foreground">Now Playing</p>
-                      <p className="text-xs font-medium truncate">{currentMusicTrack.title}</p>
+                  <div className="bg-secondary/60 rounded-xl p-2.5 space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setIsTrackPlaying(!isTrackPlaying)}
+                        className="w-7 h-7 rounded-full bg-foreground text-primary-foreground flex items-center justify-center flex-shrink-0"
+                      >
+                        {isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : isTrackPlaying ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3 ml-0.5" />}
+                      </button>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[10px] text-muted-foreground">{isLoading ? "Loading..." : "Now Playing"}</p>
+                        <p className="text-xs font-medium truncate">{currentMusicTrack.title}</p>
+                      </div>
+                      <button onClick={nextTrack} className="p-1 hover:bg-secondary rounded">
+                        <SkipForward className="w-3.5 h-3.5 text-muted-foreground" />
+                      </button>
                     </div>
-                    <button onClick={nextTrack} className="p-1 hover:bg-secondary rounded">
-                      <SkipForward className="w-3.5 h-3.5 text-muted-foreground" />
-                    </button>
+                    {isLoading && (
+                      <div className="w-full h-1 bg-secondary rounded-full overflow-hidden">
+                        <motion.div
+                          className="h-full bg-foreground rounded-full"
+                          initial={{ width: "0%" }}
+                          animate={{ width: "90%" }}
+                          transition={{ duration: 3, ease: "easeOut" }}
+                        />
+                      </div>
+                    )}
                   </div>
                 )}
 
