@@ -392,25 +392,6 @@ const StudyPlanPage = () => {
           </motion.div>
         )}
 
-        {step === 4 && (
-          <motion.div
-            key="step4"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="glass-card p-8 text-center space-y-4"
-          >
-            <div className="w-14 h-14 rounded-2xl bg-success/15 flex items-center justify-center mx-auto">
-              <Check className="w-7 h-7 text-success" />
-            </div>
-            <div>
-              <p className="font-semibold">Plan Saved!</p>
-              <p className="text-sm text-muted-foreground mt-1">Your study schedule is ready</p>
-            </div>
-            <button onClick={resetWizard} className="flex items-center gap-2 mx-auto text-sm text-muted-foreground hover:text-foreground transition-colors">
-              <RotateCcw className="w-3.5 h-3.5" /> Create another
-            </button>
-          </motion.div>
-        )}
       </AnimatePresence>
     </div>
   );
