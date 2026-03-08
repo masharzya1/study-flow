@@ -6,7 +6,8 @@ import { StudyHeatmap } from "@/components/StudyHeatmap";
 import { QuickStats } from "@/components/QuickStats";
 import { TodayTasks } from "@/components/TodayTasks";
 import { SubjectCards } from "@/components/SubjectCards";
-import { useMemo } from "react";
+import { StreakMilestone, STREAK_MILESTONES } from "@/components/StreakMilestone";
+import { useMemo, useState, useEffect, useCallback } from "react";
 
 const MOTIVATIONAL_QUOTES = [
   { text: "The secret of getting ahead is getting started.", author: "Mark Twain" },
