@@ -223,6 +223,13 @@ const translations: Record<Language, Record<string, string>> = {
     "onboard.skip": "Skip",
     "onboard.next": "Next",
     "onboard.of": "of",
+
+    // Install prompt
+    "install.title": "Install Paideia",
+    "install.desc": "Install this app on your device for the best experience — works offline!",
+    "install.iosDesc": "Tap Share → Add to Home Screen to install Paideia on your device.",
+    "install.install": "Install App",
+    "install.later": "Maybe later",
   },
 
   bn: {
