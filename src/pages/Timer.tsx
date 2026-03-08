@@ -6,6 +6,7 @@ import { AmbientSounds, type AudioState } from "@/components/AmbientSounds";
 import { NetworkIndicator } from "@/components/NetworkIndicator";
 import { MiniPlayer } from "@/components/MiniPlayer";
 import { SubjectIcon } from "@/components/SubjectIcon";
+import { VictoryScreen } from "@/components/VictoryScreen";
 import { fireSessionComplete, fireStreakCelebration } from "@/lib/confetti";
 import type { StudySession } from "@/types/study";
 
