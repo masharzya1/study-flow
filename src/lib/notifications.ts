@@ -32,10 +32,12 @@ function tryNativeNotification(title: string, options?: NotificationOptions): bo
     const notification = new Notification(title, {
       icon: "/icon-192.png",
       badge: "/icon-192.png",
+      requireInteraction: false,
+      silent: false,
       ...options,
     });
     console.log("[Notif] Native notification sent successfully");
-    setTimeout(() => notification.close(), 5000);
+    // Don't auto-close — let OS handle notification duration
     notification.onclick = () => {
       window.focus();
       notification.close();
@@ -43,6 +45,17 @@ function tryNativeNotification(title: string, options?: NotificationOptions): bo
     return true;
   } catch (err) {
     console.error("[Notif] Native notification failed:", err);
+    // Fallback: try service worker notification
+    if ("serviceWorker" in navigator && navigator.serviceWorker.controller) {
+      navigator.serviceWorker.ready.then(reg => {
+        reg.showNotification(title, {
+          icon: "/icon-192.png",
+          badge: "/icon-192.png",
+          ...options,
+        });
+        console.log("[Notif] SW notification sent as fallback");
+      }).catch(e => console.error("[Notif] SW fallback failed:", e));
+    }
     return false;
   }
 }
