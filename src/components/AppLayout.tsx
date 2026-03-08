@@ -4,6 +4,7 @@ import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { HeaderControls } from "@/components/HeaderControls";
+import penzoLogo from "@/assets/penzo-logo.png";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
@@ -31,9 +32,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       <aside className="hidden md:flex flex-col w-16 lg:w-56 border-r border-border bg-card fixed inset-y-0 left-0 z-40">
         <div className="p-4 lg:px-5 flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-foreground flex items-center justify-center">
-            <span className="text-primary-foreground text-xs font-bold">P</span>
-          </div>
+            <div className="w-7 h-7 rounded-lg bg-foreground flex items-center justify-center overflow-hidden">
+              <img src={penzoLogo} alt="Penzó" className="w-5 h-5 object-contain invert dark:invert-0" />
+            </div>
             <h1 className="font-semibold text-base hidden lg:block tracking-tight">Penzó</h1>
           </div>
           <div className="hidden lg:flex">
@@ -68,8 +69,8 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       {/* Mobile Header */}
       <header className="md:hidden sticky top-0 z-40 flex items-center justify-between px-4 py-2.5 bg-card/90 backdrop-blur-xl border-b border-border/60">
         <div className="flex items-center gap-2">
-          <div className="w-6 h-6 rounded-md bg-foreground flex items-center justify-center">
-            <span className="text-primary-foreground text-[10px] font-bold">P</span>
+          <div className="w-6 h-6 rounded-md bg-foreground flex items-center justify-center overflow-hidden">
+            <img src={penzoLogo} alt="Penzó" className="w-4 h-4 object-contain invert dark:invert-0" />
           </div>
           <span className="font-semibold text-sm tracking-tight">Penzó</span>
         </div>
