@@ -100,8 +100,12 @@
     -webkit-font-smoothing: antialiased;
     -moz-osx-font-smoothing: grayscale;
   }
+  .font-bengali,
+  .font-bengali body {
+    font-family: "Hind Siliguri", -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  }
   h1, h2, h3, h4, h5, h6 {
-    @apply font-sans font-semibold tracking-tight;
+    @apply font-semibold tracking-tight;
   }
 }
 
