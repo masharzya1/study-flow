@@ -7,8 +7,6 @@ import { NetworkIndicator } from "@/components/NetworkIndicator";
 import { MiniPlayer } from "@/components/MiniPlayer";
 import { SubjectIcon } from "@/components/SubjectIcon";
 import { fireSessionComplete, fireStreakCelebration } from "@/lib/confetti";
-import { notifyTimerComplete, notifyStreak, requestNotificationPermission } from "@/lib/notifications";
-import { NotificationBanner } from "@/components/NotificationBanner";
 import type { StudySession } from "@/types/study";
 
 const Timer = () => {
