@@ -1,29 +1,78 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { BookOpen, Sparkles, Timer, BarChart3, ArrowRight, X } from "lucide-react";
+import { X, ArrowRight, ChevronRight } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { createPortal } from "react-dom";
 
 const ONBOARDING_KEY = "studyforge_onboarded";
 
-const steps = [
-  { icon: BookOpen, color: "200 60% 45%", emoji: "📚" },
-  { icon: Sparkles, color: "45 93% 58%", emoji: "✨" },
-  { icon: Timer, color: "152 60% 42%", emoji: "⏱️" },
-  { icon: BarChart3, color: "270 50% 55%", emoji: "📊" },
+interface TourStep {
+  selector: string;
+  titleKey: string;
+  descKey: string;
+  position: "bottom" | "top" | "left" | "right";
+}
+
+const tourSteps: TourStep[] = [
+  {
+    selector: '[data-tour="focus-btn"]',
+    titleKey: "onboard.step3Title",
+    descKey: "onboard.step3Desc",
+    position: "top",
+  },
+  {
+    selector: '[data-tour="nav-subjects"]',
+    titleKey: "onboard.step1Title",
+    descKey: "onboard.step1Desc",
+    position: "top",
+  },
+  {
+    selector: '[data-tour="nav-stats"]',
+    titleKey: "onboard.step4Title",
+    descKey: "onboard.step4Desc",
+    position: "top",
+  },
 ];
 
 export function OnboardingTour() {
   const { t } = useLanguage();
   const [show, setShow] = useState(false);
   const [step, setStep] = useState(0);
+  const [rect, setRect] = useState<DOMRect | null>(null);
+  const rafRef = useRef<number>();
 
   useEffect(() => {
     const done = localStorage.getItem(ONBOARDING_KEY);
     if (!done) {
-      const timer = setTimeout(() => setShow(true), 500);
+      const timer = setTimeout(() => setShow(true), 1200);
       return () => clearTimeout(timer);
     }
   }, []);
+
+  const measureElement = useCallback(() => {
+    if (!show) return;
+    const el = document.querySelector(tourSteps[step]?.selector);
+    if (el) {
+      setRect(el.getBoundingClientRect());
+    } else {
+      setRect(null);
+    }
+  }, [step, show]);
+
+  useEffect(() => {
+    measureElement();
+    const handleScroll = () => {
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+      rafRef.current = requestAnimationFrame(measureElement);
+    };
+    window.addEventListener("scroll", handleScroll, true);
+    window.addEventListener("resize", handleScroll);
+    return () => {
+      window.removeEventListener("scroll", handleScroll, true);
+      window.removeEventListener("resize", handleScroll);
+      if (rafRef.current) cancelAnimationFrame(rafRef.current);
+    };
+  }, [measureElement]);
 
   const close = () => {
     setShow(false);
@@ -31,151 +80,160 @@ export function OnboardingTour() {
   };
 
   const next = () => {
-    if (step < steps.length - 1) {
+    if (step < tourSteps.length - 1) {
       setStep(step + 1);
     } else {
       close();
     }
   };
 
-  const stepTitles = [
-    t("onboard.step1Title"),
-    t("onboard.step2Title"),
-    t("onboard.step3Title"),
-    t("onboard.step4Title"),
-  ];
-  const stepDescs = [
-    t("onboard.step1Desc"),
-    t("onboard.step2Desc"),
-    t("onboard.step3Desc"),
-    t("onboard.step4Desc"),
-  ];
+  if (!show) return null;
 
-  return (
+  const currentStep = tourSteps[step];
+  const padding = 8;
+
+  // Tooltip positioning
+  const getTooltipStyle = (): React.CSSProperties => {
+    if (!rect) return { top: "50%", left: "50%", transform: "translate(-50%, -50%)" };
+
+    const pos = currentStep.position;
+    const gap = 12;
+
+    if (pos === "top") {
+      return {
+        bottom: `${window.innerHeight - rect.top + gap}px`,
+        left: `${Math.max(16, Math.min(rect.left + rect.width / 2 - 140, window.innerWidth - 296))}px`,
+      };
+    }
+    if (pos === "bottom") {
+      return {
+        top: `${rect.bottom + gap}px`,
+        left: `${Math.max(16, Math.min(rect.left + rect.width / 2 - 140, window.innerWidth - 296))}px`,
+      };
+    }
+    if (pos === "right") {
+      return {
+        top: `${rect.top + rect.height / 2 - 40}px`,
+        left: `${rect.right + gap}px`,
+      };
+    }
+    return {
+      top: `${rect.top + rect.height / 2 - 40}px`,
+      right: `${window.innerWidth - rect.left + gap}px`,
+    };
+  };
+
+  return createPortal(
     <AnimatePresence>
       {show && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[300] flex items-center justify-center p-5"
-        >
-          {/* Backdrop */}
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            className="absolute inset-0 bg-background/90 backdrop-blur-md"
-            onClick={close}
-          />
-
-          <motion.div
-            initial={{ scale: 0.9, opacity: 0, y: 20 }}
-            animate={{ scale: 1, opacity: 1, y: 0 }}
-            exit={{ scale: 0.9, opacity: 0, y: 20 }}
-            className="relative w-full max-w-sm glass-card-elevated p-6 space-y-6"
-          >
-            {/* Close */}
-            <button
+        <div className="fixed inset-0 z-[9999]" style={{ pointerEvents: "auto" }}>
+          {/* Dark overlay with cutout */}
+          <svg className="absolute inset-0 w-full h-full" style={{ pointerEvents: "none" }}>
+            <defs>
+              <mask id="tour-mask">
+                <rect x="0" y="0" width="100%" height="100%" fill="white" />
+                {rect && (
+                  <rect
+                    x={rect.left - padding}
+                    y={rect.top - padding}
+                    width={rect.width + padding * 2}
+                    height={rect.height + padding * 2}
+                    rx="14"
+                    fill="black"
+                  />
+                )}
+              </mask>
+            </defs>
+            <rect
+              x="0" y="0" width="100%" height="100%"
+              fill="hsl(var(--background))"
+              fillOpacity="0.82"
+              mask="url(#tour-mask)"
+              style={{ pointerEvents: "auto" }}
               onClick={close}
-              className="absolute top-4 right-4 p-1.5 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
+            />
+          </svg>
 
-            {step === 0 && (
-              <motion.div
-                key="welcome"
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="text-center space-y-3 pt-2"
-              >
-                <div className="w-16 h-16 rounded-2xl bg-foreground mx-auto flex items-center justify-center">
-                  <span className="text-primary-foreground text-2xl font-bold">SF</span>
-                </div>
-                <h2 className="text-xl font-bold tracking-tight">{t("onboard.welcome")}</h2>
-                <p className="text-sm text-muted-foreground">{t("onboard.welcomeDesc")}</p>
-              </motion.div>
-            )}
+          {/* Highlight ring */}
+          {rect && (
+            <motion.div
+              layoutId="tour-highlight"
+              className="absolute rounded-2xl border-2 border-accent"
+              style={{
+                top: rect.top - padding,
+                left: rect.left - padding,
+                width: rect.width + padding * 2,
+                height: rect.height + padding * 2,
+                pointerEvents: "none",
+                boxShadow: "0 0 0 4px hsl(var(--accent) / 0.15), 0 0 24px hsl(var(--accent) / 0.1)",
+              }}
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ type: "spring", stiffness: 300, damping: 25 }}
+            />
+          )}
 
-            {/* Step content */}
-            <AnimatePresence mode="wait">
-              <motion.div
-                key={step}
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
-                exit={{ opacity: 0, x: -20 }}
-                className="space-y-4"
-              >
-                {step > 0 && (
-                  <div className="flex items-center gap-4">
-                    <div
-                      className="w-14 h-14 rounded-2xl flex items-center justify-center flex-shrink-0"
-                      style={{ backgroundColor: `hsl(${steps[step].color} / 0.15)` }}
-                    >
-                      <span className="text-2xl">{steps[step].emoji}</span>
-                    </div>
-                    <div>
-                      <h3 className="font-semibold text-base">{stepTitles[step]}</h3>
-                      <p className="text-sm text-muted-foreground mt-0.5">{stepDescs[step]}</p>
-                    </div>
-                  </div>
-                )}
-
-                {step === 0 && (
-                  <div className="space-y-3">
-                    {steps.map((s, i) => (
-                      <div
-                        key={i}
-                        className="flex items-center gap-3 p-3 rounded-xl bg-secondary/50"
-                      >
-                        <div
-                          className="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-                          style={{ backgroundColor: `hsl(${s.color} / 0.15)` }}
-                        >
-                          <span className="text-lg">{s.emoji}</span>
-                        </div>
-                        <div>
-                          <p className="text-sm font-medium">{stepTitles[i]}</p>
-                          <p className="text-[11px] text-muted-foreground">{stepDescs[i]}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </motion.div>
-            </AnimatePresence>
-
-            {/* Progress dots */}
-            <div className="flex items-center justify-center gap-1.5">
-              {steps.map((_, i) => (
-                <div
-                  key={i}
-                  className={`w-2 h-2 rounded-full transition-all ${
-                    i === step ? "bg-foreground w-5" : i < step ? "bg-foreground/40" : "bg-secondary"
-                  }`}
-                />
-              ))}
-            </div>
-
-            {/* Actions */}
-            <div className="flex gap-2">
+          {/* Tooltip card */}
+          <motion.div
+            key={step}
+            initial={{ opacity: 0, y: 8, scale: 0.96 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -8, scale: 0.96 }}
+            transition={{ type: "spring", stiffness: 400, damping: 30 }}
+            className="absolute w-[280px] glass-card-elevated p-4 space-y-3"
+            style={getTooltipStyle()}
+          >
+            {/* Step indicator */}
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-1.5">
+                {tourSteps.map((_, i) => (
+                  <div
+                    key={i}
+                    className={`h-1 rounded-full transition-all duration-300 ${
+                      i === step ? "w-5 bg-accent" : i < step ? "w-2 bg-accent/40" : "w-2 bg-secondary"
+                    }`}
+                  />
+                ))}
+              </div>
               <button
                 onClick={close}
-                className="flex-1 py-2.5 rounded-xl bg-secondary text-muted-foreground text-sm font-medium"
+                className="p-1 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            </div>
+
+            <div>
+              <h3 className="font-semibold text-sm">{t(currentStep.titleKey)}</h3>
+              <p className="text-xs text-muted-foreground mt-1 leading-relaxed">{t(currentStep.descKey)}</p>
+            </div>
+
+            <div className="flex items-center gap-2">
+              <button
+                onClick={close}
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors px-2 py-1.5"
               >
                 {t("onboard.skip")}
               </button>
               <button
                 onClick={next}
-                className="flex-1 py-2.5 rounded-xl bg-foreground text-primary-foreground text-sm font-medium flex items-center justify-center gap-1.5"
+                className="flex-1 flex items-center justify-center gap-1 py-2 rounded-xl bg-foreground text-primary-foreground text-xs font-medium hover:opacity-90 transition-opacity"
               >
-                {step < steps.length - 1 ? t("onboard.next") : t("onboard.getStarted")}
-                <ArrowRight className="w-3.5 h-3.5" />
+                {step < tourSteps.length - 1 ? (
+                  <>
+                    {t("onboard.next")} <ChevronRight className="w-3 h-3" />
+                  </>
+                ) : (
+                  <>
+                    {t("onboard.getStarted")} <ArrowRight className="w-3 h-3" />
+                  </>
+                )}
               </button>
             </div>
           </motion.div>
-        </motion.div>
+        </div>
       )}
-    </AnimatePresence>
+    </AnimatePresence>,
+    document.body
   );
 }

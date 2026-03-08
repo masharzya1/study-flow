@@ -25,6 +25,15 @@ export function LanguageProvider({ children }: { children: React.ReactNode }) {
     localStorage.setItem(STORAGE_KEY, lang);
   }, []);
 
+  // Apply font based on language
+  useEffect(() => {
+    if (language === "bn") {
+      document.documentElement.classList.add("font-bengali");
+    } else {
+      document.documentElement.classList.remove("font-bengali");
+    }
+  }, [language]);
+
   const t = useCallback(
     (key: string, replacements?: Record<string, string | number>) => {
       let text = translations[language]?.[key] || translations.en[key] || key;
