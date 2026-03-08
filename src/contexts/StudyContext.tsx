@@ -267,7 +267,7 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
       state, addSubject, updateSubject, deleteSubject, addSession, updateSettings,
       toggleTopicComplete, updateTopicNotes, addStudyPlan, completePlanTask,
       incrementSessionsCompleted,
-      getTodayMinutes, getStreak, getHeatmapData, getSubjectProgress, getTodayPlanTask,
+      getTodayMinutes, getStreak, getHeatmapData, getSubjectProgress, getTodayPlanTask, getTodayPlanTasks,
     }}>
       {children}
     </StudyContext.Provider>
