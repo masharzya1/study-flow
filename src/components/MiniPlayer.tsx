@@ -38,16 +38,10 @@ export function MiniPlayer({
             </p>
             <p className="text-xs font-medium truncate">{trackTitle}</p>
           </div>
-          <button
-            onClick={onTogglePlay}
-            className="w-8 h-8 rounded-full bg-foreground text-primary-foreground flex items-center justify-center flex-shrink-0"
-          >
-            {isPlaying ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 ml-0.5" />}
-          </button>
         </div>
 
         {/* Controls row */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-center gap-3">
           <button
             onClick={onToggleShuffle}
             className={`p-1.5 rounded-lg transition-colors ${
@@ -59,11 +53,18 @@ export function MiniPlayer({
           </button>
 
           <button onClick={onPrev} className="p-1.5 hover:bg-secondary rounded-lg transition-colors" title="Previous">
-            <SkipBack className="w-3.5 h-3.5 text-muted-foreground" />
+            <SkipBack className="w-4 h-4 text-muted-foreground" />
+          </button>
+
+          <button
+            onClick={onTogglePlay}
+            className="w-9 h-9 rounded-full bg-foreground text-primary-foreground flex items-center justify-center flex-shrink-0"
+          >
+            {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
           </button>
 
           <button onClick={onNext} className="p-1.5 hover:bg-secondary rounded-lg transition-colors" title="Next">
-            <SkipForward className="w-3.5 h-3.5 text-muted-foreground" />
+            <SkipForward className="w-4 h-4 text-muted-foreground" />
           </button>
 
           <button

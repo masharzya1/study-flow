@@ -172,10 +172,12 @@ export function AmbientSounds({ isPlaying, currentMode, onAudioStateChange }: Am
   const toggleShuffle = useCallback(() => setShuffle(p => !p), []);
   const toggleRepeat = useCallback(() => setRepeat(p => !p), []);
 
-  // Report audio state to parent
+  // Report audio state to parent via ref to avoid infinite loops
+  const audioStateRef = useRef<AudioState | null>(null);
+  
   useEffect(() => {
     if ((audioSource === "music" || audioSource === "quran") && activeTrack) {
-      onAudioStateChange?.({
+      const newState: AudioState = {
         trackTitle: activeTrack.title,
         type: audioSource as "music" | "quran",
         isPlaying: isTrackPlaying,
@@ -187,11 +189,15 @@ export function AmbientSounds({ isPlaying, currentMode, onAudioStateChange }: Am
         onPrev: prevTrack,
         onToggleShuffle: toggleShuffle,
         onToggleRepeat: toggleRepeat,
-      });
-    } else {
+      };
+      audioStateRef.current = newState;
+      onAudioStateChange?.(newState);
+    } else if (audioStateRef.current !== null) {
+      audioStateRef.current = null;
       onAudioStateChange?.(null);
     }
-  }, [audioSource, activeTrack, isTrackPlaying, isLoading, shuffle, repeat, onAudioStateChange, togglePlay, nextTrack, prevTrack, toggleShuffle, toggleRepeat]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [audioSource, activeTrack?.title, isTrackPlaying, isLoading, shuffle, repeat]);
 
   const sounds = [
     { id: "none" as const, label: "Off", icon: VolumeX },
