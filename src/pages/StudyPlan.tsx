@@ -13,6 +13,7 @@ const StudyPlanPage = () => {
   const [dailyHours, setDailyHours] = useState(3);
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
   const [generatedPlan, setGeneratedPlan] = useState<StudyPlan | null>(null);
+  const [viewingPlanId, setViewingPlanId] = useState<string | null>(null);
 
   const toggleSubject = (id: string) => {
     setSelectedSubjects(prev =>
@@ -167,14 +168,19 @@ const StudyPlanPage = () => {
             const daysLeft = Math.max(0, Math.ceil((new Date(plan.examDate).getTime() - Date.now()) / 86400000));
             const completed = plan.tasks.filter(t => t.completed).length;
             return (
-              <div key={plan.id} className="glass-card p-4">
+              <button
+                key={plan.id}
+                onClick={() => { setGeneratedPlan(plan); setViewingPlanId(plan.id); setStep(3); }}
+                className="w-full glass-card p-4 text-left hover-lift"
+              >
                 <div className="flex items-center justify-between">
                   <div>
                     <p className="font-medium text-sm">{plan.examName}</p>
                     <p className="text-xs text-muted-foreground mt-0.5">{daysLeft} days left · {completed}/{plan.tasks.length} tasks</p>
                   </div>
-                  <div className="text-right">
+                  <div className="flex items-center gap-2">
                     <p className="text-xs text-muted-foreground">{plan.dailyHours}h/day</p>
+                    <ChevronRight className="w-4 h-4 text-muted-foreground" />
                   </div>
                 </div>
                 <div className="mt-3 h-1.5 rounded-full bg-secondary overflow-hidden">
@@ -183,7 +189,7 @@ const StudyPlanPage = () => {
                     style={{ width: `${plan.tasks.length > 0 ? (completed / plan.tasks.length) * 100 : 0}%` }}
                   />
                 </div>
-              </div>
+              </button>
             );
           })}
         </div>
@@ -381,11 +387,11 @@ const StudyPlanPage = () => {
             </div>
 
             <div className="flex gap-2">
-              <button onClick={resetWizard} className="flex-1 py-2.5 rounded-xl bg-secondary text-foreground font-medium text-sm">
-                Create Another
+              <button onClick={() => { setViewingPlanId(null); setGeneratedPlan(null); setStep(0); }} className="flex-1 py-2.5 rounded-xl bg-secondary text-foreground font-medium text-sm">
+                ← Back
               </button>
-              <button onClick={() => setStep(0)} className="flex-1 py-2.5 rounded-xl bg-foreground text-primary-foreground font-medium text-sm">
-                View Plans
+              <button onClick={resetWizard} className="flex-1 py-2.5 rounded-xl bg-foreground text-primary-foreground font-medium text-sm">
+                Create New
               </button>
             </div>
             <p className="text-[10px] text-muted-foreground text-center">Plan saved automatically</p>
