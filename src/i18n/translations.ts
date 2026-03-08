@@ -211,7 +211,7 @@ const translations: Record<Language, Record<string, string>> = {
     "comp.sessionComplete": "SESSION COMPLETE",
 
     // Onboarding
-    "onboard.welcome": "Welcome to Paideia",
+    "onboard.welcome": "Welcome to Penzó",
     "onboard.welcomeDesc": "Your personal study companion. Let's get you started!",
     "onboard.step1Title": "Create Subjects",
     "onboard.step1Desc": "Add your subjects, chapters, and topics to organize your study material.",
@@ -227,11 +227,17 @@ const translations: Record<Language, Record<string, string>> = {
     "onboard.of": "of",
 
     // Install prompt
-    "install.title": "Install Paideia",
+    "install.title": "Install Penzó",
     "install.desc": "Install this app on your device for the best experience — works offline!",
-    "install.iosDesc": "Tap Share → Add to Home Screen to install Paideia on your device.",
+    "install.iosDesc": "Tap Share → Add to Home Screen to install Penzó on your device.",
     "install.install": "Install App",
     "install.later": "Maybe later",
+
+    // 404
+    "notFound.title": "Page not found",
+    "notFound.desc": "The page you're looking for has been moved or doesn't exist.",
+    "notFound.home": "Go Home",
+    "notFound.back": "Go Back",
   },
 
   bn: {
