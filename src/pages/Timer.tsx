@@ -303,7 +303,7 @@ const Timer = () => {
           >
             <Coffee className="w-4 h-4" /> Break
           </button>
-          <AmbientSounds isPlaying={isRunning} currentMode={mode} />
+          <AmbientSounds isPlaying={isRunning} currentMode={mode} onAudioStateChange={setAudioState} />
           <button
             onClick={() => setShowSettings(!showSettings)}
             className="p-2.5 rounded-xl text-muted-foreground hover:text-foreground transition-colors"
