@@ -8,7 +8,7 @@ import { DEFAULT_DIFFICULTY_LEVELS } from "@/types/study";
 
 const SettingsPage = () => {
   const { state, updateSettings } = useStudy();
-  const { t, language, setLanguage } = useLanguage();
+  const { t } = useLanguage();
   const { settings } = state;
   const levels = settings.difficultyLevels || DEFAULT_DIFFICULTY_LEVELS;
 
