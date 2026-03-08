@@ -25,7 +25,7 @@ const Timer = () => {
   const [showTopicSelector, setShowTopicSelector] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [useTopicTime, setUseTopicTime] = useState(true);
-  const [showCelebration, setShowCelebration] = useState(false);
+  const [victoryData, setVictoryData] = useState<{ show: boolean; topicName: string; xpGained: number; newLevel?: number; isLevelUp: boolean }>({ show: false, topicName: "", xpGained: 0, isLevelUp: false });
   const [celebrationStreak, setCelebrationStreak] = useState(0);
   const [audioState, setAudioState] = useState<AudioState | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
