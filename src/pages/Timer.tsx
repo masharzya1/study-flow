@@ -401,6 +401,20 @@ const Timer = () => {
           <span>{useTopicTime && selectedTask ? `${selectedTask.estimatedMinutes}m topic` : `${pomodoroFocus}m focus`} / {pomodoroBreak}m break</span>
         </div>
       </motion.div>
+
+      {/* Mini Now Playing Bar */}
+      <AnimatePresence>
+        {audioState && (
+          <MiniPlayer
+            trackTitle={audioState.trackTitle}
+            type={audioState.type}
+            isPlaying={audioState.isPlaying}
+            isLoading={audioState.isLoading}
+            onTogglePlay={audioState.onTogglePlay}
+            onNext={audioState.onNext}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };
