@@ -124,6 +124,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           })}
           <button
             onClick={() => setShowMore(prev => !prev)}
+            data-tour="nav-stats"
             className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-[10px] font-medium transition-all ${
               isMoreActive || showMore ? "text-foreground" : "text-muted-foreground"
             }`}
