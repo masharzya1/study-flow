@@ -190,7 +190,7 @@ const SettingsPage = () => {
               onClick={() => setShowAddLevel(true)}
               className="flex items-center gap-2 w-full py-2.5 rounded-xl bg-secondary/50 text-muted-foreground text-xs font-medium hover:bg-secondary transition-colors justify-center"
             >
-              <Plus className="w-3.5 h-3.5" /> নতুন Level যোগ করো
+              <Plus className="w-3.5 h-3.5" /> Add New Level
             </button>
           )}
         </AnimatePresence>

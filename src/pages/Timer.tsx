@@ -428,7 +428,7 @@ const Timer = () => {
                         </div>
                       ))}
                       {state.subjects.length === 0 && (
-                        <p className="text-xs text-muted-foreground text-center py-3">আগে Subjects page এ subject যোগ করো</p>
+                        <p className="text-xs text-muted-foreground text-center py-3">Add subjects first on the Subjects page</p>
                       )}
                     </div>
                   </motion.div>

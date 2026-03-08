@@ -369,7 +369,7 @@ export function AmbientSounds({ isPlaying, currentMode, onAudioStateChange }: Am
                         {isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : isTrackPlaying ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3 ml-0.5" />}
                       </button>
                       <div className="flex-1 min-w-0">
-                        <p className="text-[10px] text-muted-foreground">{isLoading ? "Loading..." : "তিলাওয়াত চলছে"}</p>
+                        <p className="text-[10px] text-muted-foreground">{isLoading ? "Loading..." : "Now Playing"}</p>
                         <p className="text-xs font-medium truncate">{currentQuranTrack.title}</p>
                       </div>
                       <button onClick={nextTrack} className="p-1 hover:bg-secondary rounded">
