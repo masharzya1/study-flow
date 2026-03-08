@@ -12,6 +12,7 @@ const defaultState: AppState = {
   achievements: [],
   settings: DEFAULT_SETTINGS,
   streak: 0,
+  todaySessionsCompleted: 0,
 };
 
 function loadState(): AppState {
