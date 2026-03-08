@@ -111,7 +111,7 @@ const SettingsPage = () => {
           </button>
         </div>
         <p className="text-[11px] text-muted-foreground">
-          প্রতিটি level এর জন্য default time সেট করো। Topic add করলে এই time অনুযায়ী estimate হবে।
+          Set default time for each difficulty level. Topics will use this as their estimated duration.
         </p>
 
         <div className="space-y-2">
