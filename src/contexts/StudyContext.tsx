@@ -16,6 +16,7 @@ const defaultState: AppState = {
   xp: 0,
   level: 1,
   totalTopicsCompleted: 0,
+  celebratedMilestones: [],
 };
 
 function loadState(): AppState {
