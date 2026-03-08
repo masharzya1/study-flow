@@ -3,6 +3,7 @@ import { useStudy } from "@/contexts/StudyContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { Volume2, VolumeX, CloudRain, Wind, TreePine, Music, BookOpen, Play, Pause, SkipForward, ChevronDown, Loader2 } from "lucide-react";
 import { FOCUS_MUSIC, QURAN_TILAWAT, type MusicTrack } from "@/data/focusMusic";
+import { YouTubeAudioPlayer } from "@/components/YouTubeAudioPlayer";
 
 // Generate ambient sound using Web Audio API oscillators
 function createAmbientNode(ctx: AudioContext, type: "rain" | "whitenoise" | "forest"): AudioNode {
