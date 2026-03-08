@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useStudy } from "@/contexts/StudyContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { Moon, Sun, Volume2, VolumeX, Clock, Target, Github, Heart, ExternalLink, Layers, Plus, Trash2, Check, Bell, BellOff } from "lucide-react";
-import { requestNotificationPermission, getNotificationPermission, isNotificationSupported } from "@/lib/notifications";
+import { requestNotificationPermission, getNotificationPermission, isNotificationSupported, sendNotification } from "@/lib/notifications";
 import type { DifficultyLevel } from "@/types/study";
 import { DEFAULT_DIFFICULTY_LEVELS } from "@/types/study";
 
@@ -84,6 +84,19 @@ const SettingsPage = () => {
             </div>
             {getNotificationPermission() === "denied" && (
               <p className="text-xs text-destructive">Notification blocked — browser settings থেকে allow করো</p>
+            )}
+            {getNotificationPermission() === "granted" && (
+              <button
+                onClick={() => {
+                  sendNotification("🔔 Test Notification!", {
+                    body: "Notification ঠিকমতো কাজ করছে! 🎉",
+                    tag: "test",
+                  });
+                }}
+                className="w-full py-2.5 rounded-xl bg-secondary text-sm font-medium hover:bg-secondary/80 transition-colors"
+              >
+                Test Notification পাঠাও
+              </button>
             )}
           </div>
         ) : (
