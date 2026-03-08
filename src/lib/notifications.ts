@@ -19,7 +19,14 @@ export function getNotificationPermission(): NotificationPermission | "unsupport
 }
 
 function tryNativeNotification(title: string, options?: NotificationOptions): boolean {
-  if (!("Notification" in window) || Notification.permission !== "granted") return false;
+  if (!("Notification" in window)) {
+    console.log("[Notif] Notification API not available");
+    return false;
+  }
+  if (Notification.permission !== "granted") {
+    console.log("[Notif] Permission not granted:", Notification.permission);
+    return false;
+  }
   
   try {
     const notification = new Notification(title, {
@@ -27,13 +34,15 @@ function tryNativeNotification(title: string, options?: NotificationOptions): bo
       badge: "/icon-192.png",
       ...options,
     });
+    console.log("[Notif] Native notification sent successfully");
     setTimeout(() => notification.close(), 5000);
     notification.onclick = () => {
       window.focus();
       notification.close();
     };
     return true;
-  } catch {
+  } catch (err) {
+    console.error("[Notif] Native notification failed:", err);
     return false;
   }
 }
