@@ -1,10 +1,12 @@
 import { useState, useMemo } from "react";
 import { useStudy } from "@/contexts/StudyContext";
 import { motion } from "framer-motion";
-import { ChevronLeft, ChevronRight, Clock, BookOpen, RotateCcw } from "lucide-react";
+import { ChevronLeft, ChevronRight, Clock, BookOpen, RotateCcw, Sparkles, ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 const CalendarView = () => {
   const { state } = useStudy();
+  const navigate = useNavigate();
   const [currentDate, setCurrentDate] = useState(new Date());
 
   const year = currentDate.getFullYear();
@@ -16,11 +18,9 @@ const CalendarView = () => {
   const prevMonth = () => setCurrentDate(new Date(year, month - 1, 1));
   const nextMonth = () => setCurrentDate(new Date(year, month + 1, 1));
 
-  // Aggregate data for each day
   const dayData = useMemo(() => {
     const data: Record<string, { minutes: number; sessions: number; tasks: { name: string; type: string; subjectColor: string }[] }> = {};
 
-    // Sessions
     state.sessions.forEach(s => {
       if (!s.completed) return;
       const day = s.startTime.split("T")[0];
@@ -29,7 +29,6 @@ const CalendarView = () => {
       data[day].sessions++;
     });
 
-    // Planned tasks
     state.studyPlans.forEach(plan => {
       plan.tasks.forEach(task => {
         if (!data[task.date]) data[task.date] = { minutes: 0, sessions: 0, tasks: [] };
@@ -52,7 +51,6 @@ const CalendarView = () => {
     return data;
   }, [state.sessions, state.studyPlans, state.subjects]);
 
-  // Exam dates
   const examDates = useMemo(() => {
     const dates: Record<string, string> = {};
     state.studyPlans.forEach(p => { dates[p.examDate] = p.examName; });
@@ -62,7 +60,6 @@ const CalendarView = () => {
   const [selectedDay, setSelectedDay] = useState<string | null>(null);
   const selectedDayData = selectedDay ? dayData[selectedDay] : null;
 
-  // Days until next exam
   const nextExam = useMemo(() => {
     const upcoming = state.studyPlans
       .filter(p => new Date(p.examDate) >= new Date())
@@ -83,30 +80,36 @@ const CalendarView = () => {
 
       {/* Exam Countdown */}
       {nextExam && (
-        <motion.div initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-4">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center">
-              <Clock className="w-5 h-5 text-destructive" />
-            </div>
-            <div>
-              <p className="font-medium text-sm">{nextExam.name}</p>
-              <p className="text-xs text-muted-foreground">{nextExam.days} days remaining</p>
-            </div>
-            <div className="ml-auto text-2xl font-semibold tabular-nums">{nextExam.days}</div>
+        <motion.button
+          initial={{ opacity: 0, y: 8 }}
+          animate={{ opacity: 1, y: 0 }}
+          onClick={() => navigate("/plan")}
+          className="glass-card-elevated p-4 w-full flex items-center gap-3 text-left hover-lift"
+        >
+          <div className="w-10 h-10 rounded-xl bg-destructive/10 flex items-center justify-center">
+            <Clock className="w-5 h-5 text-destructive" />
           </div>
-        </motion.div>
+          <div className="flex-1">
+            <p className="font-medium text-sm">{nextExam.name}</p>
+            <p className="text-xs text-muted-foreground">{nextExam.days} days remaining</p>
+          </div>
+          <div className="text-right">
+            <p className="text-2xl font-bold tabular-nums">{nextExam.days}</p>
+            <p className="text-[10px] text-muted-foreground">days</p>
+          </div>
+        </motion.button>
       )}
 
       {/* Calendar */}
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="glass-card p-4">
         <div className="flex items-center justify-between mb-4">
-          <button onClick={prevMonth} className="p-2 rounded-lg hover:bg-secondary transition-colors">
+          <button onClick={prevMonth} className="p-2 rounded-xl hover:bg-secondary transition-colors">
             <ChevronLeft className="w-4 h-4" />
           </button>
           <h2 className="font-semibold text-sm">
             {currentDate.toLocaleDateString("en-US", { month: "long", year: "numeric" })}
           </h2>
-          <button onClick={nextMonth} className="p-2 rounded-lg hover:bg-secondary transition-colors">
+          <button onClick={nextMonth} className="p-2 rounded-xl hover:bg-secondary transition-colors">
             <ChevronRight className="w-4 h-4" />
           </button>
         </div>
@@ -132,8 +135,8 @@ const CalendarView = () => {
               <button
                 key={day}
                 onClick={() => setSelectedDay(isSelected ? null : dateStr)}
-                className={`relative aspect-square flex flex-col items-center justify-center rounded-lg text-sm transition-all ${
-                  isSelected ? "bg-foreground text-primary-foreground" :
+                className={`relative aspect-square flex flex-col items-center justify-center rounded-xl text-sm transition-all ${
+                  isSelected ? "bg-foreground text-primary-foreground scale-105 shadow-sm" :
                   isToday ? "bg-accent/15 text-foreground font-semibold" :
                   isExam ? "bg-destructive/10 text-destructive font-semibold" :
                   "hover:bg-secondary"
@@ -154,8 +157,7 @@ const CalendarView = () => {
           })}
         </div>
 
-        {/* Legend */}
-        <div className="flex items-center gap-4 mt-3 pt-3 border-t border-border">
+        <div className="flex items-center gap-4 mt-3 pt-3 border-t border-border/50">
           <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground">
             <div className="w-2 h-2 rounded-full bg-success" /> Studied
           </div>
@@ -175,33 +177,43 @@ const CalendarView = () => {
           animate={{ opacity: 1, y: 0 }}
           className="glass-card p-4 space-y-3"
         >
-          <p className="font-medium text-sm">
-            {new Date(selectedDay + "T00:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
-          </p>
+          <div className="flex items-center justify-between">
+            <p className="font-medium text-sm">
+              {new Date(selectedDay + "T00:00:00").toLocaleDateString("en-US", { weekday: "long", month: "long", day: "numeric" })}
+            </p>
+            {selectedDay === today && (
+              <button
+                onClick={() => navigate("/timer")}
+                className="flex items-center gap-1 text-[10px] font-medium px-2.5 py-1 rounded-full bg-foreground text-primary-foreground"
+              >
+                <Sparkles className="w-3 h-3" /> Focus
+              </button>
+            )}
+          </div>
 
           {examDates[selectedDay] && (
-            <div className="flex items-center gap-2 text-sm text-destructive">
-              <Clock className="w-3.5 h-3.5" />
-              <span className="font-medium">{examDates[selectedDay]}</span>
+            <div className="flex items-center gap-2 text-sm">
+              <span className="chip-danger">{examDates[selectedDay]}</span>
             </div>
           )}
 
           {selectedDayData ? (
             <>
               {selectedDayData.minutes > 0 && (
-                <div className="flex items-center gap-2 text-sm text-muted-foreground">
-                  <Clock className="w-3.5 h-3.5" />
-                  <span>{selectedDayData.minutes} min studied · {selectedDayData.sessions} sessions</span>
+                <div className="flex items-center gap-3 p-2.5 rounded-xl bg-success/8">
+                  <Clock className="w-3.5 h-3.5 text-success" />
+                  <span className="text-sm">{selectedDayData.minutes} min studied</span>
+                  <span className="text-[10px] text-muted-foreground">· {selectedDayData.sessions} sessions</span>
                 </div>
               )}
               {selectedDayData.tasks.length > 0 && (
                 <div className="space-y-1">
                   {selectedDayData.tasks.map((task, i) => (
-                    <div key={i} className="flex items-center gap-2 text-sm">
-                      <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: `hsl(${task.subjectColor})` }} />
+                    <div key={i} className="flex items-center gap-2.5 p-2 rounded-xl hover:bg-secondary/50 transition-colors text-sm">
+                      <div className="w-2 h-2 rounded-full flex-shrink-0" style={{ backgroundColor: `hsl(${task.subjectColor})` }} />
                       <span className="flex-1 truncate">{task.name}</span>
                       {task.type === "revision" && (
-                        <span className="text-[10px] px-1.5 py-0.5 rounded-md bg-accent/15 text-accent flex items-center gap-0.5">
+                        <span className="chip-accent flex items-center gap-0.5">
                           <RotateCcw className="w-2.5 h-2.5" /> Review
                         </span>
                       )}
