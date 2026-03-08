@@ -44,6 +44,7 @@ interface StudyContextValue {
   getHeatmapData: () => Record<string, number>;
   getSubjectProgress: (subjectId: string) => number;
   getTodayPlanTask: () => { planId: string; taskId: string; topicId: string; subjectId: string } | null;
+  getTodayPlanTasks: () => { planId: string; taskId: string; topicId: string; subjectId: string; estimatedMinutes: number; type: "study" | "revision"; completed: boolean }[];
 }
 
 const StudyContext = createContext<StudyContextValue | null>(null);
