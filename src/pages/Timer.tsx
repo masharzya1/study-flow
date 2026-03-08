@@ -6,6 +6,7 @@ import { AmbientSounds, type AudioState } from "@/components/AmbientSounds";
 import { NetworkIndicator } from "@/components/NetworkIndicator";
 import { MiniPlayer } from "@/components/MiniPlayer";
 import { SubjectIcon } from "@/components/SubjectIcon";
+import { VictoryScreen } from "@/components/VictoryScreen";
 import { fireSessionComplete, fireStreakCelebration } from "@/lib/confetti";
 import type { StudySession } from "@/types/study";
 
@@ -24,7 +25,7 @@ const Timer = () => {
   const [showTopicSelector, setShowTopicSelector] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [useTopicTime, setUseTopicTime] = useState(true);
-  const [showCelebration, setShowCelebration] = useState(false);
+  const [victoryData, setVictoryData] = useState<{ show: boolean; topicName: string; xpGained: number; newLevel?: number; isLevelUp: boolean }>({ show: false, topicName: "", xpGained: 0, isLevelUp: false });
   const [celebrationStreak, setCelebrationStreak] = useState(0);
   const [audioState, setAudioState] = useState<AudioState | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
@@ -140,17 +141,19 @@ const Timer = () => {
               incrementSessionsCompleted();
               sessionStartRef.current = null;
 
-              // 🎉 Celebration!
-              fireSessionComplete();
-              // Timer complete
+              // 🎮 Gaming Victory Screen!
+              const topicDisplayName = sourceMode === "free" && freeTopicInfo
+                ? freeTopicInfo.topicName
+                : (selectedTask ? selectedTask.topicName : "Focus Session");
               const currentStreak = getStreak();
-              if (currentStreak > 0 && currentStreak % 3 === 0) {
-                setTimeout(() => fireStreakCelebration(currentStreak), 800);
-                
-              }
               setCelebrationStreak(currentStreak);
-              setShowCelebration(true);
-              setTimeout(() => setShowCelebration(false), 3000);
+              setVictoryData({
+                show: true,
+                topicName: topicDisplayName,
+                xpGained: Math.round(focusDuration * 2),
+                newLevel: undefined,
+                isLevelUp: false,
+              });
 
               const nextTask = incompleteTasks.find(t => t.taskId !== selectedTaskId);
               if (nextTask) setSelectedTaskId(nextTask.taskId);
@@ -197,34 +200,15 @@ const Timer = () => {
         <NetworkIndicator needsInternet={needsInternet} />
       </div>
 
-      {/* Celebration Overlay */}
-      <AnimatePresence>
-        {showCelebration && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8, y: -20 }}
-            className="fixed inset-0 z-40 flex items-center justify-center pointer-events-none"
-          >
-            <div className="glass-card-elevated p-6 text-center space-y-2">
-              <motion.div
-                animate={{ rotate: [0, -10, 10, -10, 0] }}
-                transition={{ duration: 0.5 }}
-                className="text-4xl"
-              >
-                🎉
-              </motion.div>
-              <p className="text-lg font-semibold">Session Complete!</p>
-              {celebrationStreak > 0 && (
-                <p className="text-sm text-[hsl(var(--warning))]">
-                  🔥 {celebrationStreak} day streak!
-                </p>
-              )}
-              <p className="text-xs text-muted-foreground">Break time — তুমি দারুণ করছো!</p>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Gaming Victory Screen */}
+      <VictoryScreen
+        show={victoryData.show}
+        onClose={() => setVictoryData(prev => ({ ...prev, show: false }))}
+        topicName={victoryData.topicName}
+        xpGained={victoryData.xpGained}
+        newLevel={victoryData.newLevel}
+        isLevelUp={victoryData.isLevelUp}
+      />
 
       <motion.div
         initial={{ opacity: 0, scale: 0.96 }}
