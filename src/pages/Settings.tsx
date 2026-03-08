@@ -2,13 +2,13 @@ import { useState } from "react";
 import { useStudy } from "@/contexts/StudyContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { motion, AnimatePresence } from "framer-motion";
-import { Moon, Sun, Volume2, VolumeX, Clock, Target, Github, Heart, ExternalLink, Layers, Plus, Trash2, Check, Globe, RotateCcw } from "lucide-react";
+import { Volume2, VolumeX, Clock, Target, Github, Heart, ExternalLink, Layers, Plus, Trash2, Check, RotateCcw } from "lucide-react";
 import type { DifficultyLevel } from "@/types/study";
 import { DEFAULT_DIFFICULTY_LEVELS } from "@/types/study";
 
 const SettingsPage = () => {
   const { state, updateSettings } = useStudy();
-  const { t, language, setLanguage } = useLanguage();
+  const { t } = useLanguage();
   const { settings } = state;
   const levels = settings.difficultyLevels || DEFAULT_DIFFICULTY_LEVELS;
 
@@ -51,54 +51,6 @@ const SettingsPage = () => {
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
         <h1 className="text-2xl font-semibold tracking-tight">{t("settings.title")}</h1>
         <p className="text-muted-foreground text-sm mt-0.5">{t("settings.subtitle")}</p>
-      </motion.div>
-
-      {/* Language */}
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.02 }} className="glass-card p-4 space-y-3">
-        <h2 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-          <Globe className="w-3.5 h-3.5" /> {t("settings.language")}
-        </h2>
-        <div className="flex gap-2">
-          <button
-            onClick={() => setLanguage("en")}
-            className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-xl text-sm font-medium transition-all ${
-              language === "en" ? "bg-foreground text-primary-foreground" : "bg-secondary text-muted-foreground"
-            }`}
-          >
-            🇺🇸 {t("settings.english")}
-          </button>
-          <button
-            onClick={() => setLanguage("bn")}
-            className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-xl text-sm font-medium transition-all ${
-              language === "bn" ? "bg-foreground text-primary-foreground" : "bg-secondary text-muted-foreground"
-            }`}
-          >
-            🇧🇩 {t("settings.bengali")}
-          </button>
-        </div>
-      </motion.div>
-
-      {/* Appearance */}
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.04 }} className="glass-card p-4 space-y-3">
-        <h2 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground">{t("settings.appearance")}</h2>
-        <div className="flex gap-2">
-          <button
-            onClick={() => updateSettings({ theme: "light" })}
-            className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-xl text-sm font-medium transition-all ${
-              settings.theme === "light" ? "bg-foreground text-primary-foreground" : "bg-secondary text-muted-foreground"
-            }`}
-          >
-            <Sun className="w-4 h-4" /> {t("settings.light")}
-          </button>
-          <button
-            onClick={() => updateSettings({ theme: "dark" })}
-            className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-xl text-sm font-medium transition-all ${
-              settings.theme === "dark" ? "bg-foreground text-primary-foreground" : "bg-secondary text-muted-foreground"
-            }`}
-          >
-            <Moon className="w-4 h-4" /> {t("settings.dark")}
-          </button>
-        </div>
       </motion.div>
 
       {/* Timer */}

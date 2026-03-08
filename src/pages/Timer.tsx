@@ -50,7 +50,10 @@ const Timer = () => {
   const savedTimer = useRef(loadTimerState());
 
   const [mode, setMode] = useState<"focus" | "break">(savedTimer.current?.mode || "focus");
-  const [isRunning, setIsRunning] = useState(false);
+  const [isRunning, setIsRunning] = useState(() => {
+    const saved = loadTimerState();
+    return saved?.isRunning || false;
+  });
   const [timeLeft, setTimeLeft] = useState(pomodoroFocus * 60);
   const [showSettings, setShowSettings] = useState(false);
   const [focusMin, setFocusMin] = useState(pomodoroFocus);
