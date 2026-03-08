@@ -163,7 +163,7 @@ export function AmbientSounds({ isPlaying, currentMode }: AmbientSoundsProps) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.97 }}
             onClick={e => e.stopPropagation()}
-            className="absolute bottom-full mb-2 right-0 glass-card p-3 space-y-3 min-w-[280px] max-w-[320px] z-50"
+            className="absolute top-full mt-2 right-0 glass-card p-3 space-y-3 min-w-[280px] max-w-[320px] z-50 max-h-[70vh] overflow-y-auto scrollbar-hide"
           >
             {/* Tabs */}
             <div className="flex gap-1 bg-secondary/80 rounded-xl p-1">
