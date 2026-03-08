@@ -50,6 +50,7 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <OnboardingTour />
+            <InstallPrompt />
             <AppLayout>
               <AnimatedRoutes />
             </AppLayout>

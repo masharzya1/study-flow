@@ -21,9 +21,9 @@ export default defineConfig(({ mode }) => ({
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
       },
       manifest: {
-        name: "StudyForge — Smart Study Planner",
-        short_name: "StudyForge",
-        description: "The most powerful free study planner for students.",
+        name: "Paideia — Smart Study Companion",
+        short_name: "Paideia",
+        description: "Your intelligent study companion inspired by the Greek ideal of education.",
         theme_color: "#faf8f5",
         background_color: "#faf8f5",
         display: "standalone",

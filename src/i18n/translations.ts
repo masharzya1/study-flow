@@ -440,7 +440,7 @@ const translations: Record<Language, Record<string, string>> = {
     "comp.sessionComplete": "সেশন সম্পন্ন",
 
     // Onboarding
-    "onboard.welcome": "StudyForge-এ স্বাগতম",
+    "onboard.welcome": "Paideia-তে স্বাগতম",
     "onboard.welcomeDesc": "তোমার ব্যক্তিগত পড়ার সঙ্গী। চলো শুরু করি!",
     "onboard.step1Title": "বিষয় তৈরি করো",
     "onboard.step1Desc": "তোমার বিষয়, অধ্যায় এবং টপিক যোগ করো।",

@@ -3,6 +3,7 @@ import { LayoutDashboard, BookOpen, Timer, BarChart3, Settings, CalendarDays, Sp
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { HeaderControls } from "@/components/HeaderControls";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
@@ -10,14 +11,14 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const { t } = useLanguage();
 
   const navItems = [
-    { to: "/", icon: LayoutDashboard, labelKey: "nav.home" },
-    { to: "/subjects", icon: BookOpen, labelKey: "nav.subjects" },
-    { to: "/timer", icon: Timer, labelKey: "nav.focus" },
-    { to: "/plan", icon: Sparkles, labelKey: "nav.plan" },
-    { to: "/calendar", icon: CalendarDays, labelKey: "nav.calendar" },
-    { to: "/revision", icon: RotateCcw, labelKey: "nav.revision" },
-    { to: "/analytics", icon: BarChart3, labelKey: "nav.stats" },
-    { to: "/settings", icon: Settings, labelKey: "nav.settings" },
+    { to: "/", icon: LayoutDashboard, labelKey: "nav.home", tourId: undefined },
+    { to: "/subjects", icon: BookOpen, labelKey: "nav.subjects", tourId: "nav-subjects" },
+    { to: "/timer", icon: Timer, labelKey: "nav.focus", tourId: "nav-focus" },
+    { to: "/plan", icon: Sparkles, labelKey: "nav.plan", tourId: "nav-plan" },
+    { to: "/calendar", icon: CalendarDays, labelKey: "nav.calendar", tourId: undefined },
+    { to: "/revision", icon: RotateCcw, labelKey: "nav.revision", tourId: undefined },
+    { to: "/analytics", icon: BarChart3, labelKey: "nav.stats", tourId: "nav-analytics" },
+    { to: "/settings", icon: Settings, labelKey: "nav.settings", tourId: undefined },
   ];
 
   const mobileMainItems = navItems.slice(0, 4);
@@ -28,11 +29,16 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     <div className="min-h-screen flex flex-col md:flex-row">
       {/* Desktop Sidebar */}
       <aside className="hidden md:flex flex-col w-16 lg:w-56 border-r border-border bg-card fixed inset-y-0 left-0 z-40">
-        <div className="p-4 lg:px-5 flex items-center gap-2">
-          <div className="w-7 h-7 rounded-lg bg-foreground flex items-center justify-center">
-            <span className="text-primary-foreground text-xs font-bold">SF</span>
+        <div className="p-4 lg:px-5 flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <div className="w-7 h-7 rounded-lg bg-foreground flex items-center justify-center">
+              <span className="text-primary-foreground text-xs font-bold">π</span>
+            </div>
+            <h1 className="font-semibold text-base hidden lg:block tracking-tight">Paideia</h1>
           </div>
-          <h1 className="font-semibold text-base hidden lg:block tracking-tight">StudyForge</h1>
+          <div className="hidden lg:flex">
+            <HeaderControls />
+          </div>
         </div>
         <nav className="flex-1 flex flex-col gap-0.5 px-2 lg:px-3 mt-2">
           {navItems.map(item => {
@@ -41,6 +47,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               <NavLink
                 key={item.to}
                 to={item.to}
+                data-tour={item.tourId}
                 className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
                   active
                     ? "bg-foreground text-primary-foreground"
@@ -57,6 +64,17 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           <p className="text-[11px] text-muted-foreground">{t("nav.freeOpenSource")}</p>
         </div>
       </aside>
+
+      {/* Mobile Header */}
+      <header className="md:hidden sticky top-0 z-40 flex items-center justify-between px-4 py-2.5 bg-card/90 backdrop-blur-xl border-b border-border/60">
+        <div className="flex items-center gap-2">
+          <div className="w-6 h-6 rounded-md bg-foreground flex items-center justify-center">
+            <span className="text-primary-foreground text-[10px] font-bold">π</span>
+          </div>
+          <span className="font-semibold text-sm tracking-tight">Paideia</span>
+        </div>
+        <HeaderControls compact />
+      </header>
 
       {/* Main Content */}
       <main className="flex-1 md:ml-16 lg:ml-56">
@@ -87,6 +105,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                     key={item.to}
                     to={item.to}
                     onClick={() => setShowMore(false)}
+                    data-tour={item.tourId}
                     className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
                       active ? "bg-foreground text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-secondary"
                     }`}
@@ -106,13 +125,12 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <div className="flex items-center justify-around py-1.5">
           {mobileMainItems.map(item => {
             const active = location.pathname === item.to;
-            const tourId = item.to === "/subjects" ? "nav-subjects" : undefined;
             return (
               <NavLink
                 key={item.to}
                 to={item.to}
                 onClick={() => setShowMore(false)}
-                data-tour={tourId}
+                data-tour={item.tourId}
                 className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-[10px] font-medium transition-all ${
                   active ? "text-foreground" : "text-muted-foreground"
                 }`}
@@ -124,7 +142,6 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           })}
           <button
             onClick={() => setShowMore(prev => !prev)}
-            data-tour="nav-stats"
             className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-[10px] font-medium transition-all ${
               isMoreActive || showMore ? "text-foreground" : "text-muted-foreground"
             }`}
