@@ -1,12 +1,35 @@
 import { useStudy } from "@/contexts/StudyContext";
 import { motion } from "framer-motion";
-import { Clock, Flame, Target, BookOpen, ArrowRight, Sparkles, RotateCcw, AlertTriangle, CalendarDays, Zap } from "lucide-react";
+import { Clock, Flame, Target, BookOpen, ArrowRight, Sparkles, RotateCcw, AlertTriangle, CalendarDays, Zap, Quote } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { StudyHeatmap } from "@/components/StudyHeatmap";
 import { QuickStats } from "@/components/QuickStats";
 import { TodayTasks } from "@/components/TodayTasks";
 import { SubjectCards } from "@/components/SubjectCards";
 import { useMemo } from "react";
+
+const MOTIVATIONAL_QUOTES = [
+  { text: "The secret of getting ahead is getting started.", author: "Mark Twain" },
+  { text: "It does not matter how slowly you go as long as you do not stop.", author: "Confucius" },
+  { text: "Success is the sum of small efforts repeated day in and day out.", author: "Robert Collier" },
+  { text: "The beautiful thing about learning is that nobody can take it away from you.", author: "B.B. King" },
+  { text: "Education is the passport to the future.", author: "Malcolm X" },
+  { text: "Push yourself, because no one else is going to do it for you.", author: "Unknown" },
+  { text: "Don't watch the clock; do what it does. Keep going.", author: "Sam Levenson" },
+  { text: "The expert in anything was once a beginner.", author: "Helen Hayes" },
+  { text: "Study hard, for the well is deep, and our brains are shallow.", author: "Richard Baxter" },
+  { text: "Small daily improvements over time lead to stunning results.", author: "Robin Sharma" },
+  { text: "You don't have to be great to start, but you have to start to be great.", author: "Zig Ziglar" },
+  { text: "The only way to do great work is to love what you do.", author: "Steve Jobs" },
+  { text: "Believe you can and you're halfway there.", author: "Theodore Roosevelt" },
+  { text: "Success is not final, failure is not fatal: it is the courage to continue that counts.", author: "Winston Churchill" },
+  { text: "তুমি পারবে, শুধু চেষ্টা চালিয়ে যাও।", author: "Proverb" },
+  { text: "A little progress each day adds up to big results.", author: "Satya Nani" },
+  { text: "The more that you read, the more things you will know.", author: "Dr. Seuss" },
+  { text: "Dream big, start small, act now.", author: "Robin Sharma" },
+  { text: "Hard work beats talent when talent doesn't work hard.", author: "Tim Notke" },
+  { text: "Your future is created by what you do today, not tomorrow.", author: "Robert Kiyosaki" },
+];
 
 const Dashboard = () => {
   const { state, getTodayMinutes, getStreak } = useStudy();
@@ -27,6 +50,12 @@ const Dashboard = () => {
   ];
 
   const greeting = new Date().getHours() < 12 ? "morning" : new Date().getHours() < 18 ? "afternoon" : "evening";
+
+  // Daily quote based on day of year
+  const dailyQuote = useMemo(() => {
+    const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
+    return MOTIVATIONAL_QUOTES[dayOfYear % MOTIVATIONAL_QUOTES.length];
+  }, []);
 
   // Revision items due today or overdue
   const revisionDue = useMemo(() => {
@@ -84,6 +113,20 @@ const Dashboard = () => {
             ? `${streak}-day streak. Keep going.`
             : "Start studying to build your streak."}
         </p>
+      </motion.div>
+
+      {/* Daily Quote */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.03 }}
+        className="glass-card p-4 flex gap-3 items-start"
+      >
+        <Quote className="w-5 h-5 text-muted-foreground flex-shrink-0 mt-0.5" />
+        <div>
+          <p className="text-sm italic leading-relaxed">"{dailyQuote.text}"</p>
+          <p className="text-[11px] text-muted-foreground mt-1">— {dailyQuote.author}</p>
+        </div>
       </motion.div>
 
       {/* Daily Progress + Quick Actions */}
