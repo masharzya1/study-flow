@@ -356,7 +356,7 @@ const Timer = () => {
           )}
 
           {sourceMode === "plan" && resolvedTasks.length === 0 && (
-            <p className="text-xs text-muted-foreground py-2">আজকের জন্য কোনো plan task নেই। Free Topic mode ব্যবহার করো!</p>
+            <p className="text-xs text-muted-foreground py-2">No plan tasks for today. Try Free Topic mode!</p>
           )}
 
           {/* Free Topic Picker */}
