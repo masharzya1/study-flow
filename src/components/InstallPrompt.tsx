@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { Download, X, Smartphone } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-const INSTALL_DISMISSED_KEY = "paideia_install_dismissed";
+const INSTALL_DISMISSED_KEY = "penzo_install_dismissed";
 
 interface BeforeInstallPromptEvent extends Event {
   prompt: () => Promise<void>;
