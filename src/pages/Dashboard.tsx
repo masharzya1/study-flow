@@ -1,6 +1,6 @@
 import { useStudy } from "@/contexts/StudyContext";
 import { motion } from "framer-motion";
-import { Clock, Flame, Target, BookOpen, ArrowRight, Sparkles, RotateCcw, AlertTriangle, CalendarDays, Zap, Quote } from "lucide-react";
+import { Clock, Flame, Target, BookOpen, ArrowRight, Sparkles, RotateCcw, AlertTriangle, CalendarDays, Zap, Quote, Trophy } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { StudyHeatmap } from "@/components/StudyHeatmap";
 import { QuickStats } from "@/components/QuickStats";
@@ -115,7 +115,53 @@ const Dashboard = () => {
         </p>
       </motion.div>
 
-      {/* Daily Quote */}
+      {/* XP / Level Bar */}
+      {state.xp > 0 && (
+        <motion.div
+          initial={{ opacity: 0, y: 12 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.02 }}
+          className="glass-card p-4"
+        >
+          <div className="flex items-center justify-between mb-2">
+            <div className="flex items-center gap-2">
+              <Trophy className="w-4 h-4 text-accent" />
+              <span className="text-sm font-semibold">Level {state.level}</span>
+            </div>
+            <span className="text-xs text-muted-foreground">{state.xp} XP total</span>
+          </div>
+          <div className="h-2 rounded-full bg-secondary overflow-hidden">
+            <motion.div
+              className="h-full rounded-full"
+              style={{ background: "hsl(var(--accent))" }}
+              initial={{ width: 0 }}
+              animate={{ width: `${(() => {
+                const xpPerLevel = (l: number) => l * 100;
+                let remaining = state.xp;
+                let lvl = 1;
+                while (remaining >= xpPerLevel(lvl)) {
+                  remaining -= xpPerLevel(lvl);
+                  lvl++;
+                }
+                return Math.round((remaining / xpPerLevel(lvl)) * 100);
+              })()}%` }}
+              transition={{ duration: 0.8, ease: "easeOut" }}
+            />
+          </div>
+          <p className="text-[10px] text-muted-foreground mt-1.5">
+            {state.totalTopicsCompleted} topics completed • Next level: {(() => {
+              const xpPerLevel = (l: number) => l * 100;
+              let remaining = state.xp;
+              let lvl = 1;
+              while (remaining >= xpPerLevel(lvl)) {
+                remaining -= xpPerLevel(lvl);
+                lvl++;
+              }
+              return xpPerLevel(lvl) - remaining;
+            })()} XP needed
+          </p>
+        </motion.div>
+      )}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}

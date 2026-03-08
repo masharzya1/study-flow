@@ -1,13 +1,14 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useStudy } from "@/contexts/StudyContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, ChevronRight, Check, Trash2, X } from "lucide-react";
 import { SUBJECT_COLORS, SUBJECT_ICONS } from "@/types/study";
 import { SubjectIcon } from "@/components/SubjectIcon";
+import { VictoryScreen } from "@/components/VictoryScreen";
 import type { Subject, Chapter, Topic } from "@/types/study";
 
 const Subjects = () => {
-  const { state, addSubject, updateSubject, deleteSubject, toggleTopicComplete, getSubjectProgress } = useStudy();
+  const { state, addSubject, updateSubject, deleteSubject, toggleTopicComplete, getSubjectProgress, gainXp } = useStudy();
   const [showCreate, setShowCreate] = useState(false);
   const [expandedSubject, setExpandedSubject] = useState<string | null>(null);
   const [expandedChapter, setExpandedChapter] = useState<string | null>(null);
@@ -19,6 +20,24 @@ const Subjects = () => {
   const [addingTopic, setAddingTopic] = useState<string | null>(null);
   const [topicName, setTopicName] = useState("");
   const [topicDifficulty, setTopicDifficulty] = useState<1 | 2 | 3 | 4 | 5>(3);
+  
+  // Victory screen state
+  const [victoryData, setVictoryData] = useState<{
+    show: boolean;
+    topicName: string;
+    xpGained: number;
+    newLevel: number;
+    isLevelUp: boolean;
+  }>({ show: false, topicName: "", xpGained: 0, newLevel: 0, isLevelUp: false });
+
+  const handleTopicToggle = useCallback((subjectId: string, chapterId: string, topicId: string, topicName: string, difficulty: number) => {
+    const wasCompleted = toggleTopicComplete(subjectId, chapterId, topicId);
+    if (wasCompleted) {
+      const xpGained = difficulty * 25; // 25-125 XP based on difficulty
+      const { newLevel, isLevelUp } = gainXp(xpGained);
+      setVictoryData({ show: true, topicName, xpGained, newLevel, isLevelUp });
+    }
+  }, [toggleTopicComplete, gainXp]);
 
   const createSubject = () => {
     if (!newName.trim()) return;
@@ -226,7 +245,7 @@ const Subjects = () => {
                                     {chapterTopics.map(topic => (
                                       <button
                                         key={topic.id}
-                                        onClick={() => toggleTopicComplete(subject.id, chapter.id, topic.id)}
+                                        onClick={() => handleTopicToggle(subject.id, chapter.id, topic.id, topic.name, topic.difficulty)}
                                         className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-secondary/60 transition-colors text-left text-sm"
                                       >
                                         <div className={`w-4 h-4 rounded-full border-[1.5px] flex items-center justify-center flex-shrink-0 ${
@@ -318,6 +337,16 @@ const Subjects = () => {
           );
         })}
       </div>
+
+      {/* Victory Screen */}
+      <VictoryScreen
+        show={victoryData.show}
+        onClose={() => setVictoryData(prev => ({ ...prev, show: false }))}
+        topicName={victoryData.topicName}
+        xpGained={victoryData.xpGained}
+        newLevel={victoryData.newLevel}
+        isLevelUp={victoryData.isLevelUp}
+      />
     </div>
   );
 };
