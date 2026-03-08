@@ -19,7 +19,8 @@ const Subjects = () => {
   const [chapterName, setChapterName] = useState("");
   const [addingTopic, setAddingTopic] = useState<string | null>(null);
   const [topicName, setTopicName] = useState("");
-  const [topicDifficulty, setTopicDifficulty] = useState<1 | 2 | 3 | 4 | 5>(3);
+  const levels = state.settings.difficultyLevels || [];
+  const [topicDifficulty, setTopicDifficulty] = useState<number>(levels.length > 0 ? levels[Math.floor(levels.length / 2)]?.id || 3 : 3);
   
   // Victory screen state
   const [victoryData, setVictoryData] = useState<{
@@ -274,11 +275,11 @@ const Subjects = () => {
                                         />
                                         <select
                                           value={topicDifficulty}
-                                          onChange={e => setTopicDifficulty(Number(e.target.value) as 1 | 2 | 3 | 4 | 5)}
+                                          onChange={e => setTopicDifficulty(Number(e.target.value))}
                                           className="px-2 py-1 text-xs rounded-lg bg-secondary text-foreground border-0"
                                         >
-                                          {[1, 2, 3, 4, 5].map(d => (
-                                            <option key={d} value={d}>Lv {d}</option>
+                                          {levels.map(d => (
+                                            <option key={d.id} value={d.id}>{d.label}</option>
                                           ))}
                                         </select>
                                         <button onClick={() => createTopic(subject.id, chapter.id)} className="text-foreground text-xs font-medium">Add</button>
