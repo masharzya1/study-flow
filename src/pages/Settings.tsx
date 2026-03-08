@@ -1,8 +1,7 @@
 import { useState } from "react";
 import { useStudy } from "@/contexts/StudyContext";
 import { motion, AnimatePresence } from "framer-motion";
-import { Moon, Sun, Volume2, VolumeX, Clock, Target, Github, Heart, ExternalLink, Layers, Plus, Trash2, Check, Bell, BellOff } from "lucide-react";
-import { requestNotificationPermission, getNotificationPermission, isNotificationSupported, sendNotification } from "@/lib/notifications";
+import { Moon, Sun, Volume2, VolumeX, Clock, Target, Github, Heart, ExternalLink, Layers, Plus, Trash2, Check } from "lucide-react";
 import type { DifficultyLevel } from "@/types/study";
 import { DEFAULT_DIFFICULTY_LEVELS } from "@/types/study";
 
