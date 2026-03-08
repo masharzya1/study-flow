@@ -1,4 +1,5 @@
 import { motion } from "framer-motion";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { Music, BookOpen, Pause, Play, SkipForward, SkipBack, Shuffle, Repeat } from "lucide-react";
 
 interface MiniPlayerProps {
@@ -20,6 +21,7 @@ export function MiniPlayer({
   shuffle, repeat,
   onTogglePlay, onNext, onPrev, onToggleShuffle, onToggleRepeat,
 }: MiniPlayerProps) {
+  const { t } = useLanguage();
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -34,58 +36,23 @@ export function MiniPlayer({
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
-              {isLoading ? "Loading..." : type === "quran" ? "Quran Tilawat" : "Now Playing"}
+              {isLoading ? t("comp.loading") : type === "quran" ? t("comp.quranTilawat") : t("comp.nowPlaying")}
             </p>
             <p className="text-xs font-medium truncate">{trackTitle}</p>
           </div>
         </div>
-
-        {/* Controls row */}
         <div className="flex items-center justify-center gap-3">
-          <button
-            onClick={onToggleShuffle}
-            className={`p-1.5 rounded-lg transition-colors ${
-              shuffle ? "bg-foreground text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-            }`}
-            title="Shuffle"
-          >
-            <Shuffle className="w-3.5 h-3.5" />
-          </button>
-
-          <button onClick={onPrev} className="p-1.5 hover:bg-secondary rounded-lg transition-colors" title="Previous">
-            <SkipBack className="w-4 h-4 text-muted-foreground" />
-          </button>
-
-          <button
-            onClick={onTogglePlay}
-            className="w-9 h-9 rounded-full bg-foreground text-primary-foreground flex items-center justify-center flex-shrink-0"
-          >
+          <button onClick={onToggleShuffle} className={`p-1.5 rounded-lg transition-colors ${shuffle ? "bg-foreground text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}><Shuffle className="w-3.5 h-3.5" /></button>
+          <button onClick={onPrev} className="p-1.5 hover:bg-secondary rounded-lg transition-colors"><SkipBack className="w-4 h-4 text-muted-foreground" /></button>
+          <button onClick={onTogglePlay} className="w-9 h-9 rounded-full bg-foreground text-primary-foreground flex items-center justify-center flex-shrink-0">
             {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 ml-0.5" />}
           </button>
-
-          <button onClick={onNext} className="p-1.5 hover:bg-secondary rounded-lg transition-colors" title="Next">
-            <SkipForward className="w-4 h-4 text-muted-foreground" />
-          </button>
-
-          <button
-            onClick={onToggleRepeat}
-            className={`p-1.5 rounded-lg transition-colors ${
-              repeat ? "bg-foreground text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-secondary"
-            }`}
-            title="Repeat"
-          >
-            <Repeat className="w-3.5 h-3.5" />
-          </button>
+          <button onClick={onNext} className="p-1.5 hover:bg-secondary rounded-lg transition-colors"><SkipForward className="w-4 h-4 text-muted-foreground" /></button>
+          <button onClick={onToggleRepeat} className={`p-1.5 rounded-lg transition-colors ${repeat ? "bg-foreground text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-secondary"}`}><Repeat className="w-3.5 h-3.5" /></button>
         </div>
-
         {isLoading && (
           <div className="w-full h-0.5 bg-secondary rounded-full overflow-hidden">
-            <motion.div
-              className="h-full bg-foreground rounded-full"
-              initial={{ width: "0%" }}
-              animate={{ width: "90%" }}
-              transition={{ duration: 3, ease: "easeOut" }}
-            />
+            <motion.div className="h-full bg-foreground rounded-full" initial={{ width: "0%" }} animate={{ width: "90%" }} transition={{ duration: 3, ease: "easeOut" }} />
           </div>
         )}
       </div>

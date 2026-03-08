@@ -4,8 +4,10 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, useLocation } from "react-router-dom";
 import { StudyProvider } from "@/contexts/StudyContext";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AppLayout } from "@/components/AppLayout";
 import { SwipeNavigation } from "@/components/SwipeNavigation";
+import { OnboardingTour } from "@/components/OnboardingTour";
 import Dashboard from "@/pages/Dashboard";
 import Subjects from "@/pages/Subjects";
 import Timer from "@/pages/Timer";
@@ -41,15 +43,18 @@ function AnimatedRoutes() {
 const App = () => (
   <QueryClientProvider client={queryClient}>
     <TooltipProvider>
-      <StudyProvider>
-        <Toaster />
-        <Sonner />
-        <BrowserRouter>
-          <AppLayout>
-            <AnimatedRoutes />
-          </AppLayout>
-        </BrowserRouter>
-      </StudyProvider>
+      <LanguageProvider>
+        <StudyProvider>
+          <Toaster />
+          <Sonner />
+          <BrowserRouter>
+            <OnboardingTour />
+            <AppLayout>
+              <AnimatedRoutes />
+            </AppLayout>
+          </BrowserRouter>
+        </StudyProvider>
+      </LanguageProvider>
     </TooltipProvider>
   </QueryClientProvider>
 );
