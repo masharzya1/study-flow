@@ -1,14 +1,43 @@
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useStudy } from "@/contexts/StudyContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { Plus, ChevronRight, Check, Trash2, X } from "lucide-react";
 import { SUBJECT_COLORS, SUBJECT_ICONS } from "@/types/study";
 import { SubjectIcon } from "@/components/SubjectIcon";
+import { VictoryScreen } from "@/components/VictoryScreen";
 import type { Subject, Chapter, Topic } from "@/types/study";
 
 const Subjects = () => {
-  const { state, addSubject, updateSubject, deleteSubject, toggleTopicComplete, getSubjectProgress } = useStudy();
+  const { state, addSubject, updateSubject, deleteSubject, toggleTopicComplete, getSubjectProgress, gainXp } = useStudy();
   const [showCreate, setShowCreate] = useState(false);
+  const [expandedSubject, setExpandedSubject] = useState<string | null>(null);
+  const [expandedChapter, setExpandedChapter] = useState<string | null>(null);
+  const [newName, setNewName] = useState("");
+  const [newColor, setNewColor] = useState(SUBJECT_COLORS[0]);
+  const [newIcon, setNewIcon] = useState(SUBJECT_ICONS[0]);
+  const [addingChapter, setAddingChapter] = useState<string | null>(null);
+  const [chapterName, setChapterName] = useState("");
+  const [addingTopic, setAddingTopic] = useState<string | null>(null);
+  const [topicName, setTopicName] = useState("");
+  const [topicDifficulty, setTopicDifficulty] = useState<1 | 2 | 3 | 4 | 5>(3);
+  
+  // Victory screen state
+  const [victoryData, setVictoryData] = useState<{
+    show: boolean;
+    topicName: string;
+    xpGained: number;
+    newLevel: number;
+    isLevelUp: boolean;
+  }>({ show: false, topicName: "", xpGained: 0, newLevel: 0, isLevelUp: false });
+
+  const handleTopicToggle = useCallback((subjectId: string, chapterId: string, topicId: string, topicName: string, difficulty: number) => {
+    const wasCompleted = toggleTopicComplete(subjectId, chapterId, topicId);
+    if (wasCompleted) {
+      const xpGained = difficulty * 25; // 25-125 XP based on difficulty
+      const { newLevel, isLevelUp } = gainXp(xpGained);
+      setVictoryData({ show: true, topicName, xpGained, newLevel, isLevelUp });
+    }
+  }, [toggleTopicComplete, gainXp]);
   const [expandedSubject, setExpandedSubject] = useState<string | null>(null);
   const [expandedChapter, setExpandedChapter] = useState<string | null>(null);
   const [newName, setNewName] = useState("");
