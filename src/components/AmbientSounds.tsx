@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useStudy } from "@/contexts/StudyContext";
 import { motion, AnimatePresence } from "framer-motion";
-import { Volume2, VolumeX, CloudRain, Wind, TreePine, Music, BookOpen, Play, Pause, SkipForward, ChevronDown } from "lucide-react";
+import { Volume2, VolumeX, CloudRain, Wind, TreePine, Music, BookOpen, Play, Pause, SkipForward, ChevronDown, Loader2 } from "lucide-react";
 import { FOCUS_MUSIC, QURAN_TILAWAT, type MusicTrack } from "@/data/focusMusic";
 
 // Generate ambient sound using Web Audio API oscillators
