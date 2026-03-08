@@ -200,34 +200,15 @@ const Timer = () => {
         <NetworkIndicator needsInternet={needsInternet} />
       </div>
 
-      {/* Celebration Overlay */}
-      <AnimatePresence>
-        {showCelebration && (
-          <motion.div
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8, y: -20 }}
-            className="fixed inset-0 z-40 flex items-center justify-center pointer-events-none"
-          >
-            <div className="glass-card-elevated p-6 text-center space-y-2">
-              <motion.div
-                animate={{ rotate: [0, -10, 10, -10, 0] }}
-                transition={{ duration: 0.5 }}
-                className="text-4xl"
-              >
-                🎉
-              </motion.div>
-              <p className="text-lg font-semibold">Session Complete!</p>
-              {celebrationStreak > 0 && (
-                <p className="text-sm text-[hsl(var(--warning))]">
-                  🔥 {celebrationStreak} day streak!
-                </p>
-              )}
-              <p className="text-xs text-muted-foreground">Break time — তুমি দারুণ করছো!</p>
-            </div>
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Gaming Victory Screen */}
+      <VictoryScreen
+        show={victoryData.show}
+        onClose={() => setVictoryData(prev => ({ ...prev, show: false }))}
+        topicName={victoryData.topicName}
+        xpGained={victoryData.xpGained}
+        newLevel={victoryData.newLevel}
+        isLevelUp={victoryData.isLevelUp}
+      />
 
       <motion.div
         initial={{ opacity: 0, scale: 0.96 }}
