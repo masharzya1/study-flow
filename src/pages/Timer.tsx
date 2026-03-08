@@ -1,13 +1,13 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useStudy } from "@/contexts/StudyContext";
 import { motion, AnimatePresence } from "framer-motion";
-import { Play, Pause, RotateCcw, Coffee, Brain, Settings2 } from "lucide-react";
+import { Play, Pause, RotateCcw, Coffee, Brain, Settings2, ChevronDown, Check, BookOpen } from "lucide-react";
 import { AmbientSounds } from "@/components/AmbientSounds";
 import { SubjectIcon } from "@/components/SubjectIcon";
 import type { StudySession } from "@/types/study";
 
 const Timer = () => {
-  const { state, addSession, updateSettings, incrementSessionsCompleted, getTodayPlanTask } = useStudy();
+  const { state, addSession, updateSettings, incrementSessionsCompleted, getTodayPlanTasks } = useStudy();
   const { pomodoroFocus, pomodoroBreak } = state.settings;
   const today = new Date().toISOString().split("T")[0];
   const sessionsCompleted = state.todaySessionsDate === today ? state.todaySessionsCompleted : 0;
@@ -18,47 +18,63 @@ const Timer = () => {
   const [showSettings, setShowSettings] = useState(false);
   const [focusMin, setFocusMin] = useState(pomodoroFocus);
   const [breakMin, setBreakMin] = useState(pomodoroBreak);
+  const [showTopicSelector, setShowTopicSelector] = useState(false);
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [useTopicTime, setUseTopicTime] = useState(true);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const sessionStartRef = useRef<string | null>(null);
 
-  const totalTime = mode === "focus" ? pomodoroFocus * 60 : pomodoroBreak * 60;
+  // Get all today's plan tasks
+  const todayTasks = getTodayPlanTasks();
+  const incompleteTasks = todayTasks.filter(t => !t.completed);
+
+  // Resolve topic details for all today's tasks
+  const resolvedTasks = useMemo(() => {
+    return todayTasks.map(task => {
+      const subject = state.subjects.find(s => s.id === task.subjectId);
+      let topicName = "Topic";
+      for (const c of subject?.chapters || []) {
+        const t = c.topics.find(tp => tp.id === task.topicId);
+        if (t) { topicName = t.name; break; }
+      }
+      return {
+        ...task,
+        topicName,
+        subjectName: subject?.name || "Unknown",
+        subjectColor: subject?.color || "0 0% 50%",
+        subjectIcon: subject?.icon || "book-open",
+      };
+    });
+  }, [todayTasks, state.subjects]);
+
+  // Auto-select first incomplete task
+  useEffect(() => {
+    if (!selectedTaskId && incompleteTasks.length > 0) {
+      setSelectedTaskId(incompleteTasks[0].taskId);
+    }
+  }, [incompleteTasks, selectedTaskId]);
+
+  const selectedTask = resolvedTasks.find(t => t.taskId === selectedTaskId);
+
+  // Determine timer duration: use topic's estimated time or pomodoro setting
+  const focusDuration = useTopicTime && selectedTask ? selectedTask.estimatedMinutes : pomodoroFocus;
+  const totalTime = mode === "focus" ? focusDuration * 60 : pomodoroBreak * 60;
   const progress = ((totalTime - timeLeft) / totalTime) * 100;
-
-  // Get current plan task context (if any plan exists)
-  const currentPlanTask = getTodayPlanTask();
-
-  // Get topic details for the plan task
-  const suggestedTopic = useMemo(() => {
-    if (!currentPlanTask) return null;
-    const subject = state.subjects.find(s => s.id === currentPlanTask.subjectId);
-    if (!subject) return null;
-    let topicName = "Topic";
-    let taskType: "study" | "revision" = "study";
-    let minutes = 0;
-    for (const plan of state.studyPlans) {
-      const task = plan.tasks.find(t => t.id === currentPlanTask.taskId);
-      if (task) { taskType = task.type; minutes = task.estimatedMinutes; break; }
-    }
-    for (const c of subject.chapters) {
-      const t = c.topics.find(tp => tp.id === currentPlanTask.topicId);
-      if (t) { topicName = t.name; break; }
-    }
-    return {
-      topicName,
-      subjectName: subject.name,
-      subjectColor: subject.color,
-      subjectIcon: subject.icon,
-      type: taskType,
-      minutes,
-    };
-  }, [currentPlanTask, state.subjects, state.studyPlans]);
 
   const reset = useCallback(() => {
     setIsRunning(false);
-    setTimeLeft(mode === "focus" ? pomodoroFocus * 60 : pomodoroBreak * 60);
+    const dur = mode === "focus" ? focusDuration * 60 : pomodoroBreak * 60;
+    setTimeLeft(dur);
     sessionStartRef.current = null;
     if (intervalRef.current) clearInterval(intervalRef.current);
-  }, [mode, pomodoroFocus, pomodoroBreak]);
+  }, [mode, focusDuration, pomodoroBreak]);
+
+  // Update timer when selected task or mode changes (only when not running)
+  useEffect(() => {
+    if (!isRunning) {
+      setTimeLeft(mode === "focus" ? focusDuration * 60 : pomodoroBreak * 60);
+    }
+  }, [mode, focusDuration, pomodoroBreak, isRunning]);
 
   useEffect(() => {
     if (isRunning) {
@@ -68,23 +84,27 @@ const Timer = () => {
           if (prev <= 1) {
             setIsRunning(false);
             if (mode === "focus") {
-              // Build session — link to plan task if one exists
               const session: StudySession = {
                 id: crypto.randomUUID(),
                 startTime: sessionStartRef.current!,
                 endTime: new Date().toISOString(),
-                durationMinutes: pomodoroFocus,
-                type: currentPlanTask ? (suggestedTopic?.type === "revision" ? "revision" : "focus") : "focus",
+                durationMinutes: focusDuration,
+                type: selectedTask?.type === "revision" ? "revision" : "focus",
                 completed: true,
-                ...(currentPlanTask ? { topicId: currentPlanTask.topicId, subjectId: currentPlanTask.subjectId } : {}),
+                ...(selectedTask ? { topicId: selectedTask.topicId, subjectId: selectedTask.subjectId } : {}),
               };
               addSession(session);
               incrementSessionsCompleted();
+              sessionStartRef.current = null;
+              // Auto-select next incomplete task
+              const nextTask = incompleteTasks.find(t => t.taskId !== selectedTaskId);
+              if (nextTask) setSelectedTaskId(nextTask.taskId);
               setMode("break");
               return pomodoroBreak * 60;
             } else {
               setMode("focus");
-              return pomodoroFocus * 60;
+              sessionStartRef.current = null;
+              return focusDuration * 60;
             }
           }
           return prev - 1;
@@ -92,11 +112,7 @@ const Timer = () => {
       }, 1000);
     }
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  }, [isRunning, mode, pomodoroFocus, pomodoroBreak, addSession, currentPlanTask, suggestedTopic]);
-
-  useEffect(() => {
-    if (!isRunning) setTimeLeft(mode === "focus" ? pomodoroFocus * 60 : pomodoroBreak * 60);
-  }, [mode, pomodoroFocus, pomodoroBreak]);
+  }, [isRunning, mode, focusDuration, pomodoroBreak, addSession, selectedTask, incompleteTasks, selectedTaskId, incrementSessionsCompleted]);
 
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
@@ -107,6 +123,17 @@ const Timer = () => {
     reset();
   };
 
+  const selectTask = (taskId: string) => {
+    setSelectedTaskId(taskId);
+    setShowTopicSelector(false);
+    if (!isRunning) {
+      const task = resolvedTasks.find(t => t.taskId === taskId);
+      if (task && useTopicTime) {
+        setTimeLeft(task.estimatedMinutes * 60);
+      }
+    }
+  };
+
   const circumference = 2 * Math.PI * 120;
 
   return (
@@ -114,30 +141,108 @@ const Timer = () => {
       <motion.div
         initial={{ opacity: 0, scale: 0.96 }}
         animate={{ opacity: 1, scale: 1 }}
-        className="w-full max-w-sm space-y-8 text-center"
+        className="w-full max-w-sm space-y-6 text-center"
       >
-        {/* Current Topic Context — only when a plan exists */}
-        {suggestedTopic && (
-          <motion.div
-            initial={{ opacity: 0, y: -8 }}
-            animate={{ opacity: 1, y: 0 }}
-            className="glass-card p-3.5 flex items-center gap-3 text-left"
-          >
-            <div
-              className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-              style={{ backgroundColor: `hsl(${suggestedTopic.subjectColor} / 0.12)` }}
-            >
-              <SubjectIcon name={suggestedTopic.subjectIcon} className="w-4 h-4" />
-            </div>
-            <div className="flex-1 min-w-0">
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
-                {isRunning ? "Studying" : suggestedTopic.type === "revision" ? "Review next" : "Up next"}
-              </p>
-              <p className="text-sm font-medium truncate">{suggestedTopic.topicName}</p>
-              <p className="text-[10px] text-muted-foreground">{suggestedTopic.subjectName} · {suggestedTopic.minutes}m</p>
-            </div>
-            <span className="chip-accent">{suggestedTopic.type === "revision" ? "Review" : "Planned"}</span>
-          </motion.div>
+        {/* Today's Topic Selector — only when plan tasks exist */}
+        {resolvedTasks.length > 0 && (
+          <div className="space-y-2">
+            <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
+              আজকের রুটিন · {incompleteTasks.length} বাকি আছে
+            </p>
+
+            {/* Selected Topic Card */}
+            {selectedTask && (
+              <motion.button
+                initial={{ opacity: 0, y: -8 }}
+                animate={{ opacity: 1, y: 0 }}
+                onClick={() => !isRunning && setShowTopicSelector(!showTopicSelector)}
+                className="glass-card p-3.5 flex items-center gap-3 text-left w-full group"
+                disabled={isRunning}
+              >
+                <div
+                  className="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                  style={{ backgroundColor: `hsl(${selectedTask.subjectColor} / 0.12)` }}
+                >
+                  <SubjectIcon name={selectedTask.subjectIcon} className="w-4 h-4" />
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
+                    {isRunning ? "Studying" : selectedTask.type === "revision" ? "Review" : "Study"}
+                  </p>
+                  <p className="text-sm font-medium truncate">{selectedTask.topicName}</p>
+                  <p className="text-[10px] text-muted-foreground">
+                    {selectedTask.subjectName} · {selectedTask.estimatedMinutes}m
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="chip-accent">{selectedTask.type === "revision" ? "Review" : "Planned"}</span>
+                  {!isRunning && (
+                    <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${showTopicSelector ? "rotate-180" : ""}`} />
+                  )}
+                </div>
+              </motion.button>
+            )}
+
+            {/* Topic Dropdown */}
+            <AnimatePresence>
+              {showTopicSelector && !isRunning && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="overflow-hidden"
+                >
+                  <div className="glass-card p-2 space-y-0.5 max-h-52 overflow-y-auto">
+                    {resolvedTasks.map(task => (
+                      <button
+                        key={task.taskId}
+                        onClick={() => selectTask(task.taskId)}
+                        disabled={task.completed}
+                        className={`w-full flex items-center gap-3 p-2.5 rounded-xl text-left transition-colors ${
+                          task.taskId === selectedTaskId ? "bg-secondary" : "hover:bg-secondary/50"
+                        } ${task.completed ? "opacity-40" : ""}`}
+                      >
+                        <div
+                          className="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0"
+                          style={{ backgroundColor: `hsl(${task.subjectColor} / 0.12)` }}
+                        >
+                          {task.completed ? (
+                            <Check className="w-3.5 h-3.5 text-muted-foreground" />
+                          ) : (
+                            <SubjectIcon name={task.subjectIcon} className="w-3.5 h-3.5" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className={`text-sm truncate ${task.completed ? "line-through" : "font-medium"}`}>
+                            {task.topicName}
+                          </p>
+                          <p className="text-[10px] text-muted-foreground">
+                            {task.subjectName} · {task.estimatedMinutes}m · {task.type === "revision" ? "Review" : "Study"}
+                          </p>
+                        </div>
+                        {task.taskId === selectedTaskId && !task.completed && (
+                          <div className="w-2 h-2 rounded-full bg-foreground flex-shrink-0" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
+
+                  {/* Toggle: use topic time vs pomodoro */}
+                  <button
+                    onClick={() => setUseTopicTime(!useTopicTime)}
+                    className="flex items-center gap-2 mt-2 px-3 py-2 w-full text-left text-xs text-muted-foreground hover:text-foreground transition-colors"
+                  >
+                    <div className={`w-4 h-4 rounded border flex items-center justify-center transition-colors ${
+                      useTopicTime ? "bg-foreground border-foreground" : "border-border"
+                    }`}>
+                      {useTopicTime && <Check className="w-3 h-3 text-primary-foreground" />}
+                    </div>
+                    Topic এর সময় অনুযায়ী timer সেট করো
+                  </button>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
         )}
 
         {/* Mode Toggle */}
@@ -225,6 +330,9 @@ const Timer = () => {
             }`}>
               {mode === "focus" ? "Focus" : "Break"}
             </span>
+            {selectedTask && useTopicTime && mode === "focus" && (
+              <span className="text-[10px] text-muted-foreground mt-1">{selectedTask.estimatedMinutes}m estimated</span>
+            )}
           </div>
         </div>
 
@@ -250,7 +358,7 @@ const Timer = () => {
         <div className="flex items-center justify-center gap-4 text-[11px] text-muted-foreground">
           <span>{sessionsCompleted} session{sessionsCompleted !== 1 ? "s" : ""} today</span>
           <span>·</span>
-          <span>{pomodoroFocus}m focus / {pomodoroBreak}m break</span>
+          <span>{useTopicTime && selectedTask ? `${selectedTask.estimatedMinutes}m topic` : `${pomodoroFocus}m focus`} / {pomodoroBreak}m break</span>
         </div>
       </motion.div>
     </div>
