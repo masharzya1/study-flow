@@ -13,6 +13,7 @@ export default {
     extend: {
       fontFamily: {
         sans: ["-apple-system", "BlinkMacSystemFont", "Inter", "system-ui", "sans-serif"],
+        bengali: ["Hind Siliguri", "-apple-system", "BlinkMacSystemFont", "system-ui", "sans-serif"],
       },
       colors: {
         border: "hsl(var(--border))",
