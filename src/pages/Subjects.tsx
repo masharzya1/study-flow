@@ -19,7 +19,8 @@ const Subjects = () => {
   const [chapterName, setChapterName] = useState("");
   const [addingTopic, setAddingTopic] = useState<string | null>(null);
   const [topicName, setTopicName] = useState("");
-  const [topicDifficulty, setTopicDifficulty] = useState<1 | 2 | 3 | 4 | 5>(3);
+  const levels = state.settings.difficultyLevels || [];
+  const [topicDifficulty, setTopicDifficulty] = useState<number>(levels.length > 0 ? levels[Math.floor(levels.length / 2)]?.id || 3 : 3);
   
   // Victory screen state
   const [victoryData, setVictoryData] = useState<{
