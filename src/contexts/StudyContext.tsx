@@ -236,6 +236,13 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
     }));
   }, []);
 
+  const celebrateMilestone = useCallback((days: number) => {
+    setState(prev => ({
+      ...prev,
+      celebratedMilestones: [...(prev.celebratedMilestones || []), days],
+    }));
+  }, []);
+
   const incrementSessionsCompleted = useCallback(() => {
     const today = new Date().toISOString().split("T")[0];
     setState(prev => ({
