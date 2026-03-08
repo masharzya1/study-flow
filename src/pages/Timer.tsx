@@ -260,7 +260,7 @@ const Timer = () => {
           {sourceMode === "plan" && resolvedTasks.length > 0 && (
             <div className="space-y-2">
               <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
-                আজকের রুটিন · {incompleteTasks.length} বাকি আছে
+                Today's Routine · {incompleteTasks.length} remaining
               </p>
 
               {selectedTask && (
