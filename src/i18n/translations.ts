@@ -105,8 +105,10 @@ const translations: Record<Language, Record<string, string>> = {
     "settings.english": "English",
     "settings.bengali": "বাংলা",
     "settings.openSource": "Open Source",
-    "settings.openSourceDesc": "Paideia is 100% free and open source. No premium features, no locked content.",
-    "settings.version": "Paideia v1.0 · Παιδεία · Made for students everywhere",
+    "settings.openSourceDesc": "Manabu is 100% free and open source. No premium features, no locked content.",
+    "settings.version": "Manabu v1.0 · 学ぶ · Made for students everywhere",
+    "settings.restartTour": "Restart Tour",
+    "settings.restartTourDesc": "Re-trigger the onboarding walkthrough",
     "settings.pwa": "PWA · Works offline · 100% free",
 
     // Study Plan
