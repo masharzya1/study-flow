@@ -172,13 +172,17 @@ export function AmbientSounds({ isPlaying, currentMode, onAudioStateChange }: Am
         type: audioSource as "music" | "quran",
         isPlaying: isTrackPlaying,
         isLoading,
+        shuffle,
+        repeat,
         onTogglePlay: togglePlay,
         onNext: nextTrack,
+        onToggleShuffle: toggleShuffle,
+        onToggleRepeat: toggleRepeat,
       });
     } else {
       onAudioStateChange?.(null);
     }
-  }, [audioSource, activeTrack, isTrackPlaying, isLoading, onAudioStateChange, togglePlay, nextTrack]);
+  }, [audioSource, activeTrack, isTrackPlaying, isLoading, shuffle, repeat, onAudioStateChange, togglePlay, nextTrack, toggleShuffle, toggleRepeat]);
 
   const sounds = [
     { id: "none" as const, label: "Off", icon: VolumeX },
