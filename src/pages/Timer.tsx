@@ -278,15 +278,16 @@ const Timer = () => {
         animate={{ opacity: 1, scale: 1 }}
         className="w-full max-w-sm space-y-6 text-center"
       >
-        {/* Source Mode Toggle */}
+        {/* Source Mode Toggle - only show if there are plan tasks or subjects */}
+        {(todayTasks.length > 0 || state.subjects.length > 0) && (
         <div className="space-y-3">
           <div className="flex items-center justify-center gap-1 bg-secondary/60 rounded-xl p-1">
             <button
               onClick={() => { setSourceMode("plan"); setShowFreePicker(false); }}
-              disabled={isRunning}
+              disabled={isRunning || todayTasks.length === 0}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex-1 justify-center ${
-                sourceMode === "plan" ? "bg-foreground text-primary-foreground shadow-sm" : "text-muted-foreground"
-              }`}
+                sourceMode === "plan" && todayTasks.length > 0 ? "bg-foreground text-primary-foreground shadow-sm" : "text-muted-foreground"
+              } ${todayTasks.length === 0 ? "opacity-40 cursor-not-allowed" : ""}`}
             >
               <List className="w-3 h-3" /> {t("timer.routine")}
             </button>
@@ -294,7 +295,7 @@ const Timer = () => {
               onClick={() => { setSourceMode("free"); setShowTopicSelector(false); }}
               disabled={isRunning}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-medium transition-all flex-1 justify-center ${
-                sourceMode === "free" ? "bg-foreground text-primary-foreground shadow-sm" : "text-muted-foreground"
+                sourceMode === "free" || todayTasks.length === 0 ? "bg-foreground text-primary-foreground shadow-sm" : "text-muted-foreground"
               }`}
             >
               <BookOpen className="w-3 h-3" /> {t("timer.freeTopic")}
