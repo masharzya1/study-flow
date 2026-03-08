@@ -30,7 +30,30 @@ const Timer = () => {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const sessionStartRef = useRef<string | null>(null);
 
-  const todayTasks = getTodayPlanTasks();
+  // Source mode: "plan" (from study plan) or "free" (any subject/topic)
+  const [sourceMode, setSourceMode] = useState<"plan" | "free">("plan");
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
+  const [freeTopicId, setFreeTopicId] = useState<string | null>(null);
+  const [showFreePicker, setShowFreePicker] = useState(false);
+
+  // Auto-select first plan
+  useEffect(() => {
+    if (!selectedPlanId && state.studyPlans.length > 0) {
+      setSelectedPlanId(state.studyPlans[0].id);
+    }
+  }, [state.studyPlans, selectedPlanId]);
+
+  // Get tasks for selected plan
+  const todayTasks = useMemo(() => {
+    if (sourceMode === "plan" && selectedPlanId) {
+      const plan = state.studyPlans.find(p => p.id === selectedPlanId);
+      if (!plan) return [];
+      return plan.tasks
+        .filter(t => t.date === today)
+        .map(t => ({ planId: plan.id, taskId: t.id, topicId: t.topicId, subjectId: t.subjectId, estimatedMinutes: t.estimatedMinutes, type: t.type, completed: t.completed }));
+    }
+    return getTodayPlanTasks();
+  }, [sourceMode, selectedPlanId, state.studyPlans, today, getTodayPlanTasks]);
   const incompleteTasks = todayTasks.filter(t => !t.completed);
 
   const resolvedTasks = useMemo(() => {
