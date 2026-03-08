@@ -101,20 +101,32 @@ export const DEFAULT_SETTINGS: AppSettings = {
   pomodoroFocus: 25,
   pomodoroBreak: 5,
   dailyGoalMinutes: 120,
-  theme: "dark",
+  theme: "light",
   soundEnabled: true,
   ambientSound: "none",
 };
 
 export const SUBJECT_COLORS = [
-  "160 84% 45%",
-  "200 80% 55%",
-  "280 65% 60%",
-  "40 90% 55%",
-  "340 75% 55%",
-  "190 90% 50%",
-  "320 70% 55%",
-  "25 95% 55%",
+  "220 15% 25%",
+  "200 60% 45%",
+  "152 60% 42%",
+  "45 93% 58%",
+  "340 60% 55%",
+  "270 50% 55%",
+  "25 80% 50%",
+  "180 50% 45%",
 ];
 
-export const SUBJECT_ICONS = ["📚", "🧮", "🔬", "🌍", "💻", "🎨", "📝", "🧪", "📖", "🎵"];
+// Lucide icon names used for subjects
+export const SUBJECT_ICONS = [
+  "book-open",
+  "calculator",
+  "flask-conical",
+  "globe",
+  "laptop",
+  "palette",
+  "pen-line",
+  "test-tubes",
+  "book-text",
+  "music",
+];
