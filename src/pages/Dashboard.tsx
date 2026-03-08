@@ -33,7 +33,7 @@ const MOTIVATIONAL_QUOTES = [
 ];
 
 const Dashboard = () => {
-  const { state, getTodayMinutes, getStreak } = useStudy();
+  const { state, getTodayMinutes, getStreak, celebrateMilestone } = useStudy();
   const navigate = useNavigate();
   const todayMinutes = getTodayMinutes();
   const streak = getStreak();
