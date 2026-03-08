@@ -49,6 +49,7 @@ const App = () => (
         <StudyProvider>
           <Toaster />
           <Sonner />
+          <SplashScreen />
           <BrowserRouter>
             <OnboardingTour />
             <InstallPrompt />
