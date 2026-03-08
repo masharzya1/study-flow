@@ -137,16 +137,22 @@
     @apply text-[10px] font-medium px-2 py-0.5 rounded-full;
   }
   .chip-accent {
-    @apply chip bg-accent/12 text-accent;
+    @apply chip;
+    background-color: hsl(var(--accent) / 0.12);
+    color: hsl(var(--accent));
   }
   .chip-muted {
     @apply chip bg-secondary text-muted-foreground;
   }
   .chip-danger {
-    @apply chip bg-destructive/10 text-destructive;
+    @apply chip;
+    background-color: hsl(var(--destructive) / 0.1);
+    color: hsl(var(--destructive));
   }
   .chip-success {
-    @apply chip bg-success/10 text-success;
+    @apply chip;
+    background-color: hsl(var(--success) / 0.1);
+    color: hsl(var(--success));
   }
 }
 
