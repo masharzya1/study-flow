@@ -1,6 +1,6 @@
 import { useStudy } from "@/contexts/StudyContext";
 import { motion } from "framer-motion";
-import { Clock, Flame, Target, BookOpen, ArrowRight, Sparkles, RotateCcw, AlertTriangle, CalendarDays, Zap, Quote, Trophy } from "lucide-react";
+import { Clock, Flame, Target, BookOpen, ArrowRight, Sparkles, RotateCcw, AlertTriangle, CalendarDays, Zap, Quote, Trophy, Rocket } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { StudyHeatmap } from "@/components/StudyHeatmap";
 import { QuickStats } from "@/components/QuickStats";
@@ -52,19 +52,16 @@ const Dashboard = () => {
 
   const greeting = new Date().getHours() < 12 ? "morning" : new Date().getHours() < 18 ? "afternoon" : "evening";
 
-  // Daily quote based on day of year
   const dailyQuote = useMemo(() => {
     const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
     return MOTIVATIONAL_QUOTES[dayOfYear % MOTIVATIONAL_QUOTES.length];
   }, []);
 
-  // Revision items due today or overdue
   const revisionDue = useMemo(() => {
     const INTERVALS = [1, 3, 7, 14, 30];
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     let count = 0;
-
     state.subjects.forEach(subject => {
       subject.chapters.forEach(chapter => {
         chapter.topics
@@ -88,7 +85,6 @@ const Dashboard = () => {
     return count;
   }, [state.subjects]);
 
-  // Next exam
   const nextExam = useMemo(() => {
     const upcoming = state.studyPlans
       .filter(p => new Date(p.examDate) >= new Date())
@@ -98,11 +94,9 @@ const Dashboard = () => {
     return { name: upcoming[0].examName, days };
   }, [state.studyPlans]);
 
-  // Today's focus sessions
   const today = new Date().toISOString().split("T")[0];
   const todaySessions = state.todaySessionsDate === today ? state.todaySessionsCompleted : 0;
 
-  // Streak milestone celebration
   const [showMilestone, setShowMilestone] = useState(false);
   const celebrated = state.celebratedMilestones || [];
 
@@ -118,10 +112,24 @@ const Dashboard = () => {
     celebrateMilestone(streak);
   }, [streak, celebrateMilestone]);
 
+  // XP bar calculations
+  const xpPerLevel = (l: number) => l * 100;
+  const xpBarProgress = useMemo(() => {
+    let remaining = state.xp;
+    let lvl = 1;
+    while (remaining >= xpPerLevel(lvl)) {
+      remaining -= xpPerLevel(lvl);
+      lvl++;
+    }
+    return { percent: Math.round((remaining / xpPerLevel(lvl)) * 100), xpToNext: xpPerLevel(lvl) - remaining };
+  }, [state.xp]);
+
+  const isNewUser = state.subjects.length === 0 && state.sessions.length === 0;
+
   return (
     <div className="p-5 md:p-8 max-w-3xl mx-auto space-y-6 pb-28 md:pb-8">
-      {/* Streak Milestone Celebration */}
       <StreakMilestone show={showMilestone} streak={streak} onClose={handleCloseMilestone} />
+      
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-1">
         <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">
@@ -134,53 +142,74 @@ const Dashboard = () => {
         </p>
       </motion.div>
 
-      {/* XP / Level Bar */}
-      {state.xp > 0 && (
+      {/* Welcome Onboarding for New Users */}
+      {isNewUser && (
         <motion.div
           initial={{ opacity: 0, y: 12 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.02 }}
-          className="glass-card p-4"
+          className="glass-card-elevated p-6 space-y-4"
         >
-          <div className="flex items-center justify-between mb-2">
-            <div className="flex items-center gap-2">
-              <Trophy className="w-4 h-4 text-accent" />
-              <span className="text-sm font-semibold">Level {state.level}</span>
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-xl bg-accent/15 flex items-center justify-center">
+              <Rocket className="w-5 h-5 text-accent" />
             </div>
-            <span className="text-xs text-muted-foreground">{state.xp} XP total</span>
+            <div>
+              <h2 className="font-semibold text-sm">Welcome to StudyForge!</h2>
+              <p className="text-xs text-muted-foreground">Get started in 3 easy steps</p>
+            </div>
           </div>
-          <div className="h-2 rounded-full bg-secondary overflow-hidden">
-            <motion.div
-              className="h-full rounded-full"
-              style={{ background: "hsl(var(--accent))" }}
-              initial={{ width: 0 }}
-              animate={{ width: `${(() => {
-                const xpPerLevel = (l: number) => l * 100;
-                let remaining = state.xp;
-                let lvl = 1;
-                while (remaining >= xpPerLevel(lvl)) {
-                  remaining -= xpPerLevel(lvl);
-                  lvl++;
-                }
-                return Math.round((remaining / xpPerLevel(lvl)) * 100);
-              })()}%` }}
-              transition={{ duration: 0.8, ease: "easeOut" }}
-            />
+          <div className="space-y-2.5">
+            {[
+              { step: 1, label: "Create your first subject", action: () => navigate("/subjects"), cta: "Add Subject" },
+              { step: 2, label: "Generate a study plan", action: () => navigate("/plan"), cta: "Create Plan" },
+              { step: 3, label: "Start a focus session", action: () => navigate("/timer"), cta: "Start Timer" },
+            ].map(({ step, label, action, cta }) => (
+              <button
+                key={step}
+                onClick={action}
+                className="w-full flex items-center gap-3 p-3 rounded-xl bg-secondary/60 hover:bg-secondary transition-colors text-left group"
+              >
+                <div className="w-7 h-7 rounded-full bg-foreground/10 flex items-center justify-center text-xs font-bold">
+                  {step}
+                </div>
+                <span className="flex-1 text-sm">{label}</span>
+                <span className="text-[10px] text-muted-foreground group-hover:text-foreground transition-colors">{cta} →</span>
+              </button>
+            ))}
           </div>
-          <p className="text-[10px] text-muted-foreground mt-1.5">
-            {state.totalTopicsCompleted} topics completed • Next level: {(() => {
-              const xpPerLevel = (l: number) => l * 100;
-              let remaining = state.xp;
-              let lvl = 1;
-              while (remaining >= xpPerLevel(lvl)) {
-                remaining -= xpPerLevel(lvl);
-                lvl++;
-              }
-              return xpPerLevel(lvl) - remaining;
-            })()} XP needed
-          </p>
         </motion.div>
       )}
+
+      {/* XP / Level Bar — Always visible */}
+      <motion.div
+        initial={{ opacity: 0, y: 12 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: 0.02 }}
+        className="glass-card p-4"
+      >
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <Trophy className="w-4 h-4 text-accent" />
+            <span className="text-sm font-semibold">Level {state.level}</span>
+          </div>
+          <span className="text-xs text-muted-foreground">{state.xp} XP total</span>
+        </div>
+        <div className="h-2 rounded-full bg-secondary overflow-hidden">
+          <motion.div
+            className="h-full rounded-full"
+            style={{ background: "hsl(var(--accent))" }}
+            initial={{ width: 0 }}
+            animate={{ width: `${xpBarProgress.percent}%` }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+          />
+        </div>
+        <p className="text-[10px] text-muted-foreground mt-1.5">
+          {state.totalTopicsCompleted} topics completed • {state.xp === 0 ? "Complete topics to earn XP!" : `Next level: ${xpBarProgress.xpToNext} XP needed`}
+        </p>
+      </motion.div>
+
+      {/* Quote */}
       <motion.div
         initial={{ opacity: 0, y: 12 }}
         animate={{ opacity: 1, y: 0 }}
@@ -234,7 +263,6 @@ const Dashboard = () => {
           </div>
         </div>
 
-        {/* Quick Action Row */}
         <div className="flex gap-2 mt-4 pt-4 border-t border-border/50">
           <button
             onClick={() => navigate("/timer")}

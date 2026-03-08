@@ -1,15 +1,15 @@
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { useStudy } from "@/contexts/StudyContext";
-import { motion } from "framer-motion";
-import { RotateCcw, Clock, BookOpen, Zap, AlertTriangle } from "lucide-react";
+import { motion, AnimatePresence } from "framer-motion";
+import { RotateCcw, Clock, BookOpen, Zap, AlertTriangle, CheckCircle2 } from "lucide-react";
 import { SubjectIcon } from "@/components/SubjectIcon";
+import { toast } from "@/hooks/use-toast";
 
-
-// Spaced repetition intervals (in days)
 const REVISION_INTERVALS = [1, 3, 7, 14, 30];
 
 const Revision = () => {
-  const { state, toggleTopicComplete } = useStudy();
+  const { state, markTopicReviewed } = useStudy();
+  const maxDifficulty = state.settings.difficultyLevels?.length || 5;
 
   const revisionItems = useMemo(() => {
     const items: {
@@ -25,6 +25,7 @@ const Revision = () => {
       nextReview: string;
       urgency: "overdue" | "today" | "upcoming" | "done";
       difficulty: number;
+      revisionsCompleted: number;
     }[] = [];
 
     const today = new Date();
@@ -37,8 +38,6 @@ const Revision = () => {
           .forEach(topic => {
             const completedDate = new Date(topic.completedAt!);
             const daysSince = Math.floor((today.getTime() - completedDate.getTime()) / 86400000);
-
-            // Find next revision interval
             const revisionsDone = topic.revisionDates.length;
             const nextInterval = REVISION_INTERVALS[Math.min(revisionsDone, REVISION_INTERVALS.length - 1)];
             const nextReviewDate = new Date(completedDate);
@@ -76,15 +75,14 @@ const Revision = () => {
               nextReview: nextReviewDate.toISOString().split("T")[0],
               urgency,
               difficulty: topic.difficulty,
+              revisionsCompleted: revisionsDone,
             });
           });
       });
     });
 
-    // Sort: overdue first, then today, then upcoming
     const order = { overdue: 0, today: 1, upcoming: 2, done: 3 };
     items.sort((a, b) => order[a.urgency] - order[b.urgency] || b.difficulty - a.difficulty);
-
     return items;
   }, [state.subjects]);
 
@@ -92,6 +90,17 @@ const Revision = () => {
   const todayItems = revisionItems.filter(i => i.urgency === "today");
   const upcoming = revisionItems.filter(i => i.urgency === "upcoming").slice(0, 10);
   const mastered = revisionItems.filter(i => i.urgency === "done").length;
+
+  const handleMarkReviewed = (item: typeof revisionItems[0]) => {
+    markTopicReviewed(item.subjectId, item.chapterId, item.topicId);
+    const newCount = item.revisionsCompleted + 1;
+    toast({
+      title: "✅ Revision recorded!",
+      description: newCount >= REVISION_INTERVALS.length
+        ? `${item.topicName} is now mastered!`
+        : `${item.topicName} — ${newCount}/${REVISION_INTERVALS.length} revisions done`,
+    });
+  };
 
   const urgencyStyles = {
     overdue: "bg-destructive/10 text-destructive",
@@ -106,8 +115,6 @@ const Revision = () => {
         <h1 className="text-2xl font-semibold tracking-tight">Revision</h1>
         <p className="text-muted-foreground text-sm mt-0.5">Spaced repetition scheduler</p>
       </motion.div>
-
-      
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3">
@@ -155,7 +162,7 @@ const Revision = () => {
       {overdue.length > 0 && (
         <Section title="Overdue" icon={<AlertTriangle className="w-3.5 h-3.5 text-destructive" />} count={overdue.length}>
           {overdue.map(item => (
-            <RevisionCard key={item.topicId} item={item} styles={urgencyStyles} />
+            <RevisionCard key={item.topicId} item={item} styles={urgencyStyles} maxDifficulty={maxDifficulty} onMarkReviewed={handleMarkReviewed} />
           ))}
         </Section>
       )}
@@ -164,7 +171,7 @@ const Revision = () => {
       {todayItems.length > 0 && (
         <Section title="Review Today" icon={<Clock className="w-3.5 h-3.5" />} count={todayItems.length}>
           {todayItems.map(item => (
-            <RevisionCard key={item.topicId} item={item} styles={urgencyStyles} />
+            <RevisionCard key={item.topicId} item={item} styles={urgencyStyles} maxDifficulty={maxDifficulty} onMarkReviewed={handleMarkReviewed} />
           ))}
         </Section>
       )}
@@ -173,7 +180,7 @@ const Revision = () => {
       {upcoming.length > 0 && (
         <Section title="Coming Up" icon={<BookOpen className="w-3.5 h-3.5 text-muted-foreground" />} count={upcoming.length}>
           {upcoming.map(item => (
-            <RevisionCard key={item.topicId} item={item} styles={urgencyStyles} />
+            <RevisionCard key={item.topicId} item={item} styles={urgencyStyles} maxDifficulty={maxDifficulty} onMarkReviewed={handleMarkReviewed} />
           ))}
         </Section>
       )}
@@ -194,7 +201,14 @@ function Section({ title, icon, count, children }: { title: string; icon: React.
   );
 }
 
-function RevisionCard({ item, styles }: { item: any; styles: Record<string, string> }) {
+function RevisionCard({ item, styles, maxDifficulty, onMarkReviewed }: {
+  item: any;
+  styles: Record<string, string>;
+  maxDifficulty: number;
+  onMarkReviewed: (item: any) => void;
+}) {
+  const canReview = item.urgency === "overdue" || item.urgency === "today";
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 6 }}
@@ -209,17 +223,28 @@ function RevisionCard({ item, styles }: { item: any; styles: Record<string, stri
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-sm font-medium truncate">{item.topicName}</p>
-        <p className="text-[10px] text-muted-foreground">{item.subjectName}</p>
+        <p className="text-[10px] text-muted-foreground">
+          {item.subjectName} • {item.revisionsCompleted}/{REVISION_INTERVALS.length} reviews
+        </p>
       </div>
       <span className={`text-[10px] px-2 py-1 rounded-md font-medium ${styles[item.urgency]}`}>
         {item.urgency === "overdue" ? "Overdue" : item.urgency === "today" ? "Today" :
           new Date(item.nextReview).toLocaleDateString("en-US", { month: "short", day: "numeric" })}
       </span>
       <div className="flex gap-0.5">
-        {Array.from({ length: 5 }).map((_, i) => (
+        {Array.from({ length: maxDifficulty }).map((_, i) => (
           <div key={i} className={`w-1 h-1 rounded-full ${i < item.difficulty ? "bg-foreground/50" : "bg-secondary"}`} />
         ))}
       </div>
+      {canReview && (
+        <button
+          onClick={() => onMarkReviewed(item)}
+          className="flex items-center gap-1 px-2 py-1 rounded-lg bg-foreground text-primary-foreground text-[10px] font-medium hover:opacity-90 transition-opacity flex-shrink-0"
+        >
+          <CheckCircle2 className="w-3 h-3" />
+          Done
+        </button>
+      )}
     </motion.div>
   );
 }
