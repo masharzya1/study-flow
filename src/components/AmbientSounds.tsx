@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useStudy } from "@/contexts/StudyContext";
 import { motion, AnimatePresence } from "framer-motion";
-import { Volume2, VolumeX, CloudRain, Wind, TreePine, Music, BookOpen, Play, Pause, SkipForward, ChevronDown } from "lucide-react";
+import { Volume2, VolumeX, CloudRain, Wind, TreePine, Music, BookOpen, Play, Pause, SkipForward, ChevronDown, Loader2 } from "lucide-react";
 import { FOCUS_MUSIC, QURAN_TILAWAT, type MusicTrack } from "@/data/focusMusic";
 
 // Generate ambient sound using Web Audio API oscillators
@@ -62,6 +62,7 @@ export function AmbientSounds({ isPlaying, currentMode }: AmbientSoundsProps) {
   const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
   const [isTrackPlaying, setIsTrackPlaying] = useState(false);
   const [musicCategory, setMusicCategory] = useState<"focus" | "break">("focus");
+  const [isLoading, setIsLoading] = useState(false);
   const ctxRef = useRef<AudioContext | null>(null);
   const nodeRef = useRef<AudioNode | null>(null);
   const gainRef = useRef<GainNode | null>(null);
@@ -122,16 +123,19 @@ export function AmbientSounds({ isPlaying, currentMode }: AmbientSoundsProps) {
     setAudioSource(src);
     setCurrentTrackIndex(0);
     if (src === "music" || src === "quran") {
+      setIsLoading(true);
       setIsTrackPlaying(isPlaying);
     }
   };
 
   const nextTrack = () => {
     const list = audioSource === "quran" ? QURAN_TILAWAT : filteredMusic;
+    setIsLoading(true);
     setCurrentTrackIndex(prev => (prev + 1) % list.length);
   };
 
   const selectTrack = (index: number) => {
+    setIsLoading(true);
     setCurrentTrackIndex(index);
     setIsTrackPlaying(isPlaying);
   };
@@ -230,20 +234,32 @@ export function AmbientSounds({ isPlaying, currentMode }: AmbientSoundsProps) {
 
                 {/* Now Playing */}
                 {audioSource === "music" && currentMusicTrack && (
-                  <div className="bg-secondary/60 rounded-xl p-2.5 flex items-center gap-2">
-                    <button
-                      onClick={() => setIsTrackPlaying(!isTrackPlaying)}
-                      className="w-7 h-7 rounded-full bg-foreground text-primary-foreground flex items-center justify-center flex-shrink-0"
-                    >
-                      {isTrackPlaying ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3 ml-0.5" />}
-                    </button>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[10px] text-muted-foreground">Now Playing</p>
-                      <p className="text-xs font-medium truncate">{currentMusicTrack.title}</p>
+                  <div className="bg-secondary/60 rounded-xl p-2.5 space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setIsTrackPlaying(!isTrackPlaying)}
+                        className="w-7 h-7 rounded-full bg-foreground text-primary-foreground flex items-center justify-center flex-shrink-0"
+                      >
+                        {isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : isTrackPlaying ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3 ml-0.5" />}
+                      </button>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[10px] text-muted-foreground">{isLoading ? "Loading..." : "Now Playing"}</p>
+                        <p className="text-xs font-medium truncate">{currentMusicTrack.title}</p>
+                      </div>
+                      <button onClick={nextTrack} className="p-1 hover:bg-secondary rounded">
+                        <SkipForward className="w-3.5 h-3.5 text-muted-foreground" />
+                      </button>
                     </div>
-                    <button onClick={nextTrack} className="p-1 hover:bg-secondary rounded">
-                      <SkipForward className="w-3.5 h-3.5 text-muted-foreground" />
-                    </button>
+                    {isLoading && (
+                      <div className="w-full h-1 bg-secondary rounded-full overflow-hidden">
+                        <motion.div
+                          className="h-full bg-foreground rounded-full"
+                          initial={{ width: "0%" }}
+                          animate={{ width: "90%" }}
+                          transition={{ duration: 3, ease: "easeOut" }}
+                        />
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -272,20 +288,32 @@ export function AmbientSounds({ isPlaying, currentMode }: AmbientSoundsProps) {
               <div className="space-y-2">
                 {/* Now Playing */}
                 {audioSource === "quran" && currentQuranTrack && (
-                  <div className="bg-secondary/60 rounded-xl p-2.5 flex items-center gap-2">
-                    <button
-                      onClick={() => setIsTrackPlaying(!isTrackPlaying)}
-                      className="w-7 h-7 rounded-full bg-foreground text-primary-foreground flex items-center justify-center flex-shrink-0"
-                    >
-                      {isTrackPlaying ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3 ml-0.5" />}
-                    </button>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-[10px] text-muted-foreground">তিলাওয়াত চলছে</p>
-                      <p className="text-xs font-medium truncate">{currentQuranTrack.title}</p>
+                  <div className="bg-secondary/60 rounded-xl p-2.5 space-y-1.5">
+                    <div className="flex items-center gap-2">
+                      <button
+                        onClick={() => setIsTrackPlaying(!isTrackPlaying)}
+                        className="w-7 h-7 rounded-full bg-foreground text-primary-foreground flex items-center justify-center flex-shrink-0"
+                      >
+                        {isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : isTrackPlaying ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3 ml-0.5" />}
+                      </button>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-[10px] text-muted-foreground">{isLoading ? "Loading..." : "তিলাওয়াত চলছে"}</p>
+                        <p className="text-xs font-medium truncate">{currentQuranTrack.title}</p>
+                      </div>
+                      <button onClick={nextTrack} className="p-1 hover:bg-secondary rounded">
+                        <SkipForward className="w-3.5 h-3.5 text-muted-foreground" />
+                      </button>
                     </div>
-                    <button onClick={nextTrack} className="p-1 hover:bg-secondary rounded">
-                      <SkipForward className="w-3.5 h-3.5 text-muted-foreground" />
-                    </button>
+                    {isLoading && (
+                      <div className="w-full h-1 bg-secondary rounded-full overflow-hidden">
+                        <motion.div
+                          className="h-full bg-foreground rounded-full"
+                          initial={{ width: "0%" }}
+                          animate={{ width: "90%" }}
+                          transition={{ duration: 3, ease: "easeOut" }}
+                        />
+                      </div>
+                    )}
                   </div>
                 )}
 
@@ -333,6 +361,7 @@ export function AmbientSounds({ isPlaying, currentMode }: AmbientSoundsProps) {
         <iframe
           src={`https://www.youtube.com/embed/${activeTrack.youtubeId}?autoplay=1&loop=1&playlist=${activeTrack.youtubeId}`}
           allow="autoplay"
+          onLoad={() => setIsLoading(false)}
           className="fixed -left-[9999px] -top-[9999px] w-1 h-1 opacity-0 pointer-events-none"
           title="Audio Player"
         />
