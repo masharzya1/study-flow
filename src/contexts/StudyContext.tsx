@@ -309,7 +309,7 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
     <StudyContext.Provider value={{
       state, addSubject, updateSubject, deleteSubject, addSession, updateSettings,
       toggleTopicComplete, updateTopicNotes, addStudyPlan, completePlanTask,
-      incrementSessionsCompleted, gainXp,
+      incrementSessionsCompleted, celebrateMilestone, gainXp,
       getTodayMinutes, getStreak, getHeatmapData, getSubjectProgress, getTodayPlanTask, getTodayPlanTasks,
     }}>
       {children}
