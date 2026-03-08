@@ -123,6 +123,7 @@ export function AmbientSounds({ isPlaying, currentMode }: AmbientSoundsProps) {
     setAudioSource(src);
     setCurrentTrackIndex(0);
     if (src === "music" || src === "quran") {
+      setIsLoading(true);
       setIsTrackPlaying(isPlaying);
     }
   };
