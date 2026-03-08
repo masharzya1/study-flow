@@ -3,6 +3,7 @@ import { useStudy } from "@/contexts/StudyContext";
 import { motion } from "framer-motion";
 import { RotateCcw, Clock, BookOpen, Zap, AlertTriangle } from "lucide-react";
 import { SubjectIcon } from "@/components/SubjectIcon";
+import { NotificationBanner } from "@/components/NotificationBanner";
 
 // Spaced repetition intervals (in days)
 const REVISION_INTERVALS = [1, 3, 7, 14, 30];
@@ -105,6 +106,8 @@ const Revision = () => {
         <h1 className="text-2xl font-semibold tracking-tight">Revision</h1>
         <p className="text-muted-foreground text-sm mt-0.5">Spaced repetition scheduler</p>
       </motion.div>
+
+      <NotificationBanner featureName="Revision due হলে notify" />
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3">

@@ -8,6 +8,7 @@ import { MiniPlayer } from "@/components/MiniPlayer";
 import { SubjectIcon } from "@/components/SubjectIcon";
 import { fireSessionComplete, fireStreakCelebration } from "@/lib/confetti";
 import { notifyTimerComplete, notifyStreak, requestNotificationPermission } from "@/lib/notifications";
+import { NotificationBanner } from "@/components/NotificationBanner";
 import type { StudySession } from "@/types/study";
 
 const Timer = () => {
@@ -152,6 +153,10 @@ const Timer = () => {
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] p-5 pb-28 md:pb-8">
+      {/* Notification Warning */}
+      <div className="w-full max-w-md mb-4">
+        <NotificationBanner featureName="Timer শেষ হলে notify" />
+      </div>
       {/* Network Status */}
       <div className="fixed top-3 right-3 z-50 md:top-4 md:right-4">
         <NetworkIndicator needsInternet={needsInternet} />
