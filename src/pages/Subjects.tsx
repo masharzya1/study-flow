@@ -38,16 +38,6 @@ const Subjects = () => {
       setVictoryData({ show: true, topicName, xpGained, newLevel, isLevelUp });
     }
   }, [toggleTopicComplete, gainXp]);
-  const [expandedSubject, setExpandedSubject] = useState<string | null>(null);
-  const [expandedChapter, setExpandedChapter] = useState<string | null>(null);
-  const [newName, setNewName] = useState("");
-  const [newColor, setNewColor] = useState(SUBJECT_COLORS[0]);
-  const [newIcon, setNewIcon] = useState(SUBJECT_ICONS[0]);
-  const [addingChapter, setAddingChapter] = useState<string | null>(null);
-  const [chapterName, setChapterName] = useState("");
-  const [addingTopic, setAddingTopic] = useState<string | null>(null);
-  const [topicName, setTopicName] = useState("");
-  const [topicDifficulty, setTopicDifficulty] = useState<1 | 2 | 3 | 4 | 5>(3);
 
   const createSubject = () => {
     if (!newName.trim()) return;
