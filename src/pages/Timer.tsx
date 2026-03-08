@@ -7,6 +7,7 @@ import { NetworkIndicator } from "@/components/NetworkIndicator";
 import { MiniPlayer } from "@/components/MiniPlayer";
 import { SubjectIcon } from "@/components/SubjectIcon";
 import { fireSessionComplete, fireStreakCelebration } from "@/lib/confetti";
+import { notifyTimerComplete, notifyStreak, requestNotificationPermission } from "@/lib/notifications";
 import type { StudySession } from "@/types/study";
 
 const Timer = () => {
@@ -78,6 +79,7 @@ const Timer = () => {
 
   useEffect(() => {
     if (isRunning) {
+      requestNotificationPermission();
       if (!sessionStartRef.current) sessionStartRef.current = new Date().toISOString();
       intervalRef.current = setInterval(() => {
         setTimeLeft(prev => {
@@ -99,9 +101,11 @@ const Timer = () => {
 
               // 🎉 Celebration!
               fireSessionComplete();
+              notifyTimerComplete("focus");
               const currentStreak = getStreak();
               if (currentStreak > 0 && currentStreak % 3 === 0) {
                 setTimeout(() => fireStreakCelebration(currentStreak), 800);
+                notifyStreak(currentStreak);
               }
               setCelebrationStreak(currentStreak);
               setShowCelebration(true);
@@ -112,6 +116,7 @@ const Timer = () => {
               setMode("break");
               return pomodoroBreak * 60;
             } else {
+              notifyTimerComplete("break");
               setMode("focus");
               sessionStartRef.current = null;
               return focusDuration * 60;
