@@ -249,6 +249,23 @@ const SettingsPage = () => {
         </div>
       </motion.div>
 
+      {/* Restart Tour */}
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.11 }} className="glass-card p-4 space-y-3">
+        <h2 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+          <RotateCcw className="w-3.5 h-3.5" /> {t("settings.restartTour")}
+        </h2>
+        <p className="text-sm text-muted-foreground">{t("settings.restartTourDesc")}</p>
+        <button
+          onClick={() => {
+            localStorage.removeItem("manabu_onboarded");
+            window.location.reload();
+          }}
+          className="flex items-center gap-2 px-3 py-2 rounded-xl bg-secondary text-sm hover-lift font-medium"
+        >
+          <RotateCcw className="w-4 h-4" /> {t("settings.restartTour")}
+        </button>
+      </motion.div>
+
       {/* Open Source */}
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }} className="glass-card p-4 space-y-3">
         <h2 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground flex items-center gap-2">
