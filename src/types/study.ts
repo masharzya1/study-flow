@@ -86,6 +86,8 @@ export interface AppState {
   settings: AppSettings;
   streak: number;
   lastStudyDate?: string;
+  todaySessionsCompleted: number;
+  todaySessionsDate?: string;
 }
 
 export interface AppSettings {

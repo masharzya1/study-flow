@@ -178,8 +178,8 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
   return (
     <StudyContext.Provider value={{
       state, addSubject, updateSubject, deleteSubject, addSession, updateSettings,
-      toggleTopicComplete, updateTopicNotes, addStudyPlan, getTodayMinutes, getStreak,
-      getHeatmapData, getSubjectProgress,
+      toggleTopicComplete, updateTopicNotes, addStudyPlan, incrementSessionsCompleted,
+      getTodayMinutes, getStreak, getHeatmapData, getSubjectProgress,
     }}>
       {children}
     </StudyContext.Provider>

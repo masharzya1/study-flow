@@ -382,12 +382,13 @@ const StudyPlanPage = () => {
 
             <div className="flex gap-2">
               <button onClick={resetWizard} className="flex-1 py-2.5 rounded-xl bg-secondary text-foreground font-medium text-sm">
-                Discard
+                Create Another
               </button>
-              <button onClick={savePlan} className="flex-1 py-2.5 rounded-xl bg-foreground text-primary-foreground font-medium text-sm">
-                Save Plan
+              <button onClick={() => setStep(0)} className="flex-1 py-2.5 rounded-xl bg-foreground text-primary-foreground font-medium text-sm">
+                View Plans
               </button>
             </div>
+            <p className="text-[10px] text-muted-foreground text-center">Plan saved automatically</p>
           </motion.div>
         )}
 

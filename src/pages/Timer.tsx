@@ -47,7 +47,7 @@ const Timer = () => {
                 completed: true,
               };
               addSession(session);
-              setSessionsCompleted(p => p + 1);
+              incrementSessionsCompleted();
               setMode("break");
               return pomodoroBreak * 60;
             } else {
