@@ -13,6 +13,7 @@ const StudyPlanPage = () => {
   const [dailyHours, setDailyHours] = useState(3);
   const [selectedSubjects, setSelectedSubjects] = useState<string[]>([]);
   const [generatedPlan, setGeneratedPlan] = useState<StudyPlan | null>(null);
+  const [viewingPlanId, setViewingPlanId] = useState<string | null>(null);
 
   const toggleSubject = (id: string) => {
     setSelectedSubjects(prev =>
