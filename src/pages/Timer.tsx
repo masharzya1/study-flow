@@ -142,9 +142,9 @@ const Timer = () => {
               sessionStartRef.current = null;
 
               // 🎮 Gaming Victory Screen!
-              const topicDisplayName = topicInfo 
-                ? ('topicName' in topicInfo ? topicInfo.topicName : topicInfo.topicName) 
-                : "Focus Session";
+              const topicDisplayName = sourceMode === "free" && freeTopicInfo
+                ? freeTopicInfo.topicName
+                : (selectedTask ? selectedTask.topicName : "Focus Session");
               const currentStreak = getStreak();
               setCelebrationStreak(currentStreak);
               setVictoryData({
