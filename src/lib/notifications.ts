@@ -1,4 +1,5 @@
-// Browser Notification utilities
+// Browser Notification utilities with toast fallback
+import { toast } from "sonner";
 
 export async function requestNotificationPermission(): Promise<boolean> {
   if (!("Notification" in window)) return false;
@@ -17,8 +18,8 @@ export function getNotificationPermission(): NotificationPermission | "unsupport
   return Notification.permission;
 }
 
-export function sendNotification(title: string, options?: NotificationOptions) {
-  if (!("Notification" in window) || Notification.permission !== "granted") return;
+function tryNativeNotification(title: string, options?: NotificationOptions): boolean {
+  if (!("Notification" in window) || Notification.permission !== "granted") return false;
   
   try {
     const notification = new Notification(title, {
@@ -26,17 +27,25 @@ export function sendNotification(title: string, options?: NotificationOptions) {
       badge: "/icon-192.png",
       ...options,
     });
-    
-    // Auto-close after 5 seconds
     setTimeout(() => notification.close(), 5000);
-    
-    // Focus window on click
     notification.onclick = () => {
       window.focus();
       notification.close();
     };
+    return true;
   } catch {
-    // Fallback for environments that don't support Notification constructor
+    return false;
+  }
+}
+
+export function sendNotification(title: string, options?: NotificationOptions) {
+  // Try native first, fall back to toast
+  const sent = tryNativeNotification(title, options);
+  if (!sent) {
+    toast(title, {
+      description: options?.body,
+      duration: 5000,
+    });
   }
 }
 
