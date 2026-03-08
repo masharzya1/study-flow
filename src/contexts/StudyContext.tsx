@@ -36,19 +36,15 @@ interface StudyContextValue {
   addSubject: (subject: Subject) => void;
   updateSubject: (subject: Subject) => void;
   deleteSubject: (id: string) => void;
-  deleteChapter: (subjectId: string, chapterId: string) => void;
-  deleteTopic: (subjectId: string, chapterId: string, topicId: string) => void;
   addSession: (session: StudySession) => void;
   updateSettings: (settings: Partial<AppSettings>) => void;
   toggleTopicComplete: (subjectId: string, chapterId: string, topicId: string) => boolean;
   gainXp: (amount: number) => { newLevel: number; isLevelUp: boolean };
   updateTopicNotes: (subjectId: string, chapterId: string, topicId: string, notes: string) => void;
   addStudyPlan: (plan: StudyPlan) => void;
-  deleteStudyPlan: (planId: string) => void;
   completePlanTask: (topicId: string) => void;
   incrementSessionsCompleted: () => void;
   celebrateMilestone: (days: number) => void;
-  markTopicReviewed: (subjectId: string, chapterId: string, topicId: string) => void;
   getTodayMinutes: () => number;
   getStreak: () => number;
   getHeatmapData: () => Record<string, number>;
@@ -64,10 +60,12 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => { saveState(state); }, [state]);
 
+  // Apply theme
   useEffect(() => {
     document.documentElement.classList.toggle("dark", state.settings.theme === "dark");
   }, [state.settings.theme]);
 
+  // Calculate streak
   useEffect(() => {
     const today = new Date().toISOString().split("T")[0];
     const todaySessions = state.sessions.filter(s => s.startTime.startsWith(today) && s.completed);
@@ -95,38 +93,11 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
     setState(prev => ({ ...prev, subjects: prev.subjects.filter(s => s.id !== id) }));
   }, []);
 
-  const deleteChapter = useCallback((subjectId: string, chapterId: string) => {
-    setState(prev => ({
-      ...prev,
-      subjects: prev.subjects.map(s =>
-        s.id === subjectId
-          ? { ...s, chapters: s.chapters.filter(c => c.id !== chapterId) }
-          : s
-      ),
-    }));
-  }, []);
-
-  const deleteTopic = useCallback((subjectId: string, chapterId: string, topicId: string) => {
-    setState(prev => ({
-      ...prev,
-      subjects: prev.subjects.map(s =>
-        s.id === subjectId
-          ? {
-              ...s,
-              chapters: s.chapters.map(c =>
-                c.id === chapterId
-                  ? { ...c, topics: c.topics.filter(t => t.id !== topicId) }
-                  : c
-              ),
-            }
-          : s
-      ),
-    }));
-  }, []);
-
   const addSession = useCallback((session: StudySession) => {
     setState(prev => {
       let newState = { ...prev, sessions: [...prev.sessions, session] };
+
+      // Auto-sync: if session has a topicId and it matches a plan task, mark that task completed
       if (session.topicId) {
         newState = {
           ...newState,
@@ -140,6 +111,7 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
           })),
         };
       }
+
       return newState;
     });
   }, []);
@@ -148,6 +120,7 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
     setState(prev => ({ ...prev, settings: { ...prev.settings, ...settings } }));
   }, []);
 
+  // When a topic is toggled complete, also sync with plan tasks
   const toggleTopicComplete = useCallback((subjectId: string, chapterId: string, topicId: string): boolean => {
     let willBeCompleted = false;
     setState(prev => {
@@ -160,7 +133,9 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
           if (topic) wasCompleted = topic.completed;
         }
       }
+
       willBeCompleted = !wasCompleted;
+
       const newSubjects = prev.subjects.map(s =>
         s.id === subjectId
           ? {
@@ -180,6 +155,7 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
             }
           : s
       );
+
       const newPlans = prev.studyPlans.map(plan => ({
         ...plan,
         tasks: plan.tasks.map(t =>
@@ -188,6 +164,7 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
             : t
         ),
       }));
+
       return {
         ...prev,
         subjects: newSubjects,
@@ -198,19 +175,27 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
     return willBeCompleted;
   }, []);
 
+  // XP system: 100 XP per level, increasing
   const gainXp = useCallback((amount: number) => {
     let result = { newLevel: 0, isLevelUp: false };
     setState(prev => {
       const newXp = prev.xp + amount;
       const xpPerLevel = (level: number) => level * 100;
+      let level = prev.level;
+      let remaining = newXp;
+      
+      // Calculate level from total XP
+      let totalXpForLevel = 0;
       let calcLevel = 1;
       let tempXp = newXp;
       while (tempXp >= xpPerLevel(calcLevel)) {
         tempXp -= xpPerLevel(calcLevel);
         calcLevel++;
       }
+      
       const isLevelUp = calcLevel > prev.level;
       result = { newLevel: calcLevel, isLevelUp };
+      
       return { ...prev, xp: newXp, level: calcLevel };
     });
     return result;
@@ -238,13 +223,7 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
     setState(prev => ({ ...prev, studyPlans: [...prev.studyPlans, plan] }));
   }, []);
 
-  const deleteStudyPlan = useCallback((planId: string) => {
-    setState(prev => ({
-      ...prev,
-      studyPlans: prev.studyPlans.filter(p => p.id !== planId),
-    }));
-  }, []);
-
+  // Manually complete a plan task by topicId
   const completePlanTask = useCallback((topicId: string) => {
     setState(prev => ({
       ...prev,
@@ -254,31 +233,6 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
           t.topicId === topicId && !t.completed ? { ...t, completed: true } : t
         ),
       })),
-    }));
-  }, []);
-
-  const markTopicReviewed = useCallback((subjectId: string, chapterId: string, topicId: string) => {
-    setState(prev => ({
-      ...prev,
-      subjects: prev.subjects.map(s =>
-        s.id === subjectId
-          ? {
-              ...s,
-              chapters: s.chapters.map(c =>
-                c.id === chapterId
-                  ? {
-                      ...c,
-                      topics: c.topics.map(t =>
-                        t.id === topicId
-                          ? { ...t, revisionDates: [...t.revisionDates, new Date().toISOString()] }
-                          : t
-                      ),
-                    }
-                  : c
-              ),
-            }
-          : s
-      ),
     }));
   }, []);
 
@@ -325,6 +279,7 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
     return Math.round((allTopics.filter(t => t.completed).length / allTopics.length) * 100);
   }, [state.subjects]);
 
+  // Get the next incomplete plan task for today (used by timer)
   const getTodayPlanTask = useCallback(() => {
     const today = new Date().toISOString().split("T")[0];
     for (const plan of state.studyPlans) {
@@ -336,6 +291,7 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
     return null;
   }, [state.studyPlans]);
 
+  // Get ALL today's plan tasks (for timer topic selector)
   const getTodayPlanTasks = useCallback(() => {
     const today = new Date().toISOString().split("T")[0];
     const tasks: { planId: string; taskId: string; topicId: string; subjectId: string; estimatedMinutes: number; type: "study" | "revision"; completed: boolean }[] = [];
@@ -351,10 +307,9 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <StudyContext.Provider value={{
-      state, addSubject, updateSubject, deleteSubject, deleteChapter, deleteTopic,
-      addSession, updateSettings,
-      toggleTopicComplete, updateTopicNotes, addStudyPlan, deleteStudyPlan, completePlanTask,
-      incrementSessionsCompleted, celebrateMilestone, gainXp, markTopicReviewed,
+      state, addSubject, updateSubject, deleteSubject, addSession, updateSettings,
+      toggleTopicComplete, updateTopicNotes, addStudyPlan, completePlanTask,
+      incrementSessionsCompleted, celebrateMilestone, gainXp,
       getTodayMinutes, getStreak, getHeatmapData, getSubjectProgress, getTodayPlanTask, getTodayPlanTasks,
     }}>
       {children}
