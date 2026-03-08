@@ -107,7 +107,7 @@ const Revision = () => {
         <p className="text-muted-foreground text-sm mt-0.5">Spaced repetition scheduler</p>
       </motion.div>
 
-      <NotificationBanner featureName="Revision due হলে notify" />
+      
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-3">
