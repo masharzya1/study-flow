@@ -127,13 +127,14 @@ export function AmbientSounds({ isPlaying, currentMode, onAudioStateChange }: Am
     if (gainRef.current) gainRef.current.gain.value = volume;
   }, [volume]);
 
-  // Auto-play/pause YouTube track with timer
+  // Auto-play ambient sounds with timer, but NOT music/quran (those play independently)
   useEffect(() => {
-    if (isPlaying && (audioSource === "music" || audioSource === "quran")) {
-      setIsTrackPlaying(true);
-    } else if (!isPlaying) {
-      setIsTrackPlaying(false);
+    if (isPlaying && ["rain", "whitenoise", "forest"].includes(audioSource)) {
+      // Ambient sounds are tied to timer
+    } else if (!isPlaying && ["rain", "whitenoise", "forest"].includes(audioSource)) {
+      // Stop ambient sounds when timer stops
     }
+    // Music/Quran plays independently — no auto-pause
   }, [isPlaying, audioSource]);
 
   const selectSource = (src: AudioSource) => {
