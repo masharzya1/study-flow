@@ -233,7 +233,7 @@ const StudyPlanPage = () => {
             className="glass-card p-5 space-y-4"
           >
             <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-muted-foreground" />
+              <CalendarIcon className="w-4 h-4 text-muted-foreground" />
               <h3 className="font-semibold text-sm">Exam Details</h3>
             </div>
             <div className="space-y-3">
