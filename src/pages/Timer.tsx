@@ -1,29 +1,62 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useStudy } from "@/contexts/StudyContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play, Pause, RotateCcw, Coffee, Brain, Settings2, ChevronDown, Check, BookOpen, List } from "lucide-react";
 import { AmbientSounds, type AudioState } from "@/components/AmbientSounds";
-import { NetworkIndicator } from "@/components/NetworkIndicator";
 import { MiniPlayer } from "@/components/MiniPlayer";
 import { SubjectIcon } from "@/components/SubjectIcon";
 import { VictoryScreen } from "@/components/VictoryScreen";
 import { fireSessionComplete, fireStreakCelebration } from "@/lib/confetti";
 import type { StudySession } from "@/types/study";
 
+const TIMER_STORAGE_KEY = "studyforge_timer";
+
+interface TimerState {
+  isRunning: boolean;
+  startedAt: number; // timestamp when current countdown started
+  totalSeconds: number; // total seconds for this countdown
+  mode: "focus" | "break";
+  selectedTaskId: string | null;
+  freeTopicId: string | null;
+  sourceMode: "plan" | "free";
+  selectedPlanId: string | null;
+}
+
+function saveTimerState(state: TimerState) {
+  sessionStorage.setItem(TIMER_STORAGE_KEY, JSON.stringify(state));
+}
+
+function loadTimerState(): TimerState | null {
+  try {
+    const raw = sessionStorage.getItem(TIMER_STORAGE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch {}
+  return null;
+}
+
+function clearTimerState() {
+  sessionStorage.removeItem(TIMER_STORAGE_KEY);
+}
+
 const Timer = () => {
   const { state, addSession, updateSettings, incrementSessionsCompleted, getTodayPlanTasks, getStreak } = useStudy();
+  const { t } = useLanguage();
   const { pomodoroFocus, pomodoroBreak } = state.settings;
   const today = new Date().toISOString().split("T")[0];
   const sessionsCompleted = state.todaySessionsDate === today ? state.todaySessionsCompleted : 0;
 
-  const [mode, setMode] = useState<"focus" | "break">("focus");
+  // Restore timer state from sessionStorage
+  const savedTimer = useRef(loadTimerState());
+
+  const [mode, setMode] = useState<"focus" | "break">(savedTimer.current?.mode || "focus");
   const [isRunning, setIsRunning] = useState(false);
   const [timeLeft, setTimeLeft] = useState(pomodoroFocus * 60);
   const [showSettings, setShowSettings] = useState(false);
   const [focusMin, setFocusMin] = useState(pomodoroFocus);
   const [breakMin, setBreakMin] = useState(pomodoroBreak);
   const [showTopicSelector, setShowTopicSelector] = useState(false);
-  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
+  const [selectedTaskId, setSelectedTaskId] = useState<string | null>(savedTimer.current?.selectedTaskId || null);
   const [useTopicTime, setUseTopicTime] = useState(true);
   const [victoryData, setVictoryData] = useState<{ show: boolean; topicName: string; xpGained: number; newLevel?: number; isLevelUp: boolean }>({ show: false, topicName: "", xpGained: 0, isLevelUp: false });
   const [celebrationStreak, setCelebrationStreak] = useState(0);
@@ -31,11 +64,49 @@ const Timer = () => {
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const sessionStartRef = useRef<string | null>(null);
 
-  // Source mode: "plan" (from study plan) or "free" (any subject/topic)
-  const [sourceMode, setSourceMode] = useState<"plan" | "free">("plan");
-  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(null);
-  const [freeTopicId, setFreeTopicId] = useState<string | null>(null);
+  const [sourceMode, setSourceMode] = useState<"plan" | "free">(savedTimer.current?.sourceMode || "plan");
+  const [selectedPlanId, setSelectedPlanId] = useState<string | null>(savedTimer.current?.selectedPlanId || null);
+  const [freeTopicId, setFreeTopicId] = useState<string | null>(savedTimer.current?.freeTopicId || null);
   const [showFreePicker, setShowFreePicker] = useState(false);
+
+  // Restore running timer on mount
+  useEffect(() => {
+    const saved = savedTimer.current;
+    if (saved?.isRunning) {
+      const elapsed = Math.floor((Date.now() - saved.startedAt) / 1000);
+      const remaining = saved.totalSeconds - elapsed;
+      if (remaining > 0) {
+        setTimeLeft(remaining);
+        setMode(saved.mode);
+        setIsRunning(true);
+        sessionStartRef.current = new Date(saved.startedAt).toISOString();
+      } else {
+        // Timer expired while away — just reset
+        clearTimerState();
+      }
+    }
+    savedTimer.current = null;
+  }, []);
+
+  // Save timer state when running
+  useEffect(() => {
+    if (isRunning) {
+      const totalSeconds = mode === "focus" ? focusDuration * 60 : pomodoroBreak * 60;
+      const startedAt = Date.now() - (totalSeconds - timeLeft) * 1000;
+      saveTimerState({
+        isRunning: true,
+        startedAt,
+        totalSeconds,
+        mode,
+        selectedTaskId,
+        freeTopicId,
+        sourceMode,
+        selectedPlanId,
+      });
+    } else {
+      clearTimerState();
+    }
+  }, [isRunning]);
 
   // Auto-select first plan
   useEffect(() => {
@@ -44,7 +115,6 @@ const Timer = () => {
     }
   }, [state.studyPlans, selectedPlanId]);
 
-  // Get tasks for selected plan
   const todayTasks = useMemo(() => {
     if (sourceMode === "plan" && selectedPlanId) {
       const plan = state.studyPlans.find(p => p.id === selectedPlanId);
@@ -60,10 +130,10 @@ const Timer = () => {
   const resolvedTasks = useMemo(() => {
     return todayTasks.map(task => {
       const subject = state.subjects.find(s => s.id === task.subjectId);
-      let topicName = "Topic";
+      let topicName = t("timer.topic");
       for (const c of subject?.chapters || []) {
-        const t = c.topics.find(tp => tp.id === task.topicId);
-        if (t) { topicName = t.name; break; }
+        const tp = c.topics.find(tp => tp.id === task.topicId);
+        if (tp) { topicName = tp.name; break; }
       }
       return {
         ...task,
@@ -73,15 +143,14 @@ const Timer = () => {
         subjectIcon: subject?.icon || "book-open",
       };
     });
-  }, [todayTasks, state.subjects]);
+  }, [todayTasks, state.subjects, t]);
 
-  // Free topic: resolve selected free topic info
   const freeTopicInfo = useMemo(() => {
     if (!freeTopicId) return null;
     for (const s of state.subjects) {
       for (const c of s.chapters) {
-        const t = c.topics.find(tp => tp.id === freeTopicId);
-        if (t) return { topicName: t.name, subjectName: s.name, subjectColor: s.color, subjectIcon: s.icon, estimatedMinutes: t.estimatedMinutes, topicId: t.id, subjectId: s.id };
+        const tp = c.topics.find(tp => tp.id === freeTopicId);
+        if (tp) return { topicName: tp.name, subjectName: s.name, subjectColor: s.color, subjectIcon: s.icon, estimatedMinutes: tp.estimatedMinutes, topicId: tp.id, subjectId: s.id };
       }
     }
     return null;
@@ -95,7 +164,6 @@ const Timer = () => {
 
   const selectedTask = resolvedTasks.find(t => t.taskId === selectedTaskId);
   
-  // Calculate focus duration based on source mode
   const focusDuration = useMemo(() => {
     if (sourceMode === "free" && freeTopicInfo && useTopicTime) return freeTopicInfo.estimatedMinutes;
     if (sourceMode === "plan" && selectedTask && useTopicTime) return selectedTask.estimatedMinutes;
@@ -110,10 +178,10 @@ const Timer = () => {
     const dur = mode === "focus" ? focusDuration * 60 : pomodoroBreak * 60;
     setTimeLeft(dur);
     sessionStartRef.current = null;
+    clearTimerState();
     if (intervalRef.current) clearInterval(intervalRef.current);
   }, [mode, focusDuration, pomodoroBreak]);
 
-  // Only reset timeLeft when mode or duration settings change, NOT when pausing
   useEffect(() => {
     if (!isRunning) {
       setTimeLeft(mode === "focus" ? focusDuration * 60 : pomodoroBreak * 60);
@@ -127,6 +195,7 @@ const Timer = () => {
         setTimeLeft(prev => {
           if (prev <= 1) {
             setIsRunning(false);
+            clearTimerState();
             if (mode === "focus") {
               const topicInfo = sourceMode === "free" ? freeTopicInfo : selectedTask;
               const session: StudySession = {
@@ -142,10 +211,9 @@ const Timer = () => {
               incrementSessionsCompleted();
               sessionStartRef.current = null;
 
-              // 🎮 Gaming Victory Screen!
               const topicDisplayName = sourceMode === "free" && freeTopicInfo
                 ? freeTopicInfo.topicName
-                : (selectedTask ? selectedTask.topicName : "Focus Session");
+                : (selectedTask ? selectedTask.topicName : t("timer.focus"));
               const currentStreak = getStreak();
               setCelebrationStreak(currentStreak);
               setVictoryData({
@@ -161,7 +229,6 @@ const Timer = () => {
               setMode("break");
               return pomodoroBreak * 60;
             } else {
-              // Break complete
               setMode("focus");
               sessionStartRef.current = null;
               return focusDuration * 60;
@@ -172,7 +239,7 @@ const Timer = () => {
       }, 1000);
     }
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  }, [isRunning, mode, focusDuration, pomodoroBreak, addSession, selectedTask, incompleteTasks, selectedTaskId, incrementSessionsCompleted, getStreak]);
+  }, [isRunning, mode, focusDuration, pomodoroBreak, addSession, selectedTask, incompleteTasks, selectedTaskId, incrementSessionsCompleted, getStreak, t]);
 
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
@@ -193,14 +260,9 @@ const Timer = () => {
   };
 
   const circumference = 2 * Math.PI * 120;
-  const needsInternet = isRunning;
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] p-5 pb-28 md:pb-8">
-      <div className="fixed top-3 right-3 z-50 md:top-4 md:right-4">
-        <NetworkIndicator needsInternet={needsInternet} />
-      </div>
-
       {/* Gaming Victory Screen */}
       <VictoryScreen
         show={victoryData.show}
@@ -226,7 +288,7 @@ const Timer = () => {
                 sourceMode === "plan" ? "bg-foreground text-primary-foreground shadow-sm" : "text-muted-foreground"
               }`}
             >
-              <List className="w-3 h-3" /> Routine
+              <List className="w-3 h-3" /> {t("timer.routine")}
             </button>
             <button
               onClick={() => { setSourceMode("free"); setShowTopicSelector(false); }}
@@ -235,11 +297,11 @@ const Timer = () => {
                 sourceMode === "free" ? "bg-foreground text-primary-foreground shadow-sm" : "text-muted-foreground"
               }`}
             >
-              <BookOpen className="w-3 h-3" /> Free Topic
+              <BookOpen className="w-3 h-3" /> {t("timer.freeTopic")}
             </button>
           </div>
 
-          {/* Plan Selector (when multiple plans exist) */}
+          {/* Plan Selector */}
           {sourceMode === "plan" && state.studyPlans.length > 1 && !isRunning && (
             <div className="flex gap-1.5 overflow-x-auto scrollbar-hide px-1">
               {state.studyPlans.map(plan => (
@@ -260,7 +322,7 @@ const Timer = () => {
           {sourceMode === "plan" && resolvedTasks.length > 0 && (
             <div className="space-y-2">
               <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
-                Today's Routine · {incompleteTasks.length} remaining
+                {t("timer.todayRoutine")} · {incompleteTasks.length} {t("timer.remaining")}
               </p>
 
               {selectedTask && (
@@ -279,7 +341,7 @@ const Timer = () => {
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
-                      {isRunning ? "Studying" : selectedTask.type === "revision" ? "Review" : "Study"}
+                      {isRunning ? t("timer.studying") : selectedTask.type === "revision" ? t("timer.review") : t("timer.study")}
                     </p>
                     <p className="text-sm font-medium truncate">{selectedTask.topicName}</p>
                     <p className="text-[10px] text-muted-foreground">
@@ -287,7 +349,7 @@ const Timer = () => {
                     </p>
                   </div>
                   <div className="flex items-center gap-2">
-                    <span className="chip-accent">{selectedTask.type === "revision" ? "Review" : "Planned"}</span>
+                    <span className="chip-accent">{selectedTask.type === "revision" ? t("timer.review") : t("timer.planned")}</span>
                     {!isRunning && (
                       <ChevronDown className={`w-4 h-4 text-muted-foreground transition-transform ${showTopicSelector ? "rotate-180" : ""}`} />
                     )}
@@ -328,7 +390,7 @@ const Timer = () => {
                               {task.topicName}
                             </p>
                             <p className="text-[10px] text-muted-foreground">
-                              {task.subjectName} · {task.estimatedMinutes}m · {task.type === "revision" ? "Review" : "Study"}
+                              {task.subjectName} · {task.estimatedMinutes}m · {task.type === "revision" ? t("timer.review") : t("timer.study")}
                             </p>
                           </div>
                           {task.taskId === selectedTaskId && !task.completed && (
@@ -347,7 +409,7 @@ const Timer = () => {
                       }`}>
                         {useTopicTime && <Check className="w-3 h-3 text-primary-foreground" />}
                       </div>
-                      Set timer based on topic duration
+                      {t("timer.setTimerByTopic")}
                     </button>
                   </motion.div>
                 )}
@@ -356,7 +418,7 @@ const Timer = () => {
           )}
 
           {sourceMode === "plan" && resolvedTasks.length === 0 && (
-            <p className="text-xs text-muted-foreground py-2">No plan tasks for today. Try Free Topic mode!</p>
+            <p className="text-xs text-muted-foreground py-2">{t("timer.noPlanTasks")}</p>
           )}
 
           {/* Free Topic Picker */}
@@ -377,7 +439,7 @@ const Timer = () => {
                     <SubjectIcon name={freeTopicInfo.subjectIcon} className="w-4 h-4" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Free Study</p>
+                    <p className="text-[10px] text-muted-foreground uppercase tracking-wider">{t("timer.freeStudy")}</p>
                     <p className="text-sm font-medium truncate">{freeTopicInfo.topicName}</p>
                     <p className="text-[10px] text-muted-foreground">{freeTopicInfo.subjectName} · {freeTopicInfo.estimatedMinutes}m</p>
                   </div>
@@ -390,7 +452,7 @@ const Timer = () => {
                   className="glass-card p-4 w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <BookOpen className="w-5 h-5 mx-auto mb-1.5 opacity-50" />
-                  Pick a Topic
+                  {t("timer.pickATopic")}
                 </button>
               )}
 
@@ -409,7 +471,7 @@ const Timer = () => {
                             <SubjectIcon name={subject.icon} className="w-3 h-3" />
                             {subject.name}
                           </p>
-                          {subject.chapters.flatMap(c => c.topics).filter(t => !t.completed).map(topic => (
+                          {subject.chapters.flatMap(c => c.topics).filter(tp => !tp.completed).map(topic => (
                             <button
                               key={topic.id}
                               onClick={() => {
@@ -428,7 +490,7 @@ const Timer = () => {
                         </div>
                       ))}
                       {state.subjects.length === 0 && (
-                        <p className="text-xs text-muted-foreground text-center py-3">Add subjects first on the Subjects page</p>
+                        <p className="text-xs text-muted-foreground text-center py-3">{t("timer.addSubjectsFirst")}</p>
                       )}
                     </div>
                   </motion.div>
@@ -446,7 +508,7 @@ const Timer = () => {
               mode === "focus" ? "bg-foreground text-primary-foreground shadow-sm" : "text-muted-foreground"
             }`}
           >
-            <Brain className="w-4 h-4" /> Focus
+            <Brain className="w-4 h-4" /> {t("timer.focus")}
           </button>
           <button
             onClick={() => { setMode("break"); setIsRunning(false); }}
@@ -454,7 +516,7 @@ const Timer = () => {
               mode === "break" ? "bg-foreground text-primary-foreground shadow-sm" : "text-muted-foreground"
             }`}
           >
-            <Coffee className="w-4 h-4" /> Break
+            <Coffee className="w-4 h-4" /> {t("timer.break")}
           </button>
           <AmbientSounds isPlaying={isRunning} currentMode={mode} onAudioStateChange={setAudioState} />
           <button
@@ -475,7 +537,7 @@ const Timer = () => {
               className="glass-card p-4 space-y-3 overflow-hidden"
             >
               <div className="flex items-center justify-between">
-                <label className="text-sm">Focus (min)</label>
+                <label className="text-sm">{t("timer.focusMin")}</label>
                 <input
                   type="number"
                   value={focusMin}
@@ -484,7 +546,7 @@ const Timer = () => {
                 />
               </div>
               <div className="flex items-center justify-between">
-                <label className="text-sm">Break (min)</label>
+                <label className="text-sm">{t("timer.breakMin")}</label>
                 <input
                   type="number"
                   value={breakMin}
@@ -493,7 +555,7 @@ const Timer = () => {
                 />
               </div>
               <button onClick={applySettings} className="w-full py-2.5 rounded-xl bg-foreground text-primary-foreground text-sm font-medium">
-                Apply
+                {t("timer.apply")}
               </button>
             </motion.div>
           )}
@@ -521,13 +583,13 @@ const Timer = () => {
             <span className={`text-xs mt-2 uppercase tracking-widest ${
               mode === "focus" ? "text-muted-foreground" : "text-accent"
             }`}>
-              {mode === "focus" ? "Focus" : "Break"}
+              {mode === "focus" ? t("timer.focus") : t("timer.break")}
             </span>
             {useTopicTime && mode === "focus" && (
               (sourceMode === "plan" && selectedTask) ? (
-                <span className="text-[10px] text-muted-foreground mt-1">{selectedTask.estimatedMinutes}m estimated</span>
+                <span className="text-[10px] text-muted-foreground mt-1">{selectedTask.estimatedMinutes}m {t("timer.estimated")}</span>
               ) : (sourceMode === "free" && freeTopicInfo) ? (
-                <span className="text-[10px] text-muted-foreground mt-1">{freeTopicInfo.estimatedMinutes}m estimated</span>
+                <span className="text-[10px] text-muted-foreground mt-1">{freeTopicInfo.estimatedMinutes}m {t("timer.estimated")}</span>
               ) : null
             )}
           </div>
@@ -553,9 +615,9 @@ const Timer = () => {
 
         {/* Session Info */}
         <div className="flex items-center justify-center gap-4 text-[11px] text-muted-foreground">
-          <span>{sessionsCompleted} session{sessionsCompleted !== 1 ? "s" : ""} today</span>
+          <span>{sessionsCompleted} {sessionsCompleted !== 1 ? t("timer.sessionsToday") : t("timer.sessionToday")}</span>
           <span>·</span>
-          <span>{useTopicTime && selectedTask ? `${selectedTask.estimatedMinutes}m topic` : `${pomodoroFocus}m focus`} / {pomodoroBreak}m break</span>
+          <span>{useTopicTime && selectedTask ? `${selectedTask.estimatedMinutes}m ${t("timer.topic")}` : `${pomodoroFocus}m ${t("timer.focus")}`} / {pomodoroBreak}m {t("timer.break")}</span>
         </div>
       </motion.div>
 

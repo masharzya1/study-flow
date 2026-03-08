@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { useStudy } from "@/contexts/StudyContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { motion, AnimatePresence } from "framer-motion";
-import { Moon, Sun, Volume2, VolumeX, Clock, Target, Github, Heart, ExternalLink, Layers, Plus, Trash2, Check } from "lucide-react";
+import { Moon, Sun, Volume2, VolumeX, Clock, Target, Github, Heart, ExternalLink, Layers, Plus, Trash2, Check, Globe } from "lucide-react";
 import type { DifficultyLevel } from "@/types/study";
 import { DEFAULT_DIFFICULTY_LEVELS } from "@/types/study";
 
 const SettingsPage = () => {
   const { state, updateSettings } = useStudy();
+  const { t, language, setLanguage } = useLanguage();
   const { settings } = state;
   const levels = settings.difficultyLevels || DEFAULT_DIFFICULTY_LEVELS;
 
@@ -36,7 +38,7 @@ const SettingsPage = () => {
   };
 
   const removeLevel = (id: number) => {
-    if (levels.length <= 2) return; // Keep at least 2 levels
+    if (levels.length <= 2) return;
     updateSettings({ difficultyLevels: levels.filter(l => l.id !== id) });
   };
 
@@ -45,14 +47,40 @@ const SettingsPage = () => {
   };
 
   return (
-    <div className="p-5 md:p-8 max-w-2xl mx-auto space-y-5 pb-28 md:pb-8">
+    <div className="p-4 md:p-8 max-w-2xl mx-auto space-y-4 pb-28 md:pb-8">
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }}>
-        <h1 className="text-2xl font-semibold tracking-tight">Settings</h1>
-        <p className="text-muted-foreground text-sm mt-0.5">Customize your experience</p>
+        <h1 className="text-2xl font-semibold tracking-tight">{t("settings.title")}</h1>
+        <p className="text-muted-foreground text-sm mt-0.5">{t("settings.subtitle")}</p>
       </motion.div>
 
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.04 }} className="glass-card p-5 space-y-3">
-        <h2 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground">Appearance</h2>
+      {/* Language */}
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.02 }} className="glass-card p-4 space-y-3">
+        <h2 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+          <Globe className="w-3.5 h-3.5" /> {t("settings.language")}
+        </h2>
+        <div className="flex gap-2">
+          <button
+            onClick={() => setLanguage("en")}
+            className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-xl text-sm font-medium transition-all ${
+              language === "en" ? "bg-foreground text-primary-foreground" : "bg-secondary text-muted-foreground"
+            }`}
+          >
+            🇺🇸 {t("settings.english")}
+          </button>
+          <button
+            onClick={() => setLanguage("bn")}
+            className={`flex-1 flex items-center justify-center gap-2 p-3 rounded-xl text-sm font-medium transition-all ${
+              language === "bn" ? "bg-foreground text-primary-foreground" : "bg-secondary text-muted-foreground"
+            }`}
+          >
+            🇧🇩 {t("settings.bengali")}
+          </button>
+        </div>
+      </motion.div>
+
+      {/* Appearance */}
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.04 }} className="glass-card p-4 space-y-3">
+        <h2 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground">{t("settings.appearance")}</h2>
         <div className="flex gap-2">
           <button
             onClick={() => updateSettings({ theme: "light" })}
@@ -60,7 +88,7 @@ const SettingsPage = () => {
               settings.theme === "light" ? "bg-foreground text-primary-foreground" : "bg-secondary text-muted-foreground"
             }`}
           >
-            <Sun className="w-4 h-4" /> Light
+            <Sun className="w-4 h-4" /> {t("settings.light")}
           </button>
           <button
             onClick={() => updateSettings({ theme: "dark" })}
@@ -68,19 +96,19 @@ const SettingsPage = () => {
               settings.theme === "dark" ? "bg-foreground text-primary-foreground" : "bg-secondary text-muted-foreground"
             }`}
           >
-            <Moon className="w-4 h-4" /> Dark
+            <Moon className="w-4 h-4" /> {t("settings.dark")}
           </button>
         </div>
       </motion.div>
 
       {/* Timer */}
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }} className="glass-card p-5 space-y-4">
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.06 }} className="glass-card p-4 space-y-4">
         <h2 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-          <Clock className="w-3.5 h-3.5" /> Focus Timer
+          <Clock className="w-3.5 h-3.5" /> {t("settings.focusTimer")}
         </h2>
         <div className="space-y-3">
           <div className="flex items-center justify-between">
-            <label className="text-sm">Focus (min)</label>
+            <label className="text-sm">{t("settings.focusMin")}</label>
             <input
               type="number"
               value={settings.pomodoroFocus}
@@ -89,7 +117,7 @@ const SettingsPage = () => {
             />
           </div>
           <div className="flex items-center justify-between">
-            <label className="text-sm">Break (min)</label>
+            <label className="text-sm">{t("settings.breakMin")}</label>
             <input
               type="number"
               value={settings.pomodoroBreak}
@@ -101,42 +129,42 @@ const SettingsPage = () => {
       </motion.div>
 
       {/* Difficulty Levels */}
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.10 }} className="glass-card p-5 space-y-4">
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.08 }} className="glass-card p-4 space-y-4">
         <div className="flex items-center justify-between">
           <h2 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-            <Layers className="w-3.5 h-3.5" /> Difficulty Levels
+            <Layers className="w-3.5 h-3.5" /> {t("settings.difficultyLevels")}
           </h2>
           <button onClick={resetLevels} className="text-[10px] text-muted-foreground hover:text-foreground transition-colors">
-            Reset
+            {t("settings.reset")}
           </button>
         </div>
         <p className="text-[11px] text-muted-foreground">
-          Set default time for each difficulty level. Topics will use this as their estimated duration.
+          {t("settings.difficultyDesc")}
         </p>
 
         <div className="space-y-2">
           {levels.map((level, index) => (
             <div key={level.id} className="flex items-center gap-2">
-              <span className="text-xs text-muted-foreground w-5 text-center">{index + 1}</span>
+              <span className="text-xs text-muted-foreground w-5 text-center flex-shrink-0">{index + 1}</span>
               <input
                 type="text"
                 value={level.label}
                 onChange={e => updateLevel(level.id, "label", e.target.value)}
-                className="flex-1 px-2.5 py-2 text-sm rounded-lg bg-secondary text-foreground border-0 outline-none"
+                className="flex-1 min-w-0 px-2.5 py-2 text-sm rounded-lg bg-secondary text-foreground border-0 outline-none"
               />
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 flex-shrink-0">
                 <input
                   type="number"
                   value={level.minutes}
                   onChange={e => updateLevel(level.id, "minutes", Number(e.target.value))}
-                  className="w-16 px-2 py-2 text-sm rounded-lg bg-secondary text-foreground text-center border-0 outline-none"
+                  className="w-14 px-2 py-2 text-sm rounded-lg bg-secondary text-foreground text-center border-0 outline-none"
                 />
                 <span className="text-[10px] text-muted-foreground">min</span>
               </div>
               {levels.length > 2 && (
                 <button
                   onClick={() => removeLevel(level.id)}
-                  className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                  className="p-1.5 rounded-lg text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors flex-shrink-0"
                 >
                   <Trash2 className="w-3.5 h-3.5" />
                 </button>
@@ -157,31 +185,31 @@ const SettingsPage = () => {
               <div className="flex items-center gap-2">
                 <input
                   type="text"
-                  placeholder="Level name"
+                  placeholder={t("settings.levelName")}
                   value={newLevelLabel}
                   onChange={e => setNewLevelLabel(e.target.value)}
-                  className="flex-1 px-2.5 py-2 text-sm rounded-lg bg-secondary text-foreground border-0 outline-none placeholder:text-muted-foreground"
+                  className="flex-1 min-w-0 px-2.5 py-2 text-sm rounded-lg bg-secondary text-foreground border-0 outline-none placeholder:text-muted-foreground"
                 />
                 <input
                   type="number"
                   value={newLevelMinutes}
                   onChange={e => setNewLevelMinutes(Number(e.target.value))}
-                  className="w-16 px-2 py-2 text-sm rounded-lg bg-secondary text-foreground text-center border-0 outline-none"
+                  className="w-14 px-2 py-2 text-sm rounded-lg bg-secondary text-foreground text-center border-0 outline-none flex-shrink-0"
                 />
-                <span className="text-[10px] text-muted-foreground">min</span>
+                <span className="text-[10px] text-muted-foreground flex-shrink-0">min</span>
               </div>
               <div className="flex gap-2">
                 <button
                   onClick={addLevel}
                   className="flex-1 py-2 rounded-xl bg-foreground text-primary-foreground text-xs font-medium"
                 >
-                  <Check className="w-3.5 h-3.5 inline mr-1" /> Add
+                  <Check className="w-3.5 h-3.5 inline mr-1" /> {t("subjects.add")}
                 </button>
                 <button
                   onClick={() => setShowAddLevel(false)}
                   className="px-4 py-2 rounded-xl bg-secondary text-muted-foreground text-xs font-medium"
                 >
-                  Cancel
+                  {t("subjects.cancel")}
                 </button>
               </div>
             </motion.div>
@@ -190,19 +218,19 @@ const SettingsPage = () => {
               onClick={() => setShowAddLevel(true)}
               className="flex items-center gap-2 w-full py-2.5 rounded-xl bg-secondary/50 text-muted-foreground text-xs font-medium hover:bg-secondary transition-colors justify-center"
             >
-              <Plus className="w-3.5 h-3.5" /> Add New Level
+              <Plus className="w-3.5 h-3.5" /> {t("settings.addNewLevel")}
             </button>
           )}
         </AnimatePresence>
       </motion.div>
 
       {/* Goals */}
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.14 }} className="glass-card p-5 space-y-4">
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.10 }} className="glass-card p-4 space-y-4">
         <h2 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-          <Target className="w-3.5 h-3.5" /> Daily Goal
+          <Target className="w-3.5 h-3.5" /> {t("settings.dailyGoal")}
         </h2>
         <div className="flex items-center justify-between">
-          <label className="text-sm">Target minutes</label>
+          <label className="text-sm">{t("settings.targetMinutes")}</label>
           <input
             type="number"
             value={settings.dailyGoalMinutes}
@@ -211,7 +239,7 @@ const SettingsPage = () => {
           />
         </div>
         <div className="flex items-center justify-between">
-          <label className="text-sm">Sound</label>
+          <label className="text-sm">{t("settings.sound")}</label>
           <button
             onClick={() => updateSettings({ soundEnabled: !settings.soundEnabled })}
             className={`p-2 rounded-lg transition-colors ${settings.soundEnabled ? "bg-foreground text-primary-foreground" : "bg-secondary text-muted-foreground"}`}
@@ -222,12 +250,12 @@ const SettingsPage = () => {
       </motion.div>
 
       {/* Open Source */}
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.18 }} className="glass-card p-5 space-y-3">
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }} className="glass-card p-4 space-y-3">
         <h2 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground flex items-center gap-2">
-          <Github className="w-3.5 h-3.5" /> Open Source
+          <Github className="w-3.5 h-3.5" /> {t("settings.openSource")}
         </h2>
         <p className="text-sm text-muted-foreground">
-          StudyForge is 100% free and open source. No premium features, no locked content.
+          {t("settings.openSourceDesc")}
         </p>
         <div className="flex gap-2 flex-wrap">
           <a href="https://github.com" target="_blank" rel="noopener noreferrer" className="flex items-center gap-2 px-3 py-2 rounded-xl bg-secondary text-sm hover-lift font-medium">
@@ -241,9 +269,9 @@ const SettingsPage = () => {
         </div>
       </motion.div>
 
-      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.22 }} className="text-center text-[11px] text-muted-foreground py-4">
-        <p>StudyForge v1.0.0 · Made for students everywhere</p>
-        <p className="mt-0.5">PWA · Works offline · 100% free</p>
+      <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} transition={{ delay: 0.16 }} className="text-center text-[11px] text-muted-foreground py-4">
+        <p>{t("settings.version")}</p>
+        <p className="mt-0.5">{t("settings.pwa")}</p>
       </motion.div>
     </div>
   );
