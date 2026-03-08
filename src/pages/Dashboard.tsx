@@ -117,7 +117,11 @@ const Dashboard = () => {
     setShowMilestone(false);
     celebrateMilestone(streak);
   }, [streak, celebrateMilestone]);
+
+  return (
     <div className="p-5 md:p-8 max-w-3xl mx-auto space-y-6 pb-28 md:pb-8">
+      {/* Streak Milestone Celebration */}
+      <StreakMilestone show={showMilestone} streak={streak} onClose={handleCloseMilestone} />
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-1">
         <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">
