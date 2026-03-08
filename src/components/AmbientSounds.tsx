@@ -147,8 +147,12 @@ export function AmbientSounds({ isPlaying, currentMode, onAudioStateChange }: Am
   const nextTrack = useCallback(() => {
     const list = audioSource === "quran" ? QURAN_TILAWAT : filteredMusic;
     setIsLoading(true);
-    setCurrentTrackIndex(prev => (prev + 1) % list.length);
-  }, [audioSource, filteredMusic]);
+    if (shuffle) {
+      setCurrentTrackIndex(Math.floor(Math.random() * list.length));
+    } else {
+      setCurrentTrackIndex(prev => (prev + 1) % list.length);
+    }
+  }, [audioSource, filteredMusic, shuffle]);
 
   const selectTrack = (index: number) => {
     setIsLoading(true);
