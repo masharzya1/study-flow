@@ -57,8 +57,12 @@ export interface AudioState {
   type: "music" | "quran";
   isPlaying: boolean;
   isLoading: boolean;
+  shuffle: boolean;
+  repeat: boolean;
   onTogglePlay: () => void;
   onNext: () => void;
+  onToggleShuffle: () => void;
+  onToggleRepeat: () => void;
 }
 
 type AudioSource = "none" | "rain" | "whitenoise" | "forest" | "music" | "quran";
