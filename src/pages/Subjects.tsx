@@ -61,7 +61,7 @@ const Subjects = () => {
       subjectId,
       name: topicName.trim(),
       difficulty: topicDifficulty,
-      estimatedMinutes: topicDifficulty * 15,
+      estimatedMinutes: (state.settings.difficultyLevels?.find(d => d.id === topicDifficulty)?.minutes || topicDifficulty * 15),
       completed: false,
       notes: "",
       revisionDates: [],

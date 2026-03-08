@@ -90,6 +90,12 @@ export interface AppState {
   todaySessionsDate?: string;
 }
 
+export interface DifficultyLevel {
+  id: number;
+  label: string;
+  minutes: number;
+}
+
 export interface AppSettings {
   pomodoroFocus: number;
   pomodoroBreak: number;
@@ -97,7 +103,17 @@ export interface AppSettings {
   theme: "dark" | "light";
   soundEnabled: boolean;
   ambientSound: "none" | "rain" | "whitenoise" | "forest";
+  youtubeUrl: string;
+  difficultyLevels: DifficultyLevel[];
 }
+
+export const DEFAULT_DIFFICULTY_LEVELS: DifficultyLevel[] = [
+  { id: 1, label: "Very Easy", minutes: 15 },
+  { id: 2, label: "Easy", minutes: 25 },
+  { id: 3, label: "Medium", minutes: 35 },
+  { id: 4, label: "Hard", minutes: 50 },
+  { id: 5, label: "Very Hard", minutes: 60 },
+];
 
 export const DEFAULT_SETTINGS: AppSettings = {
   pomodoroFocus: 25,
@@ -106,6 +122,8 @@ export const DEFAULT_SETTINGS: AppSettings = {
   theme: "light",
   soundEnabled: true,
   ambientSound: "none",
+  youtubeUrl: "",
+  difficultyLevels: DEFAULT_DIFFICULTY_LEVELS,
 };
 
 export const SUBJECT_COLORS = [
