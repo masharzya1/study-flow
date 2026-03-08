@@ -8,6 +8,7 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import { AppLayout } from "@/components/AppLayout";
 import { SwipeNavigation } from "@/components/SwipeNavigation";
 import { OnboardingTour } from "@/components/OnboardingTour";
+import { InstallPrompt } from "@/components/InstallPrompt";
 import Dashboard from "@/pages/Dashboard";
 import Subjects from "@/pages/Subjects";
 import Timer from "@/pages/Timer";
@@ -49,6 +50,7 @@ const App = () => (
           <Sonner />
           <BrowserRouter>
             <OnboardingTour />
+            <InstallPrompt />
             <AppLayout>
               <AnimatedRoutes />
             </AppLayout>

@@ -105,8 +105,8 @@ const translations: Record<Language, Record<string, string>> = {
     "settings.english": "English",
     "settings.bengali": "বাংলা",
     "settings.openSource": "Open Source",
-    "settings.openSourceDesc": "StudyForge is 100% free and open source. No premium features, no locked content.",
-    "settings.version": "StudyForge v1.0.0 · Made for students everywhere",
+    "settings.openSourceDesc": "Paideia is 100% free and open source. No premium features, no locked content.",
+    "settings.version": "Paideia v1.0 · Παιδεία · Made for students everywhere",
     "settings.pwa": "PWA · Works offline · 100% free",
 
     // Study Plan
@@ -209,7 +209,7 @@ const translations: Record<Language, Record<string, string>> = {
     "comp.sessionComplete": "SESSION COMPLETE",
 
     // Onboarding
-    "onboard.welcome": "Welcome to StudyForge",
+    "onboard.welcome": "Welcome to Paideia",
     "onboard.welcomeDesc": "Your personal study companion. Let's get you started!",
     "onboard.step1Title": "Create Subjects",
     "onboard.step1Desc": "Add your subjects, chapters, and topics to organize your study material.",
@@ -223,6 +223,13 @@ const translations: Record<Language, Record<string, string>> = {
     "onboard.skip": "Skip",
     "onboard.next": "Next",
     "onboard.of": "of",
+
+    // Install prompt
+    "install.title": "Install Paideia",
+    "install.desc": "Install this app on your device for the best experience — works offline!",
+    "install.iosDesc": "Tap Share → Add to Home Screen to install Paideia on your device.",
+    "install.install": "Install App",
+    "install.later": "Maybe later",
   },
 
   bn: {
@@ -329,8 +336,8 @@ const translations: Record<Language, Record<string, string>> = {
     "settings.english": "English",
     "settings.bengali": "বাংলা",
     "settings.openSource": "ওপেন সোর্স",
-    "settings.openSourceDesc": "StudyForge সম্পূর্ণ বিনামূল্যে এবং ওপেন সোর্স। কোনো প্রিমিয়াম ফিচার নেই।",
-    "settings.version": "StudyForge v1.0.0 · সব ছাত্রদের জন্য তৈরি",
+    "settings.openSourceDesc": "Paideia সম্পূর্ণ বিনামূল্যে এবং ওপেন সোর্স। কোনো প্রিমিয়াম ফিচার নেই।",
+    "settings.version": "Paideia v1.0 · Παιδεία · সব ছাত্রদের জন্য তৈরি",
     "settings.pwa": "PWA · অফলাইনে কাজ করে · ১০০% ফ্রি",
 
     // Study Plan
@@ -433,7 +440,7 @@ const translations: Record<Language, Record<string, string>> = {
     "comp.sessionComplete": "সেশন সম্পন্ন",
 
     // Onboarding
-    "onboard.welcome": "StudyForge-এ স্বাগতম",
+    "onboard.welcome": "Paideia-তে স্বাগতম",
     "onboard.welcomeDesc": "তোমার ব্যক্তিগত পড়ার সঙ্গী। চলো শুরু করি!",
     "onboard.step1Title": "বিষয় তৈরি করো",
     "onboard.step1Desc": "তোমার বিষয়, অধ্যায় এবং টপিক যোগ করো।",
@@ -447,6 +454,13 @@ const translations: Record<Language, Record<string, string>> = {
     "onboard.skip": "বাদ দিন",
     "onboard.next": "পরবর্তী",
     "onboard.of": "এর",
+
+    // Install prompt
+    "install.title": "Paideia ইনস্টল করুন",
+    "install.desc": "সেরা অভিজ্ঞতার জন্য আপনার ডিভাইসে অ্যাপটি ইনস্টল করুন — অফলাইনে কাজ করে!",
+    "install.iosDesc": "Share → Add to Home Screen ট্যাপ করে Paideia ইনস্টল করুন।",
+    "install.install": "ইনস্টল করুন",
+    "install.later": "পরে করবো",
   },
 };
 
