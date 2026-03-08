@@ -454,6 +454,13 @@ const translations: Record<Language, Record<string, string>> = {
     "onboard.skip": "বাদ দিন",
     "onboard.next": "পরবর্তী",
     "onboard.of": "এর",
+
+    // Install prompt
+    "install.title": "Paideia ইনস্টল করুন",
+    "install.desc": "সেরা অভিজ্ঞতার জন্য আপনার ডিভাইসে অ্যাপটি ইনস্টল করুন — অফলাইনে কাজ করে!",
+    "install.iosDesc": "Share → Add to Home Screen ট্যাপ করে Paideia ইনস্টল করুন।",
+    "install.install": "ইনস্টল করুন",
+    "install.later": "পরে করবো",
   },
 };
 
