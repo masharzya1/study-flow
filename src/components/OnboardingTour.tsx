@@ -44,11 +44,12 @@ function findVisibleElement(selector: string): Element | null {
   const els = document.querySelectorAll(selector);
   for (const el of els) {
     const r = el.getBoundingClientRect();
-    if (r.width > 0 && r.height > 0 && r.top >= 0 && r.bottom <= window.innerHeight + 100) {
+    // Element must be visible and on-screen
+    if (r.width > 0 && r.height > 0 && r.top >= -10 && r.bottom <= window.innerHeight + 10 && r.left >= -10 && r.right <= window.innerWidth + 10) {
       return el;
     }
   }
-  return els[0] || null;
+  return null; // Return null if no VISIBLE element found — don't fallback to hidden ones
 }
 
 export function OnboardingTour() {
