@@ -20,7 +20,7 @@ export interface Topic {
   chapterId: string;
   subjectId: string;
   name: string;
-  difficulty: 1 | 2 | 3 | 4 | 5;
+  difficulty: number;
   estimatedMinutes: number;
   completed: boolean;
   completedAt?: string;
