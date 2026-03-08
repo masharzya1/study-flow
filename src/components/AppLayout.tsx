@@ -1,5 +1,7 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutDashboard, BookOpen, Timer, BarChart3, Settings, CalendarDays, Sparkles, RotateCcw } from "lucide-react";
+import { LayoutDashboard, BookOpen, Timer, BarChart3, Settings, CalendarDays, Sparkles, RotateCcw, MoreHorizontal } from "lucide-react";
+import { useState } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 
 const navItems = [
   { to: "/", icon: LayoutDashboard, label: "Home" },
@@ -12,13 +14,16 @@ const navItems = [
   { to: "/settings", icon: Settings, label: "Settings" },
 ];
 
-// Show fewer items on mobile bottom nav
-const mobileNavItems = navItems.filter(item =>
-  ["/", "/subjects", "/timer", "/plan", "/analytics"].includes(item.to)
-);
+// Primary 4 items + More button on mobile
+const mobileMainItems = navItems.slice(0, 4);
+const mobileMoreItems = navItems.slice(4);
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
+  const [showMore, setShowMore] = useState(false);
+
+  // Check if current route is in the "more" section
+  const isMoreActive = mobileMoreItems.some(item => item.to === location.pathname);
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
@@ -59,15 +64,54 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         {children}
       </main>
 
+      {/* More menu overlay */}
+      <AnimatePresence>
+        {showMore && (
+          <>
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="md:hidden fixed inset-0 bg-background/60 backdrop-blur-sm z-40"
+              onClick={() => setShowMore(false)}
+            />
+            <motion.div
+              initial={{ opacity: 0, y: 16 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 16 }}
+              className="md:hidden fixed bottom-[68px] right-3 z-50 glass-card-elevated p-2 min-w-[160px] safe-area-bottom"
+            >
+              {mobileMoreItems.map(item => {
+                const active = location.pathname === item.to;
+                return (
+                  <NavLink
+                    key={item.to}
+                    to={item.to}
+                    onClick={() => setShowMore(false)}
+                    className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                      active ? "bg-foreground text-primary-foreground" : "text-muted-foreground hover:text-foreground hover:bg-secondary"
+                    }`}
+                  >
+                    <item.icon className="w-[18px] h-[18px]" />
+                    <span>{item.label}</span>
+                  </NavLink>
+                );
+              })}
+            </motion.div>
+          </>
+        )}
+      </AnimatePresence>
+
       {/* Mobile Bottom Nav — iOS style */}
       <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-card/95 backdrop-blur-xl border-t border-border z-50 safe-area-bottom">
         <div className="flex items-center justify-around py-1.5">
-          {mobileNavItems.map(item => {
+          {mobileMainItems.map(item => {
             const active = location.pathname === item.to;
             return (
               <NavLink
                 key={item.to}
                 to={item.to}
+                onClick={() => setShowMore(false)}
                 className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-[10px] font-medium transition-all ${
                   active ? "text-foreground" : "text-muted-foreground"
                 }`}
@@ -77,6 +121,16 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               </NavLink>
             );
           })}
+          {/* More button */}
+          <button
+            onClick={() => setShowMore(prev => !prev)}
+            className={`flex flex-col items-center gap-0.5 px-3 py-1.5 rounded-xl text-[10px] font-medium transition-all ${
+              isMoreActive || showMore ? "text-foreground" : "text-muted-foreground"
+            }`}
+          >
+            <MoreHorizontal className={`w-[22px] h-[22px]`} strokeWidth={isMoreActive || showMore ? 2.2 : 1.8} />
+            <span>More</span>
+          </button>
         </div>
       </nav>
     </div>
