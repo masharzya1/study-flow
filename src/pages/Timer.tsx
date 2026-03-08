@@ -108,12 +108,15 @@ const Timer = () => {
     }
   }, [isRunning]);
 
-  // Auto-select first plan
+  // Auto-select first plan, auto-switch to free mode if no plans
   useEffect(() => {
     if (!selectedPlanId && state.studyPlans.length > 0) {
       setSelectedPlanId(state.studyPlans[0].id);
     }
-  }, [state.studyPlans, selectedPlanId]);
+    if (state.studyPlans.length === 0 && sourceMode === "plan") {
+      setSourceMode("free");
+    }
+  }, [state.studyPlans, selectedPlanId, sourceMode]);
 
   const todayTasks = useMemo(() => {
     if (sourceMode === "plan" && selectedPlanId) {
