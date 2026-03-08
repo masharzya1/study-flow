@@ -538,8 +538,12 @@ const Timer = () => {
             }`}>
               {mode === "focus" ? "Focus" : "Break"}
             </span>
-            {selectedTask && useTopicTime && mode === "focus" && (
-              <span className="text-[10px] text-muted-foreground mt-1">{selectedTask.estimatedMinutes}m estimated</span>
+            {useTopicTime && mode === "focus" && (
+              (sourceMode === "plan" && selectedTask) ? (
+                <span className="text-[10px] text-muted-foreground mt-1">{selectedTask.estimatedMinutes}m estimated</span>
+              ) : (sourceMode === "free" && freeTopicInfo) ? (
+                <span className="text-[10px] text-muted-foreground mt-1">{freeTopicInfo.estimatedMinutes}m estimated</span>
+              ) : null
             )}
           </div>
         </div>

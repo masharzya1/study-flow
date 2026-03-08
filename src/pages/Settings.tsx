@@ -27,7 +27,7 @@ const SettingsPage = () => {
     const newLevel: DifficultyLevel = {
       id: newId,
       label: newLevelLabel.trim(),
-      minutes: Math.max(5, Math.min(300, newLevelMinutes)),
+      minutes: Math.max(1, Math.min(300, newLevelMinutes)),
     };
     updateSettings({ difficultyLevels: [...levels, newLevel] });
     setNewLevelLabel("");
