@@ -361,6 +361,7 @@ export function AmbientSounds({ isPlaying, currentMode }: AmbientSoundsProps) {
         <iframe
           src={`https://www.youtube.com/embed/${activeTrack.youtubeId}?autoplay=1&loop=1&playlist=${activeTrack.youtubeId}`}
           allow="autoplay"
+          onLoad={() => setIsLoading(false)}
           className="fixed -left-[9999px] -top-[9999px] w-1 h-1 opacity-0 pointer-events-none"
           title="Audio Player"
         />
