@@ -61,6 +61,7 @@ export interface AudioState {
   repeat: boolean;
   onTogglePlay: () => void;
   onNext: () => void;
+  onPrev: () => void;
   onToggleShuffle: () => void;
   onToggleRepeat: () => void;
 }
@@ -154,6 +155,12 @@ export function AmbientSounds({ isPlaying, currentMode, onAudioStateChange }: Am
     }
   }, [audioSource, filteredMusic, shuffle]);
 
+  const prevTrack = useCallback(() => {
+    const list = audioSource === "quran" ? QURAN_TILAWAT : filteredMusic;
+    setIsLoading(true);
+    setCurrentTrackIndex(prev => (prev - 1 + list.length) % list.length);
+  }, [audioSource, filteredMusic]);
+
   const selectTrack = (index: number) => {
     setIsLoading(true);
     setCurrentTrackIndex(index);
@@ -176,13 +183,14 @@ export function AmbientSounds({ isPlaying, currentMode, onAudioStateChange }: Am
         repeat,
         onTogglePlay: togglePlay,
         onNext: nextTrack,
+        onPrev: prevTrack,
         onToggleShuffle: toggleShuffle,
         onToggleRepeat: toggleRepeat,
       });
     } else {
       onAudioStateChange?.(null);
     }
-  }, [audioSource, activeTrack, isTrackPlaying, isLoading, shuffle, repeat, onAudioStateChange, togglePlay, nextTrack, toggleShuffle, toggleRepeat]);
+  }, [audioSource, activeTrack, isTrackPlaying, isLoading, shuffle, repeat, onAudioStateChange, togglePlay, nextTrack, prevTrack, toggleShuffle, toggleRepeat]);
 
   const sounds = [
     { id: "none" as const, label: "Off", icon: VolumeX },

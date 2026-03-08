@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { Music, BookOpen, Pause, Play, SkipForward, Shuffle, Repeat } from "lucide-react";
+import { Music, BookOpen, Pause, Play, SkipForward, SkipBack, Shuffle, Repeat } from "lucide-react";
 
 interface MiniPlayerProps {
   trackTitle: string;
@@ -10,6 +10,7 @@ interface MiniPlayerProps {
   repeat: boolean;
   onTogglePlay: () => void;
   onNext: () => void;
+  onPrev: () => void;
   onToggleShuffle: () => void;
   onToggleRepeat: () => void;
 }
@@ -17,7 +18,7 @@ interface MiniPlayerProps {
 export function MiniPlayer({
   trackTitle, type, isPlaying, isLoading,
   shuffle, repeat,
-  onTogglePlay, onNext, onToggleShuffle, onToggleRepeat,
+  onTogglePlay, onNext, onPrev, onToggleShuffle, onToggleRepeat,
 }: MiniPlayerProps) {
   return (
     <motion.div
@@ -55,6 +56,10 @@ export function MiniPlayer({
             title="Shuffle"
           >
             <Shuffle className="w-3.5 h-3.5" />
+          </button>
+
+          <button onClick={onPrev} className="p-1.5 hover:bg-secondary rounded-lg transition-colors" title="Previous">
+            <SkipBack className="w-3.5 h-3.5 text-muted-foreground" />
           </button>
 
           <button onClick={onNext} className="p-1.5 hover:bg-secondary rounded-lg transition-colors" title="Next">
