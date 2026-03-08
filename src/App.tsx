@@ -9,6 +9,7 @@ import { AppLayout } from "@/components/AppLayout";
 import { SwipeNavigation } from "@/components/SwipeNavigation";
 import { OnboardingTour } from "@/components/OnboardingTour";
 import { InstallPrompt } from "@/components/InstallPrompt";
+import { SplashScreen } from "@/components/SplashScreen";
 import Dashboard from "@/pages/Dashboard";
 import Subjects from "@/pages/Subjects";
 import Timer from "@/pages/Timer";
@@ -48,6 +49,7 @@ const App = () => (
         <StudyProvider>
           <Toaster />
           <Sonner />
+          <SplashScreen />
           <BrowserRouter>
             <OnboardingTour />
             <InstallPrompt />

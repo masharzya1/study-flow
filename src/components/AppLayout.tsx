@@ -32,9 +32,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <div className="p-4 lg:px-5 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg bg-foreground flex items-center justify-center">
-              <span className="text-primary-foreground text-xs font-bold">π</span>
-            </div>
-            <h1 className="font-semibold text-base hidden lg:block tracking-tight">Paideia</h1>
+            <span className="text-primary-foreground text-xs font-bold">P</span>
+          </div>
+            <h1 className="font-semibold text-base hidden lg:block tracking-tight">Penzó</h1>
           </div>
           <div className="hidden lg:flex">
             <HeaderControls />
@@ -69,9 +69,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
       <header className="md:hidden sticky top-0 z-40 flex items-center justify-between px-4 py-2.5 bg-card/90 backdrop-blur-xl border-b border-border/60">
         <div className="flex items-center gap-2">
           <div className="w-6 h-6 rounded-md bg-foreground flex items-center justify-center">
-            <span className="text-primary-foreground text-[10px] font-bold">π</span>
+            <span className="text-primary-foreground text-[10px] font-bold">P</span>
           </div>
-          <span className="font-semibold text-sm tracking-tight">Paideia</span>
+          <span className="font-semibold text-sm tracking-tight">Penzó</span>
         </div>
         <HeaderControls compact />
       </header>
