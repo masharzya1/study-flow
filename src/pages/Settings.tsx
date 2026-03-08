@@ -66,27 +66,25 @@ const SettingsPage = () => {
               <button
                 onClick={async () => {
                   const granted = await requestNotificationPermission();
-                  // Force re-render
-                  setShowAddLevel(prev => !prev);
-                  setTimeout(() => setShowAddLevel(prev => !prev), 0);
+                  setNotifPerm(getNotificationPermission());
                 }}
                 className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all ${
-                  getNotificationPermission() === "granted"
+                  notifPerm === "granted"
                     ? "bg-foreground text-primary-foreground"
                     : "bg-secondary text-muted-foreground"
                 }`}
               >
-                {getNotificationPermission() === "granted" ? (
+                {notifPerm === "granted" ? (
                   <><Bell className="w-4 h-4" /> On</>
                 ) : (
                   <><BellOff className="w-4 h-4" /> Off</>
                 )}
               </button>
             </div>
-            {getNotificationPermission() === "denied" && (
+            {notifPerm === "denied" && (
               <p className="text-xs text-destructive">Notification blocked — browser settings থেকে allow করো</p>
             )}
-            {getNotificationPermission() === "granted" && (
+            {notifPerm === "granted" && (
               <button
                 onClick={() => {
                   sendNotification("🔔 Test Notification!", {
