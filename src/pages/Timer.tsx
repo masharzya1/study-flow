@@ -93,7 +93,14 @@ const Timer = () => {
   }, [incompleteTasks, selectedTaskId]);
 
   const selectedTask = resolvedTasks.find(t => t.taskId === selectedTaskId);
-  const focusDuration = useTopicTime && selectedTask ? selectedTask.estimatedMinutes : pomodoroFocus;
+  
+  // Calculate focus duration based on source mode
+  const focusDuration = useMemo(() => {
+    if (sourceMode === "free" && freeTopicInfo && useTopicTime) return freeTopicInfo.estimatedMinutes;
+    if (sourceMode === "plan" && selectedTask && useTopicTime) return selectedTask.estimatedMinutes;
+    return pomodoroFocus;
+  }, [sourceMode, freeTopicInfo, selectedTask, useTopicTime, pomodoroFocus]);
+  
   const totalTime = mode === "focus" ? focusDuration * 60 : pomodoroBreak * 60;
   const progress = ((totalTime - timeLeft) / totalTime) * 100;
 
