@@ -12,6 +12,7 @@ const SettingsPage = () => {
 
   const [newLevelLabel, setNewLevelLabel] = useState("");
   const [newLevelMinutes, setNewLevelMinutes] = useState(30);
+  const [showAddLevel, setShowAddLevel] = useState(false);
 
   const updateLevel = (id: number, field: "label" | "minutes", value: string | number) => {
     const updated = levels.map(l =>
