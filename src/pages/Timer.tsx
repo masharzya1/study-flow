@@ -126,6 +126,7 @@ const Timer = () => {
           if (prev <= 1) {
             setIsRunning(false);
             if (mode === "focus") {
+              const topicInfo = sourceMode === "free" ? freeTopicInfo : selectedTask;
               const session: StudySession = {
                 id: crypto.randomUUID(),
                 startTime: sessionStartRef.current!,
@@ -133,7 +134,7 @@ const Timer = () => {
                 durationMinutes: focusDuration,
                 type: selectedTask?.type === "revision" ? "revision" : "focus",
                 completed: true,
-                ...(selectedTask ? { topicId: selectedTask.topicId, subjectId: selectedTask.subjectId } : {}),
+                ...(topicInfo ? { topicId: topicInfo.topicId, subjectId: topicInfo.subjectId } : {}),
               };
               addSession(session);
               incrementSessionsCompleted();
