@@ -1,9 +1,14 @@
 import { useState } from "react";
 import { useStudy } from "@/contexts/StudyContext";
 import { motion, AnimatePresence } from "framer-motion";
-import { Sparkles, Calendar, Clock, BookOpen, ChevronRight, Check, RotateCcw, Zap } from "lucide-react";
+import { Sparkles, Calendar as CalendarIcon, Clock, BookOpen, ChevronRight, Check, RotateCcw, Zap } from "lucide-react";
 import { SubjectIcon } from "@/components/SubjectIcon";
 import type { StudyPlan, PlannedTask } from "@/types/study";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 
 const StudyPlanPage = () => {
   const { state, addStudyPlan } = useStudy();
@@ -228,7 +233,7 @@ const StudyPlanPage = () => {
             className="glass-card p-5 space-y-4"
           >
             <div className="flex items-center gap-2">
-              <Calendar className="w-4 h-4 text-muted-foreground" />
+              <CalendarIcon className="w-4 h-4 text-muted-foreground" />
               <h3 className="font-semibold text-sm">Exam Details</h3>
             </div>
             <div className="space-y-3">
@@ -241,13 +246,30 @@ const StudyPlanPage = () => {
               />
               <div>
                 <label className="text-xs text-muted-foreground mb-1 block">Exam Date</label>
-                <input
-                  type="date"
-                  value={examDate}
-                  onChange={e => setExamDate(e.target.value)}
-                  min={new Date().toISOString().split("T")[0]}
-                  className="w-full px-3 py-2.5 rounded-xl bg-secondary text-foreground text-sm border-0 outline-none focus:ring-2 focus:ring-foreground/20"
-                />
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal rounded-xl bg-secondary border-0 h-auto px-3 py-2.5 text-sm hover:bg-secondary/80",
+                        !examDate && "text-muted-foreground"
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {examDate ? format(new Date(examDate + "T00:00:00"), "PPP") : <span>Pick exam date</span>}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={examDate ? new Date(examDate + "T00:00:00") : undefined}
+                      onSelect={(date) => setExamDate(date ? format(date, "yyyy-MM-dd") : "")}
+                      disabled={(date) => date < new Date(new Date().toDateString())}
+                      initialFocus
+                      className={cn("p-3 pointer-events-auto")}
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
               <div>
                 <label className="text-xs text-muted-foreground mb-1 block">Daily Study Hours</label>
