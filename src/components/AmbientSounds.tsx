@@ -3,6 +3,7 @@ import { useStudy } from "@/contexts/StudyContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { Volume2, VolumeX, CloudRain, Wind, TreePine, Music, BookOpen, Play, Pause, SkipForward, ChevronDown, Loader2 } from "lucide-react";
 import { FOCUS_MUSIC, QURAN_TILAWAT, type MusicTrack } from "@/data/focusMusic";
+import { YouTubeAudioPlayer } from "@/components/YouTubeAudioPlayer";
 
 // Generate ambient sound using Web Audio API oscillators
 function createAmbientNode(ctx: AudioContext, type: "rain" | "whitenoise" | "forest"): AudioNode {
@@ -206,7 +207,7 @@ export function AmbientSounds({ isPlaying, currentMode, onAudioStateChange }: Am
     { id: "forest" as const, label: "Forest", icon: TreePine },
   ];
 
-  const isYoutubeActive = (audioSource === "music" || audioSource === "quran") && isTrackPlaying && activeTrack;
+  const isMediaActive = (audioSource === "music" || audioSource === "quran") && activeTrack;
 
   const pickerRef = useRef<HTMLDivElement>(null);
 
@@ -369,7 +370,7 @@ export function AmbientSounds({ isPlaying, currentMode, onAudioStateChange }: Am
                         {isLoading ? <Loader2 className="w-3 h-3 animate-spin" /> : isTrackPlaying ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3 ml-0.5" />}
                       </button>
                       <div className="flex-1 min-w-0">
-                        <p className="text-[10px] text-muted-foreground">{isLoading ? "Loading..." : "তিলাওয়াত চলছে"}</p>
+                        <p className="text-[10px] text-muted-foreground">{isLoading ? "Loading..." : "Now Playing"}</p>
                         <p className="text-xs font-medium truncate">{currentQuranTrack.title}</p>
                       </div>
                       <button onClick={nextTrack} className="p-1 hover:bg-secondary rounded">
@@ -428,14 +429,16 @@ export function AmbientSounds({ isPlaying, currentMode, onAudioStateChange }: Am
         )}
       </AnimatePresence>
 
-      {/* Hidden YouTube audio player — NO video shown */}
-      {isYoutubeActive && activeTrack && (
-        <iframe
-          src={`https://www.youtube.com/embed/${activeTrack.youtubeId}?autoplay=1&loop=${repeat ? 1 : 0}${repeat ? `&playlist=${activeTrack.youtubeId}` : ""}`}
-          allow="autoplay"
-          onLoad={() => setIsLoading(false)}
-          className="fixed -left-[9999px] -top-[9999px] w-1 h-1 opacity-0 pointer-events-none"
-          title="Audio Player"
+      {/* YouTube audio player using IFrame API */}
+      {(audioSource === "music" || audioSource === "quran") && activeTrack && (
+        <YouTubeAudioPlayer
+          videoId={activeTrack.youtubeId}
+          isPlaying={isTrackPlaying}
+          repeat={repeat}
+          onReady={() => setIsLoading(false)}
+          onEnded={() => {
+            if (!repeat) nextTrack();
+          }}
         />
       )}
     </div>

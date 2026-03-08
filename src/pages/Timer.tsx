@@ -113,11 +113,12 @@ const Timer = () => {
     if (intervalRef.current) clearInterval(intervalRef.current);
   }, [mode, focusDuration, pomodoroBreak]);
 
+  // Only reset timeLeft when mode or duration settings change, NOT when pausing
   useEffect(() => {
     if (!isRunning) {
       setTimeLeft(mode === "focus" ? focusDuration * 60 : pomodoroBreak * 60);
     }
-  }, [mode, focusDuration, pomodoroBreak, isRunning]);
+  }, [mode, focusDuration, pomodoroBreak]);
 
   useEffect(() => {
     if (isRunning) {
@@ -259,7 +260,7 @@ const Timer = () => {
           {sourceMode === "plan" && resolvedTasks.length > 0 && (
             <div className="space-y-2">
               <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
-                আজকের রুটিন · {incompleteTasks.length} বাকি আছে
+                Today's Routine · {incompleteTasks.length} remaining
               </p>
 
               {selectedTask && (
@@ -346,7 +347,7 @@ const Timer = () => {
                       }`}>
                         {useTopicTime && <Check className="w-3 h-3 text-primary-foreground" />}
                       </div>
-                      Topic এর সময় অনুযায়ী timer সেট করো
+                      Set timer based on topic duration
                     </button>
                   </motion.div>
                 )}
@@ -355,7 +356,7 @@ const Timer = () => {
           )}
 
           {sourceMode === "plan" && resolvedTasks.length === 0 && (
-            <p className="text-xs text-muted-foreground py-2">আজকের জন্য কোনো plan task নেই। Free Topic mode ব্যবহার করো!</p>
+            <p className="text-xs text-muted-foreground py-2">No plan tasks for today. Try Free Topic mode!</p>
           )}
 
           {/* Free Topic Picker */}
@@ -389,7 +390,7 @@ const Timer = () => {
                   className="glass-card p-4 w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <BookOpen className="w-5 h-5 mx-auto mb-1.5 opacity-50" />
-                  Topic বেছে নাও
+                  Pick a Topic
                 </button>
               )}
 
@@ -427,7 +428,7 @@ const Timer = () => {
                         </div>
                       ))}
                       {state.subjects.length === 0 && (
-                        <p className="text-xs text-muted-foreground text-center py-3">আগে Subjects page এ subject যোগ করো</p>
+                        <p className="text-xs text-muted-foreground text-center py-3">Add subjects first on the Subjects page</p>
                       )}
                     </div>
                   </motion.div>

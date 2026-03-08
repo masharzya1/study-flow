@@ -23,7 +23,7 @@ const MOTIVATIONAL_QUOTES = [
   { text: "The only way to do great work is to love what you do.", author: "Steve Jobs" },
   { text: "Believe you can and you're halfway there.", author: "Theodore Roosevelt" },
   { text: "Success is not final, failure is not fatal: it is the courage to continue that counts.", author: "Winston Churchill" },
-  { text: "তুমি পারবে, শুধু চেষ্টা চালিয়ে যাও।", author: "Proverb" },
+  { text: "You can do it, just keep trying.", author: "Proverb" },
   { text: "A little progress each day adds up to big results.", author: "Satya Nani" },
   { text: "The more that you read, the more things you will know.", author: "Dr. Seuss" },
   { text: "Dream big, start small, act now.", author: "Robin Sharma" },

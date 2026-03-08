@@ -34,7 +34,7 @@ export function MiniPlayer({
           </div>
           <div className="flex-1 min-w-0">
             <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
-              {isLoading ? "Loading..." : type === "quran" ? "তিলাওয়াত" : "Now Playing"}
+              {isLoading ? "Loading..." : type === "quran" ? "Quran Tilawat" : "Now Playing"}
             </p>
             <p className="text-xs font-medium truncate">{trackTitle}</p>
           </div>

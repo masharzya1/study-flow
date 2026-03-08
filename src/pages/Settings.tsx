@@ -111,7 +111,7 @@ const SettingsPage = () => {
           </button>
         </div>
         <p className="text-[11px] text-muted-foreground">
-          প্রতিটি level এর জন্য default time সেট করো। Topic add করলে এই time অনুযায়ী estimate হবে।
+          Set default time for each difficulty level. Topics will use this as their estimated duration.
         </p>
 
         <div className="space-y-2">
@@ -190,7 +190,7 @@ const SettingsPage = () => {
               onClick={() => setShowAddLevel(true)}
               className="flex items-center gap-2 w-full py-2.5 rounded-xl bg-secondary/50 text-muted-foreground text-xs font-medium hover:bg-secondary transition-colors justify-center"
             >
-              <Plus className="w-3.5 h-3.5" /> নতুন Level যোগ করো
+              <Plus className="w-3.5 h-3.5" /> Add New Level
             </button>
           )}
         </AnimatePresence>
