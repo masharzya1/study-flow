@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import { useStudy } from "@/contexts/StudyContext";
 import { motion, AnimatePresence } from "framer-motion";
-import { Volume2, VolumeX, CloudRain, Wind, TreePine, Youtube, X, Link } from "lucide-react";
+import { Volume2, VolumeX, CloudRain, Wind, TreePine, Music, BookOpen, Play, Pause, SkipForward, ChevronDown } from "lucide-react";
+import { FOCUS_MUSIC, QURAN_TILAWAT, type MusicTrack } from "@/data/focusMusic";
 
 // Generate ambient sound using Web Audio API oscillators
 function createAmbientNode(ctx: AudioContext, type: "rain" | "whitenoise" | "forest"): AudioNode {
@@ -10,9 +11,7 @@ function createAmbientNode(ctx: AudioContext, type: "rain" | "whitenoise" | "for
   const data = buffer.getChannelData(0);
 
   if (type === "whitenoise") {
-    for (let i = 0; i < bufferSize; i++) {
-      data[i] = Math.random() * 2 - 1;
-    }
+    for (let i = 0; i < bufferSize; i++) data[i] = Math.random() * 2 - 1;
   } else if (type === "rain") {
     let last = 0;
     for (let i = 0; i < bufferSize; i++) {
@@ -40,34 +39,42 @@ function createAmbientNode(ctx: AudioContext, type: "rain" | "whitenoise" | "for
   const source = ctx.createBufferSource();
   source.buffer = buffer;
   source.loop = true;
-
   const gain = ctx.createGain();
   gain.gain.value = 0.3;
   source.connect(gain);
   source.start();
-
   return gain;
-}
-
-function extractYouTubeId(url: string): string | null {
-  const match = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|v\/))([a-zA-Z0-9_-]{11})/);
-  return match ? match[1] : null;
 }
 
 interface AmbientSoundsProps {
   isPlaying: boolean;
+  currentMode: "focus" | "break";
 }
 
-export function AmbientSounds({ isPlaying }: AmbientSoundsProps) {
-  const { state, updateSettings } = useStudy();
-  const { ambientSound, youtubeUrl } = state.settings;
+type AudioSource = "none" | "rain" | "whitenoise" | "forest" | "music" | "quran";
+
+export function AmbientSounds({ isPlaying, currentMode }: AmbientSoundsProps) {
+  const { state } = useStudy();
   const [showPicker, setShowPicker] = useState(false);
   const [volume, setVolume] = useState(0.3);
-  const [ytInput, setYtInput] = useState(youtubeUrl || "");
-  const [showYoutube, setShowYoutube] = useState(false);
+  const [audioSource, setAudioSource] = useState<AudioSource>("none");
+  const [activeTab, setActiveTab] = useState<"sounds" | "music" | "quran">("sounds");
+  const [currentTrackIndex, setCurrentTrackIndex] = useState(0);
+  const [isTrackPlaying, setIsTrackPlaying] = useState(false);
+  const [musicCategory, setMusicCategory] = useState<"focus" | "break">("focus");
   const ctxRef = useRef<AudioContext | null>(null);
   const nodeRef = useRef<AudioNode | null>(null);
   const gainRef = useRef<GainNode | null>(null);
+
+  // Sync music category with timer mode
+  useEffect(() => {
+    setMusicCategory(currentMode);
+  }, [currentMode]);
+
+  const filteredMusic = FOCUS_MUSIC.filter(t => t.category === musicCategory);
+  const currentMusicTrack = audioSource === "music" ? filteredMusic[currentTrackIndex % filteredMusic.length] : null;
+  const currentQuranTrack = audioSource === "quran" ? QURAN_TILAWAT[currentTrackIndex % QURAN_TILAWAT.length] : null;
+  const activeTrack = currentMusicTrack || currentQuranTrack;
 
   const stopSound = useCallback(() => {
     if (ctxRef.current) {
@@ -90,34 +97,43 @@ export function AmbientSounds({ isPlaying }: AmbientSoundsProps) {
   }, [stopSound, volume]);
 
   useEffect(() => {
-    if (isPlaying && ambientSound !== "none" && ambientSound !== "youtube" as string) {
-      startSound(ambientSound as "rain" | "whitenoise" | "forest");
+    if (isPlaying && ["rain", "whitenoise", "forest"].includes(audioSource)) {
+      startSound(audioSource as "rain" | "whitenoise" | "forest");
     } else {
       stopSound();
     }
     return stopSound;
-  }, [isPlaying, ambientSound]);
+  }, [isPlaying, audioSource]);
 
   useEffect(() => {
-    if (gainRef.current) {
-      gainRef.current.gain.value = volume;
-    }
+    if (gainRef.current) gainRef.current.gain.value = volume;
   }, [volume]);
 
-  const ytId = extractYouTubeId(youtubeUrl || "");
-  const isYoutubeMode = ambientSound === ("youtube" as string);
+  // Auto-play/pause YouTube track with timer
+  useEffect(() => {
+    if (isPlaying && (audioSource === "music" || audioSource === "quran")) {
+      setIsTrackPlaying(true);
+    } else if (!isPlaying) {
+      setIsTrackPlaying(false);
+    }
+  }, [isPlaying, audioSource]);
 
-  const setYoutubeUrl = () => {
-    const id = extractYouTubeId(ytInput);
-    if (id) {
-      updateSettings({ youtubeUrl: ytInput, ambientSound: "youtube" as any });
-      setShowYoutube(false);
+  const selectSource = (src: AudioSource) => {
+    setAudioSource(src);
+    setCurrentTrackIndex(0);
+    if (src === "music" || src === "quran") {
+      setIsTrackPlaying(isPlaying);
     }
   };
 
-  const clearYoutube = () => {
-    updateSettings({ youtubeUrl: "", ambientSound: "none" });
-    setYtInput("");
+  const nextTrack = () => {
+    const list = audioSource === "quran" ? QURAN_TILAWAT : filteredMusic;
+    setCurrentTrackIndex(prev => (prev + 1) % list.length);
+  };
+
+  const selectTrack = (index: number) => {
+    setCurrentTrackIndex(index);
+    setIsTrackPlaying(isPlaying);
   };
 
   const sounds = [
@@ -127,12 +143,14 @@ export function AmbientSounds({ isPlaying }: AmbientSoundsProps) {
     { id: "forest" as const, label: "Forest", icon: TreePine },
   ];
 
+  const isYoutubeActive = (audioSource === "music" || audioSource === "quran") && isTrackPlaying && activeTrack;
+
   return (
     <div className="relative">
       <button
         onClick={() => setShowPicker(!showPicker)}
         className={`p-2 rounded-lg transition-colors ${
-          ambientSound !== "none" ? "text-foreground bg-secondary" : "text-muted-foreground hover:text-foreground"
+          audioSource !== "none" ? "text-foreground bg-secondary" : "text-muted-foreground hover:text-foreground"
         }`}
       >
         <Volume2 className="w-4 h-4" />
@@ -145,77 +163,154 @@ export function AmbientSounds({ isPlaying }: AmbientSoundsProps) {
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 8, scale: 0.97 }}
             onClick={e => e.stopPropagation()}
-            className="absolute bottom-full mb-2 right-0 glass-card p-3 space-y-3 min-w-[220px] z-50"
+            className="absolute bottom-full mb-2 right-0 glass-card p-3 space-y-3 min-w-[280px] max-w-[320px] z-50"
           >
-            <p className="text-[10px] text-muted-foreground uppercase tracking-wider">Ambient Sound</p>
-            <div className="grid grid-cols-2 gap-1.5">
-              {sounds.map(sound => (
+            {/* Tabs */}
+            <div className="flex gap-1 bg-secondary/80 rounded-xl p-1">
+              {(["sounds", "music", "quran"] as const).map(tab => (
                 <button
-                  key={sound.id}
-                  onClick={() => updateSettings({ ambientSound: sound.id })}
-                  className={`flex items-center gap-1.5 px-2.5 py-2 rounded-lg text-xs font-medium transition-all ${
-                    ambientSound === sound.id && !isYoutubeMode
-                      ? "bg-foreground text-primary-foreground"
-                      : "bg-secondary text-muted-foreground hover:text-foreground"
+                  key={tab}
+                  onClick={() => setActiveTab(tab)}
+                  className={`flex-1 flex items-center justify-center gap-1 px-2 py-1.5 rounded-lg text-[11px] font-medium transition-all ${
+                    activeTab === tab ? "bg-foreground text-primary-foreground" : "text-muted-foreground hover:text-foreground"
                   }`}
                 >
-                  <sound.icon className="w-3.5 h-3.5" />
-                  {sound.label}
+                  {tab === "sounds" && <Wind className="w-3 h-3" />}
+                  {tab === "music" && <Music className="w-3 h-3" />}
+                  {tab === "quran" && <BookOpen className="w-3 h-3" />}
+                  {tab === "sounds" ? "Sounds" : tab === "music" ? "Music" : "Quran"}
                 </button>
               ))}
             </div>
 
-            {/* YouTube / Custom Audio */}
-            <div className="border-t border-border/50 pt-2 space-y-2">
-              <p className="text-[10px] text-muted-foreground uppercase tracking-wider">YouTube / কুরআন</p>
-
-              {ytId && isYoutubeMode ? (
-                <div className="space-y-2">
-                  <div className="flex items-center gap-2">
-                    <Youtube className="w-3.5 h-3.5 text-destructive flex-shrink-0" />
-                    <span className="text-xs truncate flex-1">{youtubeUrl}</span>
-                    <button onClick={clearYoutube} className="p-1 hover:bg-secondary rounded">
-                      <X className="w-3 h-3 text-muted-foreground" />
-                    </button>
-                  </div>
-                </div>
-              ) : showYoutube ? (
-                <div className="space-y-1.5">
-                  <div className="flex gap-1.5">
-                    <input
-                      type="text"
-                      placeholder="YouTube link paste করো"
-                      value={ytInput}
-                      onChange={e => setYtInput(e.target.value)}
-                      className="flex-1 px-2 py-1.5 text-xs rounded-lg bg-secondary text-foreground border-0 outline-none placeholder:text-muted-foreground"
-                    />
+            {/* SOUNDS TAB */}
+            {activeTab === "sounds" && (
+              <div className="space-y-2">
+                <div className="grid grid-cols-2 gap-1.5">
+                  {sounds.map(sound => (
                     <button
-                      onClick={setYoutubeUrl}
-                      disabled={!extractYouTubeId(ytInput)}
-                      className="px-2 py-1.5 rounded-lg bg-foreground text-primary-foreground text-xs font-medium disabled:opacity-40"
+                      key={sound.id}
+                      onClick={() => selectSource(sound.id)}
+                      className={`flex items-center gap-1.5 px-2.5 py-2 rounded-lg text-xs font-medium transition-all ${
+                        audioSource === sound.id
+                          ? "bg-foreground text-primary-foreground"
+                          : "bg-secondary text-muted-foreground hover:text-foreground"
+                      }`}
                     >
-                      <Link className="w-3 h-3" />
+                      <sound.icon className="w-3.5 h-3.5" />
+                      {sound.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* MUSIC TAB */}
+            {activeTab === "music" && (
+              <div className="space-y-2">
+                {/* Focus / Break category toggle */}
+                <div className="flex gap-1 bg-secondary/60 rounded-lg p-0.5">
+                  <button
+                    onClick={() => { setMusicCategory("focus"); setCurrentTrackIndex(0); }}
+                    className={`flex-1 px-2 py-1 rounded-md text-[10px] font-medium transition-all ${
+                      musicCategory === "focus" ? "bg-foreground text-primary-foreground" : "text-muted-foreground"
+                    }`}
+                  >
+                    🧠 Focus
+                  </button>
+                  <button
+                    onClick={() => { setMusicCategory("break"); setCurrentTrackIndex(0); }}
+                    className={`flex-1 px-2 py-1 rounded-md text-[10px] font-medium transition-all ${
+                      musicCategory === "break" ? "bg-foreground text-primary-foreground" : "text-muted-foreground"
+                    }`}
+                  >
+                    ☕ Break
+                  </button>
+                </div>
+
+                {/* Now Playing */}
+                {audioSource === "music" && currentMusicTrack && (
+                  <div className="bg-secondary/60 rounded-xl p-2.5 flex items-center gap-2">
+                    <button
+                      onClick={() => setIsTrackPlaying(!isTrackPlaying)}
+                      className="w-7 h-7 rounded-full bg-foreground text-primary-foreground flex items-center justify-center flex-shrink-0"
+                    >
+                      {isTrackPlaying ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3 ml-0.5" />}
+                    </button>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[10px] text-muted-foreground">Now Playing</p>
+                      <p className="text-xs font-medium truncate">{currentMusicTrack.title}</p>
+                    </div>
+                    <button onClick={nextTrack} className="p-1 hover:bg-secondary rounded">
+                      <SkipForward className="w-3.5 h-3.5 text-muted-foreground" />
                     </button>
                   </div>
-                  <p className="text-[9px] text-muted-foreground">Music, Quran, Lo-fi ইত্যাদি চালাতে পারো</p>
-                </div>
-              ) : (
-                <button
-                  onClick={() => setShowYoutube(true)}
-                  className={`flex items-center gap-1.5 w-full px-2.5 py-2 rounded-lg text-xs font-medium transition-all ${
-                    isYoutubeMode
-                      ? "bg-foreground text-primary-foreground"
-                      : "bg-secondary text-muted-foreground hover:text-foreground"
-                  }`}
-                >
-                  <Youtube className="w-3.5 h-3.5" />
-                  YouTube Link দাও
-                </button>
-              )}
-            </div>
+                )}
 
-            {/* Volume */}
-            {(ambientSound !== "none" || isYoutubeMode) && !isYoutubeMode && (
+                {/* Track List */}
+                <div className="max-h-44 overflow-y-auto space-y-0.5 scrollbar-hide">
+                  {filteredMusic.map((track, i) => (
+                    <button
+                      key={track.id}
+                      onClick={() => { selectSource("music"); selectTrack(i); }}
+                      className={`w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-left transition-colors text-xs ${
+                        audioSource === "music" && currentTrackIndex === i
+                          ? "bg-secondary font-medium"
+                          : "hover:bg-secondary/50 text-muted-foreground"
+                      }`}
+                    >
+                      <Music className="w-3 h-3 flex-shrink-0" />
+                      <span className="truncate">{track.title}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* QURAN TAB */}
+            {activeTab === "quran" && (
+              <div className="space-y-2">
+                {/* Now Playing */}
+                {audioSource === "quran" && currentQuranTrack && (
+                  <div className="bg-secondary/60 rounded-xl p-2.5 flex items-center gap-2">
+                    <button
+                      onClick={() => setIsTrackPlaying(!isTrackPlaying)}
+                      className="w-7 h-7 rounded-full bg-foreground text-primary-foreground flex items-center justify-center flex-shrink-0"
+                    >
+                      {isTrackPlaying ? <Pause className="w-3 h-3" /> : <Play className="w-3 h-3 ml-0.5" />}
+                    </button>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[10px] text-muted-foreground">তিলাওয়াত চলছে</p>
+                      <p className="text-xs font-medium truncate">{currentQuranTrack.title}</p>
+                    </div>
+                    <button onClick={nextTrack} className="p-1 hover:bg-secondary rounded">
+                      <SkipForward className="w-3.5 h-3.5 text-muted-foreground" />
+                    </button>
+                  </div>
+                )}
+
+                {/* Quran List */}
+                <div className="max-h-44 overflow-y-auto space-y-0.5 scrollbar-hide">
+                  {QURAN_TILAWAT.map((track, i) => (
+                    <button
+                      key={track.id}
+                      onClick={() => { selectSource("quran"); selectTrack(i); }}
+                      className={`w-full flex items-center gap-2 px-2.5 py-2 rounded-lg text-left transition-colors text-xs ${
+                        audioSource === "quran" && currentTrackIndex === i
+                          ? "bg-secondary font-medium"
+                          : "hover:bg-secondary/50 text-muted-foreground"
+                      }`}
+                    >
+                      <BookOpen className="w-3 h-3 flex-shrink-0" />
+                      <span className="truncate">{track.title}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Volume — for ambient sounds only */}
+            {["rain", "whitenoise", "forest"].includes(audioSource) && (
               <div className="space-y-1">
                 <p className="text-[10px] text-muted-foreground">Volume</p>
                 <input
@@ -233,13 +328,13 @@ export function AmbientSounds({ isPlaying }: AmbientSoundsProps) {
         )}
       </AnimatePresence>
 
-      {/* YouTube iframe (hidden audio player) */}
-      {isPlaying && isYoutubeMode && ytId && (
+      {/* Hidden YouTube audio player — NO video shown */}
+      {isYoutubeActive && activeTrack && (
         <iframe
-          src={`https://www.youtube.com/embed/${ytId}?autoplay=1&loop=1&playlist=${ytId}`}
+          src={`https://www.youtube.com/embed/${activeTrack.youtubeId}?autoplay=1&loop=1&playlist=${activeTrack.youtubeId}`}
           allow="autoplay"
-          className="fixed bottom-20 right-4 w-64 h-36 rounded-xl shadow-lg z-40 md:bottom-4"
-          title="YouTube Player"
+          className="fixed -left-[9999px] -top-[9999px] w-1 h-1 opacity-0 pointer-events-none"
+          title="Audio Player"
         />
       )}
     </div>

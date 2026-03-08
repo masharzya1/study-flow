@@ -1,0 +1,86 @@
+export interface MusicTrack {
+  id: string;
+  title: string;
+  youtubeId: string;
+  category: "focus" | "break";
+}
+
+// 50 curated focus & break tracks (YouTube IDs)
+export const FOCUS_MUSIC: MusicTrack[] = [
+  // === FOCUS MUSIC (30) — Lo-fi, Classical, Ambient ===
+  { id: "f1", title: "Lofi Hip Hop — Beats to Study", youtubeId: "jfKfPfyJRdk", category: "focus" },
+  { id: "f2", title: "Deep Focus — Ambient Music", youtubeId: "ONmRSIbr0Lo", category: "focus" },
+  { id: "f3", title: "Coffee Shop Ambience", youtubeId: "h2zkV-l_TbY", category: "focus" },
+  { id: "f4", title: "Classical Study Music — Mozart", youtubeId: "tT9gT5bqi6Y", category: "focus" },
+  { id: "f5", title: "Rain & Jazz for Studying", youtubeId: "c0_ejQQcrwI", category: "focus" },
+  { id: "f6", title: "Hans Zimmer — Study Mix", youtubeId: "cyOkEBiTo3Q", category: "focus" },
+  { id: "f7", title: "Alpha Waves — Focus Music", youtubeId: "WPni755-Krg", category: "focus" },
+  { id: "f8", title: "Library Ambience — Soft Rain", youtubeId: "sGkh1W5cbH4", category: "focus" },
+  { id: "f9", title: "Beethoven — Moonlight Sonata", youtubeId: "4Tr0otuiQuU", category: "focus" },
+  { id: "f10", title: "Ambient Study Music 2024", youtubeId: "yIQd2Ya0Ziw", category: "focus" },
+  { id: "f11", title: "Chillhop Essentials", youtubeId: "7NOSDKb0HlU", category: "focus" },
+  { id: "f12", title: "Brain Power — Focus Beats", youtubeId: "hHW1oY26kxQ", category: "focus" },
+  { id: "f13", title: "Peaceful Piano — Study", youtubeId: "lCOF9LN_Zxs", category: "focus" },
+  { id: "f14", title: "Interstellar Theme — Extended", youtubeId: "UDVtMYqUAyw", category: "focus" },
+  { id: "f15", title: "Lo-fi Coding Beats", youtubeId: "f02mOEt11OQ", category: "focus" },
+  { id: "f16", title: "Concentration Music — Binaural", youtubeId: "1ZYbU82GVz4", category: "focus" },
+  { id: "f17", title: "Study With Me — Lo-fi Mix", youtubeId: "n61ULFL0_2g", category: "focus" },
+  { id: "f18", title: "Debussy — Clair de Lune", youtubeId: "CvFH_6DNRCY", category: "focus" },
+  { id: "f19", title: "Japanese Lo-fi Study", youtubeId: "Na0w3Mz1WAs", category: "focus" },
+  { id: "f20", title: "Synthwave Study — Retrowave", youtubeId: "4xDzrJKXOOY", category: "focus" },
+  { id: "f21", title: "Ambient Guitar — Focus", youtubeId: "S_MOd40zlYU", category: "focus" },
+  { id: "f22", title: "Deep Concentration — 432Hz", youtubeId: "aKtLjZgd5Eo", category: "focus" },
+  { id: "f23", title: "Skyrim Ambient Music", youtubeId: "aK4JSwhdscI", category: "focus" },
+  { id: "f24", title: "Study Night — Chill Beats", youtubeId: "lTRiuFIWV54", category: "focus" },
+  { id: "f25", title: "Focus Flow — Electronic", youtubeId: "w3MnECHk0HI", category: "focus" },
+  { id: "f26", title: "Chopin — Nocturnes Full", youtubeId: "wygy721nzRc", category: "focus" },
+  { id: "f27", title: "Dark Academia Study", youtubeId: "GtL1huin9EE", category: "focus" },
+  { id: "f28", title: "Rainy Day Study Session", youtubeId: "q76bMs-NwRk", category: "focus" },
+  { id: "f29", title: "Productivity Music — 3hr", youtubeId: "DIkm9TwikCM", category: "focus" },
+  { id: "f30", title: "Studio Ghibli — Calm Piano", youtubeId: "3jWRrafhO7M", category: "focus" },
+
+  // === BREAK MUSIC (20) — Relaxing, Nature, Peaceful ===
+  { id: "b1", title: "Relaxing Nature Sounds", youtubeId: "eKFTSSKCzWA", category: "break" },
+  { id: "b2", title: "Ocean Waves — 10 Min", youtubeId: "bn9F19Hi1Lk", category: "break" },
+  { id: "b3", title: "Peaceful Garden Music", youtubeId: "HmFGaCNwtiQ", category: "break" },
+  { id: "b4", title: "Bird Songs — Forest", youtubeId: "Qm846KdZN_c", category: "break" },
+  { id: "b5", title: "Spa Music — Deep Relaxation", youtubeId: "lFcSrYw-ARY", category: "break" },
+  { id: "b6", title: "Calm Piano — 5 Min Break", youtubeId: "77ZozI0rw7w", category: "break" },
+  { id: "b7", title: "Meditation Bells — Zen", youtubeId: "hlWiI4xAXKo", category: "break" },
+  { id: "b8", title: "Tibetan Singing Bowls", youtubeId: "D9YhJrp8XTk", category: "break" },
+  { id: "b9", title: "Gentle Stream Sounds", youtubeId: "IvjMgVS6kng", category: "break" },
+  { id: "b10", title: "Yoga Music — Soft Flute", youtubeId: "yXsmhihVNAE", category: "break" },
+  { id: "b11", title: "Evening Calm — Guitar", youtubeId: "kHnOIsQwkOg", category: "break" },
+  { id: "b12", title: "Campfire & Night Sounds", youtubeId: "gVKEM4K8J8A", category: "break" },
+  { id: "b13", title: "Waterfall Ambient Sound", youtubeId: "TQwGMEUzNNk", category: "break" },
+  { id: "b14", title: "Stress Relief — Slow Music", youtubeId: "lCOF9LN_Zxs", category: "break" },
+  { id: "b15", title: "Healing Frequencies — 528Hz", youtubeId: "aVhYOLQkN2k", category: "break" },
+  { id: "b16", title: "Rain on Window — No Music", youtubeId: "yMRom2gMPIg", category: "break" },
+  { id: "b17", title: "Chill Acoustic Guitar", youtubeId: "S_MOd40zlYU", category: "break" },
+  { id: "b18", title: "Ambient Space Music", youtubeId: "GWKL7E7xev4", category: "break" },
+  { id: "b19", title: "Japanese Zen Garden", youtubeId: "iSTQMjwDUNU", category: "break" },
+  { id: "b20", title: "Peaceful Harp — Relax", youtubeId: "CZkMaZO1Mso", category: "break" },
+];
+
+export const QURAN_TILAWAT: MusicTrack[] = [
+  { id: "q1", title: "Surah Al-Baqarah — Mishary Rashid", youtubeId: "eYRG3ECs1k8", category: "focus" },
+  { id: "q2", title: "Surah Yasin — Abdul Rahman Al-Sudais", youtubeId: "a75WaVTLUp0", category: "focus" },
+  { id: "q3", title: "Surah Ar-Rahman — Mishary Rashid", youtubeId: "bQBfanz3kfA", category: "focus" },
+  { id: "q4", title: "Surah Al-Mulk — Abdul Basit", youtubeId: "954e_Bwmm2k", category: "focus" },
+  { id: "q5", title: "Surah Al-Kahf — Saad Al-Ghamdi", youtubeId: "EhGFVeiGrOg", category: "focus" },
+  { id: "q6", title: "Surah Maryam — Maher Al-Muaiqly", youtubeId: "Q9wBqzgyMCQ", category: "focus" },
+  { id: "q7", title: "Surah Al-Waqi'ah — Hani Ar-Rifai", youtubeId: "6YsfJAWkZyQ", category: "focus" },
+  { id: "q8", title: "Surah Al-Imran — Mishary Rashid", youtubeId: "8PHhvVKFj1c", category: "focus" },
+  { id: "q9", title: "Surah Taha — Abdul Rahman Al-Sudais", youtubeId: "K08pdPpEgHg", category: "focus" },
+  { id: "q10", title: "Surah Al-Furqan — Yasser Al-Dosari", youtubeId: "6BH_R1JXaEo", category: "focus" },
+  { id: "q11", title: "Surah An-Naba — Mishary Rashid", youtubeId: "ZArQ-SUt0Lk", category: "focus" },
+  { id: "q12", title: "Surah Al-Hashr — Abdul Basit", youtubeId: "NqpvRMFPAcg", category: "focus" },
+  { id: "q13", title: "Surah Yusuf — Mishary Rashid", youtubeId: "Ioqk8tPOZ-w", category: "focus" },
+  { id: "q14", title: "Surah Al-Isra — Saad Al-Ghamdi", youtubeId: "vI6sIRgX6HA", category: "focus" },
+  { id: "q15", title: "Full Quran — Mishary Rashid (10hr)", youtubeId: "fhvj1oPQsFc", category: "focus" },
+  { id: "q16", title: "Surah Al-Anfal — Abdul Rahman", youtubeId: "TcOGALbFBMM", category: "focus" },
+  { id: "q17", title: "Surah An-Nisa — Maher Al-Muaiqly", youtubeId: "jYhZCaGUzYE", category: "focus" },
+  { id: "q18", title: "Surah Al-A'raf — Mishary Rashid", youtubeId: "o3cHTmMvhcM", category: "focus" },
+  { id: "q19", title: "Surah Az-Zumar — Yasser Al-Dosari", youtubeId: "v05eFAoKfNE", category: "focus" },
+  { id: "q20", title: "Surah Al-Jumu'ah — Abdul Basit", youtubeId: "s3xJz1ir-Ec", category: "focus" },
+];

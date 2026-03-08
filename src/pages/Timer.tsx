@@ -1,13 +1,15 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useStudy } from "@/contexts/StudyContext";
 import { motion, AnimatePresence } from "framer-motion";
-import { Play, Pause, RotateCcw, Coffee, Brain, Settings2, ChevronDown, Check, BookOpen } from "lucide-react";
+import { Play, Pause, RotateCcw, Coffee, Brain, Settings2, ChevronDown, Check } from "lucide-react";
 import { AmbientSounds } from "@/components/AmbientSounds";
+import { NetworkIndicator } from "@/components/NetworkIndicator";
 import { SubjectIcon } from "@/components/SubjectIcon";
+import { fireSessionComplete, fireStreakCelebration } from "@/lib/confetti";
 import type { StudySession } from "@/types/study";
 
 const Timer = () => {
-  const { state, addSession, updateSettings, incrementSessionsCompleted, getTodayPlanTasks } = useStudy();
+  const { state, addSession, updateSettings, incrementSessionsCompleted, getTodayPlanTasks, getStreak } = useStudy();
   const { pomodoroFocus, pomodoroBreak } = state.settings;
   const today = new Date().toISOString().split("T")[0];
   const sessionsCompleted = state.todaySessionsDate === today ? state.todaySessionsCompleted : 0;
@@ -21,14 +23,14 @@ const Timer = () => {
   const [showTopicSelector, setShowTopicSelector] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(null);
   const [useTopicTime, setUseTopicTime] = useState(true);
+  const [showCelebration, setShowCelebration] = useState(false);
+  const [celebrationStreak, setCelebrationStreak] = useState(0);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const sessionStartRef = useRef<string | null>(null);
 
-  // Get all today's plan tasks
   const todayTasks = getTodayPlanTasks();
   const incompleteTasks = todayTasks.filter(t => !t.completed);
 
-  // Resolve topic details for all today's tasks
   const resolvedTasks = useMemo(() => {
     return todayTasks.map(task => {
       const subject = state.subjects.find(s => s.id === task.subjectId);
@@ -47,7 +49,6 @@ const Timer = () => {
     });
   }, [todayTasks, state.subjects]);
 
-  // Auto-select first incomplete task
   useEffect(() => {
     if (!selectedTaskId && incompleteTasks.length > 0) {
       setSelectedTaskId(incompleteTasks[0].taskId);
@@ -55,8 +56,6 @@ const Timer = () => {
   }, [incompleteTasks, selectedTaskId]);
 
   const selectedTask = resolvedTasks.find(t => t.taskId === selectedTaskId);
-
-  // Determine timer duration: use topic's estimated time or pomodoro setting
   const focusDuration = useTopicTime && selectedTask ? selectedTask.estimatedMinutes : pomodoroFocus;
   const totalTime = mode === "focus" ? focusDuration * 60 : pomodoroBreak * 60;
   const progress = ((totalTime - timeLeft) / totalTime) * 100;
@@ -69,7 +68,6 @@ const Timer = () => {
     if (intervalRef.current) clearInterval(intervalRef.current);
   }, [mode, focusDuration, pomodoroBreak]);
 
-  // Update timer when selected task or mode changes (only when not running)
   useEffect(() => {
     if (!isRunning) {
       setTimeLeft(mode === "focus" ? focusDuration * 60 : pomodoroBreak * 60);
@@ -96,7 +94,17 @@ const Timer = () => {
               addSession(session);
               incrementSessionsCompleted();
               sessionStartRef.current = null;
-              // Auto-select next incomplete task
+
+              // 🎉 Celebration!
+              fireSessionComplete();
+              const currentStreak = getStreak();
+              if (currentStreak > 0 && currentStreak % 3 === 0) {
+                setTimeout(() => fireStreakCelebration(currentStreak), 800);
+              }
+              setCelebrationStreak(currentStreak);
+              setShowCelebration(true);
+              setTimeout(() => setShowCelebration(false), 3000);
+
               const nextTask = incompleteTasks.find(t => t.taskId !== selectedTaskId);
               if (nextTask) setSelectedTaskId(nextTask.taskId);
               setMode("break");
@@ -112,7 +120,7 @@ const Timer = () => {
       }, 1000);
     }
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  }, [isRunning, mode, focusDuration, pomodoroBreak, addSession, selectedTask, incompleteTasks, selectedTaskId, incrementSessionsCompleted]);
+  }, [isRunning, mode, focusDuration, pomodoroBreak, addSession, selectedTask, incompleteTasks, selectedTaskId, incrementSessionsCompleted, getStreak]);
 
   const minutes = Math.floor(timeLeft / 60);
   const seconds = timeLeft % 60;
@@ -128,29 +136,61 @@ const Timer = () => {
     setShowTopicSelector(false);
     if (!isRunning) {
       const task = resolvedTasks.find(t => t.taskId === taskId);
-      if (task && useTopicTime) {
-        setTimeLeft(task.estimatedMinutes * 60);
-      }
+      if (task && useTopicTime) setTimeLeft(task.estimatedMinutes * 60);
     }
   };
 
   const circumference = 2 * Math.PI * 120;
+  const needsInternet = isRunning;
 
   return (
     <div className="flex flex-col items-center justify-center min-h-[calc(100vh-4rem)] p-5 pb-28 md:pb-8">
+      {/* Network Status */}
+      <div className="fixed top-3 right-3 z-50 md:top-4 md:right-4">
+        <NetworkIndicator needsInternet={needsInternet} />
+      </div>
+
+      {/* Celebration Overlay */}
+      <AnimatePresence>
+        {showCelebration && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.8 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.8, y: -20 }}
+            className="fixed inset-0 z-40 flex items-center justify-center pointer-events-none"
+          >
+            <div className="glass-card-elevated p-6 text-center space-y-2">
+              <motion.div
+                animate={{ rotate: [0, -10, 10, -10, 0] }}
+                transition={{ duration: 0.5 }}
+                className="text-4xl"
+              >
+                🎉
+              </motion.div>
+              <p className="text-lg font-semibold">Session Complete!</p>
+              {celebrationStreak > 0 && (
+                <p className="text-sm text-[hsl(var(--warning))]">
+                  🔥 {celebrationStreak} day streak!
+                </p>
+              )}
+              <p className="text-xs text-muted-foreground">Break time — তুমি দারুণ করছো!</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
       <motion.div
         initial={{ opacity: 0, scale: 0.96 }}
         animate={{ opacity: 1, scale: 1 }}
         className="w-full max-w-sm space-y-6 text-center"
       >
-        {/* Today's Topic Selector — only when plan tasks exist */}
+        {/* Today's Topic Selector */}
         {resolvedTasks.length > 0 && (
           <div className="space-y-2">
             <p className="text-[10px] text-muted-foreground uppercase tracking-widest">
               আজকের রুটিন · {incompleteTasks.length} বাকি আছে
             </p>
 
-            {/* Selected Topic Card */}
             {selectedTask && (
               <motion.button
                 initial={{ opacity: 0, y: -8 }}
@@ -183,7 +223,6 @@ const Timer = () => {
               </motion.button>
             )}
 
-            {/* Topic Dropdown */}
             <AnimatePresence>
               {showTopicSelector && !isRunning && (
                 <motion.div
@@ -227,7 +266,6 @@ const Timer = () => {
                     ))}
                   </div>
 
-                  {/* Toggle: use topic time vs pomodoro */}
                   <button
                     onClick={() => setUseTopicTime(!useTopicTime)}
                     className="flex items-center gap-2 mt-2 px-3 py-2 w-full text-left text-xs text-muted-foreground hover:text-foreground transition-colors"
@@ -263,7 +301,7 @@ const Timer = () => {
           >
             <Coffee className="w-4 h-4" /> Break
           </button>
-          <AmbientSounds isPlaying={isRunning} />
+          <AmbientSounds isPlaying={isRunning} currentMode={mode} />
           <button
             onClick={() => setShowSettings(!showSettings)}
             className="p-2.5 rounded-xl text-muted-foreground hover:text-foreground transition-colors"
