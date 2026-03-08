@@ -190,7 +190,7 @@ export function AmbientSounds({ isPlaying, currentMode, onAudioStateChange }: Am
     } else {
       onAudioStateChange?.(null);
     }
-  }, [audioSource, activeTrack, isTrackPlaying, isLoading, shuffle, repeat, onAudioStateChange, togglePlay, nextTrack, toggleShuffle, toggleRepeat]);
+  }, [audioSource, activeTrack, isTrackPlaying, isLoading, shuffle, repeat, onAudioStateChange, togglePlay, nextTrack, prevTrack, toggleShuffle, toggleRepeat]);
 
   const sounds = [
     { id: "none" as const, label: "Off", icon: VolumeX },
