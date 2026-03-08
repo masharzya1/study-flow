@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { useStudy } from "@/contexts/StudyContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play, Pause, RotateCcw, Coffee, Brain, Settings2 } from "lucide-react";
+import { AmbientSounds } from "@/components/AmbientSounds";
 import type { StudySession } from "@/types/study";
 
 const Timer = () => {
