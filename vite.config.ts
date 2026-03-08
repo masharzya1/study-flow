@@ -21,9 +21,9 @@ export default defineConfig(({ mode }) => ({
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
       },
       manifest: {
-        name: "Manabu — Smart Study Companion",
-        short_name: "Manabu",
-        description: "Your intelligent study companion inspired by the Japanese art of learning.",
+        name: "Penzó — Smart Study Companion",
+        short_name: "Penzó",
+        description: "Your intelligent study companion inspired by the Spanish art of thinking.",
         theme_color: "#faf8f5",
         background_color: "#faf8f5",
         display: "standalone",

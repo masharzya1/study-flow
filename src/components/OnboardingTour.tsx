@@ -4,7 +4,7 @@ import { X, ChevronRight, ArrowRight, BookOpen, Sparkles, Timer, BarChart3 } fro
 import { useLanguage } from "@/contexts/LanguageContext";
 import { createPortal } from "react-dom";
 
-const ONBOARDING_KEY = "manabu_onboarded";
+const ONBOARDING_KEY = "penzo_onboarded";
 
 interface TourStep {
   selector: string;
