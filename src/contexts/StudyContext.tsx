@@ -37,6 +37,7 @@ interface StudyContextValue {
   toggleTopicComplete: (subjectId: string, chapterId: string, topicId: string) => void;
   updateTopicNotes: (subjectId: string, chapterId: string, topicId: string, notes: string) => void;
   addStudyPlan: (plan: StudyPlan) => void;
+  incrementSessionsCompleted: () => void;
   getTodayMinutes: () => number;
   getStreak: () => number;
   getHeatmapData: () => Record<string, number>;
