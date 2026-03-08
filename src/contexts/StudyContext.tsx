@@ -44,6 +44,7 @@ interface StudyContextValue {
   getHeatmapData: () => Record<string, number>;
   getSubjectProgress: (subjectId: string) => number;
   getTodayPlanTask: () => { planId: string; taskId: string; topicId: string; subjectId: string } | null;
+  getTodayPlanTasks: () => { planId: string; taskId: string; topicId: string; subjectId: string; estimatedMinutes: number; type: "study" | "revision"; completed: boolean }[];
 }
 
 const StudyContext = createContext<StudyContextValue | null>(null);
@@ -247,12 +248,26 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
     return null;
   }, [state.studyPlans]);
 
+  // Get ALL today's plan tasks (for timer topic selector)
+  const getTodayPlanTasks = useCallback(() => {
+    const today = new Date().toISOString().split("T")[0];
+    const tasks: { planId: string; taskId: string; topicId: string; subjectId: string; estimatedMinutes: number; type: "study" | "revision"; completed: boolean }[] = [];
+    for (const plan of state.studyPlans) {
+      for (const task of plan.tasks) {
+        if (task.date === today) {
+          tasks.push({ planId: plan.id, taskId: task.id, topicId: task.topicId, subjectId: task.subjectId, estimatedMinutes: task.estimatedMinutes, type: task.type, completed: task.completed });
+        }
+      }
+    }
+    return tasks;
+  }, [state.studyPlans]);
+
   return (
     <StudyContext.Provider value={{
       state, addSubject, updateSubject, deleteSubject, addSession, updateSettings,
       toggleTopicComplete, updateTopicNotes, addStudyPlan, completePlanTask,
       incrementSessionsCompleted,
-      getTodayMinutes, getStreak, getHeatmapData, getSubjectProgress, getTodayPlanTask,
+      getTodayMinutes, getStreak, getHeatmapData, getSubjectProgress, getTodayPlanTask, getTodayPlanTasks,
     }}>
       {children}
     </StudyContext.Provider>
