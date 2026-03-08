@@ -2,8 +2,9 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useStudy } from "@/contexts/StudyContext";
 import { motion, AnimatePresence } from "framer-motion";
 import { Play, Pause, RotateCcw, Coffee, Brain, Settings2, ChevronDown, Check } from "lucide-react";
-import { AmbientSounds } from "@/components/AmbientSounds";
+import { AmbientSounds, type AudioState } from "@/components/AmbientSounds";
 import { NetworkIndicator } from "@/components/NetworkIndicator";
+import { MiniPlayer } from "@/components/MiniPlayer";
 import { SubjectIcon } from "@/components/SubjectIcon";
 import { fireSessionComplete, fireStreakCelebration } from "@/lib/confetti";
 import type { StudySession } from "@/types/study";
@@ -25,6 +26,7 @@ const Timer = () => {
   const [useTopicTime, setUseTopicTime] = useState(true);
   const [showCelebration, setShowCelebration] = useState(false);
   const [celebrationStreak, setCelebrationStreak] = useState(0);
+  const [audioState, setAudioState] = useState<AudioState | null>(null);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const sessionStartRef = useRef<string | null>(null);
 
@@ -301,7 +303,7 @@ const Timer = () => {
           >
             <Coffee className="w-4 h-4" /> Break
           </button>
-          <AmbientSounds isPlaying={isRunning} currentMode={mode} />
+          <AmbientSounds isPlaying={isRunning} currentMode={mode} onAudioStateChange={setAudioState} />
           <button
             onClick={() => setShowSettings(!showSettings)}
             className="p-2.5 rounded-xl text-muted-foreground hover:text-foreground transition-colors"
@@ -399,6 +401,20 @@ const Timer = () => {
           <span>{useTopicTime && selectedTask ? `${selectedTask.estimatedMinutes}m topic` : `${pomodoroFocus}m focus`} / {pomodoroBreak}m break</span>
         </div>
       </motion.div>
+
+      {/* Mini Now Playing Bar */}
+      <AnimatePresence>
+        {audioState && (
+          <MiniPlayer
+            trackTitle={audioState.trackTitle}
+            type={audioState.type}
+            isPlaying={audioState.isPlaying}
+            isLoading={audioState.isLoading}
+            onTogglePlay={audioState.onTogglePlay}
+            onNext={audioState.onNext}
+          />
+        )}
+      </AnimatePresence>
     </div>
   );
 };

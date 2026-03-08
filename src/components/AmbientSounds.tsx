@@ -49,11 +49,21 @@ function createAmbientNode(ctx: AudioContext, type: "rain" | "whitenoise" | "for
 interface AmbientSoundsProps {
   isPlaying: boolean;
   currentMode: "focus" | "break";
+  onAudioStateChange?: (state: AudioState | null) => void;
+}
+
+export interface AudioState {
+  trackTitle: string;
+  type: "music" | "quran";
+  isPlaying: boolean;
+  isLoading: boolean;
+  onTogglePlay: () => void;
+  onNext: () => void;
 }
 
 type AudioSource = "none" | "rain" | "whitenoise" | "forest" | "music" | "quran";
 
-export function AmbientSounds({ isPlaying, currentMode }: AmbientSoundsProps) {
+export function AmbientSounds({ isPlaying, currentMode, onAudioStateChange }: AmbientSoundsProps) {
   const { state } = useStudy();
   const [showPicker, setShowPicker] = useState(false);
   const [volume, setVolume] = useState(0.3);
@@ -124,21 +134,39 @@ export function AmbientSounds({ isPlaying, currentMode }: AmbientSoundsProps) {
     setCurrentTrackIndex(0);
     if (src === "music" || src === "quran") {
       setIsLoading(true);
-      setIsTrackPlaying(isPlaying);
+      setIsTrackPlaying(true); // Always start playing when user selects
     }
   };
 
-  const nextTrack = () => {
+  const nextTrack = useCallback(() => {
     const list = audioSource === "quran" ? QURAN_TILAWAT : filteredMusic;
     setIsLoading(true);
     setCurrentTrackIndex(prev => (prev + 1) % list.length);
-  };
+  }, [audioSource, filteredMusic]);
 
   const selectTrack = (index: number) => {
     setIsLoading(true);
     setCurrentTrackIndex(index);
-    setIsTrackPlaying(isPlaying);
+    setIsTrackPlaying(true); // Always start playing when user selects
   };
+
+  const togglePlay = useCallback(() => setIsTrackPlaying(p => !p), []);
+
+  // Report audio state to parent
+  useEffect(() => {
+    if ((audioSource === "music" || audioSource === "quran") && activeTrack) {
+      onAudioStateChange?.({
+        trackTitle: activeTrack.title,
+        type: audioSource as "music" | "quran",
+        isPlaying: isTrackPlaying,
+        isLoading,
+        onTogglePlay: togglePlay,
+        onNext: nextTrack,
+      });
+    } else {
+      onAudioStateChange?.(null);
+    }
+  }, [audioSource, activeTrack, isTrackPlaying, isLoading, onAudioStateChange, togglePlay, nextTrack]);
 
   const sounds = [
     { id: "none" as const, label: "Off", icon: VolumeX },
