@@ -118,15 +118,10 @@ const StudyPlanPage = () => {
       tasks,
     };
 
+    // Auto-save immediately so plan persists across navigation
+    addStudyPlan(plan);
     setGeneratedPlan(plan);
     setStep(3);
-  };
-
-  const savePlan = () => {
-    if (generatedPlan) {
-      addStudyPlan(generatedPlan);
-      setStep(4);
-    }
   };
 
   const resetWizard = () => {
