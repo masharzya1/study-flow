@@ -414,6 +414,7 @@ const Timer = () => {
             repeat={audioState.repeat}
             onTogglePlay={audioState.onTogglePlay}
             onNext={audioState.onNext}
+            onPrev={audioState.onPrev}
             onToggleShuffle={audioState.onToggleShuffle}
             onToggleRepeat={audioState.onToggleRepeat}
           />
