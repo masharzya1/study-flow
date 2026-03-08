@@ -15,8 +15,6 @@ import Revision from "@/pages/Revision";
 import Analytics from "@/pages/Analytics";
 import SettingsPage from "@/pages/Settings";
 import NotFound from "./pages/NotFound";
-import { NotificationPrompt } from "@/components/NotificationPrompt";
-import { NotificationScheduler } from "@/components/NotificationScheduler";
 
 const queryClient = new QueryClient();
 
@@ -46,8 +44,6 @@ const App = () => (
       <StudyProvider>
         <Toaster />
         <Sonner />
-        <NotificationPrompt />
-        <NotificationScheduler />
         <BrowserRouter>
           <AppLayout>
             <AnimatedRoutes />
