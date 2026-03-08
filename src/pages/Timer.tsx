@@ -347,7 +347,7 @@ const Timer = () => {
                       }`}>
                         {useTopicTime && <Check className="w-3 h-3 text-primary-foreground" />}
                       </div>
-                      Topic এর সময় অনুযায়ী timer সেট করো
+                      Set timer based on topic duration
                     </button>
                   </motion.div>
                 )}
