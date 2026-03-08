@@ -32,9 +32,9 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         <div className="p-4 lg:px-5 flex items-center justify-between">
           <div className="flex items-center gap-2">
             <div className="w-7 h-7 rounded-lg bg-foreground flex items-center justify-center">
-              <span className="text-primary-foreground text-xs font-bold">π</span>
-            </div>
-            <h1 className="font-semibold text-base hidden lg:block tracking-tight">Paideia</h1>
+            <span className="text-primary-foreground text-xs font-bold">P</span>
+          </div>
+            <h1 className="font-semibold text-base hidden lg:block tracking-tight">Penzó</h1>
           </div>
           <div className="hidden lg:flex">
             <HeaderControls />
