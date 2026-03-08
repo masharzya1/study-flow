@@ -85,6 +85,19 @@ const SettingsPage = () => {
             {getNotificationPermission() === "denied" && (
               <p className="text-xs text-destructive">Notification blocked — browser settings থেকে allow করো</p>
             )}
+            {getNotificationPermission() === "granted" && (
+              <button
+                onClick={() => {
+                  sendNotification("🔔 Test Notification!", {
+                    body: "Notification ঠিকমতো কাজ করছে! 🎉",
+                    tag: "test",
+                  });
+                }}
+                className="w-full py-2.5 rounded-xl bg-secondary text-sm font-medium hover:bg-secondary/80 transition-colors"
+              >
+                Test Notification পাঠাও
+              </button>
+            )}
           </div>
         ) : (
           <p className="text-sm text-muted-foreground">তোমার browser notification support করে না</p>
