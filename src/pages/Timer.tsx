@@ -6,13 +6,14 @@ import { AmbientSounds } from "@/components/AmbientSounds";
 import type { StudySession } from "@/types/study";
 
 const Timer = () => {
-  const { state, addSession, updateSettings } = useStudy();
+  const { state, addSession, updateSettings, incrementSessionsCompleted } = useStudy();
   const { pomodoroFocus, pomodoroBreak } = state.settings;
+  const today = new Date().toISOString().split("T")[0];
+  const sessionsCompleted = state.todaySessionsDate === today ? state.todaySessionsCompleted : 0;
 
   const [mode, setMode] = useState<"focus" | "break">("focus");
   const [isRunning, setIsRunning] = useState(false);
   const [timeLeft, setTimeLeft] = useState(pomodoroFocus * 60);
-  const [sessionsCompleted, setSessionsCompleted] = useState(0);
   const [showSettings, setShowSettings] = useState(false);
   const [focusMin, setFocusMin] = useState(pomodoroFocus);
   const [breakMin, setBreakMin] = useState(pomodoroBreak);
@@ -46,7 +47,7 @@ const Timer = () => {
                 completed: true,
               };
               addSession(session);
-              setSessionsCompleted(p => p + 1);
+              incrementSessionsCompleted();
               setMode("break");
               return pomodoroBreak * 60;
             } else {

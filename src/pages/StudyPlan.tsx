@@ -118,15 +118,10 @@ const StudyPlanPage = () => {
       tasks,
     };
 
+    // Auto-save immediately so plan persists across navigation
+    addStudyPlan(plan);
     setGeneratedPlan(plan);
     setStep(3);
-  };
-
-  const savePlan = () => {
-    if (generatedPlan) {
-      addStudyPlan(generatedPlan);
-      setStep(4);
-    }
   };
 
   const resetWizard = () => {
@@ -387,34 +382,16 @@ const StudyPlanPage = () => {
 
             <div className="flex gap-2">
               <button onClick={resetWizard} className="flex-1 py-2.5 rounded-xl bg-secondary text-foreground font-medium text-sm">
-                Discard
+                Create Another
               </button>
-              <button onClick={savePlan} className="flex-1 py-2.5 rounded-xl bg-foreground text-primary-foreground font-medium text-sm">
-                Save Plan
+              <button onClick={() => setStep(0)} className="flex-1 py-2.5 rounded-xl bg-foreground text-primary-foreground font-medium text-sm">
+                View Plans
               </button>
             </div>
+            <p className="text-[10px] text-muted-foreground text-center">Plan saved automatically</p>
           </motion.div>
         )}
 
-        {step === 4 && (
-          <motion.div
-            key="step4"
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className="glass-card p-8 text-center space-y-4"
-          >
-            <div className="w-14 h-14 rounded-2xl bg-success/15 flex items-center justify-center mx-auto">
-              <Check className="w-7 h-7 text-success" />
-            </div>
-            <div>
-              <p className="font-semibold">Plan Saved!</p>
-              <p className="text-sm text-muted-foreground mt-1">Your study schedule is ready</p>
-            </div>
-            <button onClick={resetWizard} className="flex items-center gap-2 mx-auto text-sm text-muted-foreground hover:text-foreground transition-colors">
-              <RotateCcw className="w-3.5 h-3.5" /> Create another
-            </button>
-          </motion.div>
-        )}
       </AnimatePresence>
     </div>
   );

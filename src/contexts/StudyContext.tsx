@@ -12,6 +12,7 @@ const defaultState: AppState = {
   achievements: [],
   settings: DEFAULT_SETTINGS,
   streak: 0,
+  todaySessionsCompleted: 0,
 };
 
 function loadState(): AppState {
@@ -36,6 +37,7 @@ interface StudyContextValue {
   toggleTopicComplete: (subjectId: string, chapterId: string, topicId: string) => void;
   updateTopicNotes: (subjectId: string, chapterId: string, topicId: string, notes: string) => void;
   addStudyPlan: (plan: StudyPlan) => void;
+  incrementSessionsCompleted: () => void;
   getTodayMinutes: () => number;
   getStreak: () => number;
   getHeatmapData: () => Record<string, number>;
@@ -137,6 +139,15 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
     setState(prev => ({ ...prev, studyPlans: [...prev.studyPlans, plan] }));
   }, []);
 
+  const incrementSessionsCompleted = useCallback(() => {
+    const today = new Date().toISOString().split("T")[0];
+    setState(prev => ({
+      ...prev,
+      todaySessionsCompleted: prev.todaySessionsDate === today ? prev.todaySessionsCompleted + 1 : 1,
+      todaySessionsDate: today,
+    }));
+  }, []);
+
   const getTodayMinutes = useCallback(() => {
     const today = new Date().toISOString().split("T")[0];
     return state.sessions
@@ -167,8 +178,8 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
   return (
     <StudyContext.Provider value={{
       state, addSubject, updateSubject, deleteSubject, addSession, updateSettings,
-      toggleTopicComplete, updateTopicNotes, addStudyPlan, getTodayMinutes, getStreak,
-      getHeatmapData, getSubjectProgress,
+      toggleTopicComplete, updateTopicNotes, addStudyPlan, incrementSessionsCompleted,
+      getTodayMinutes, getStreak, getHeatmapData, getSubjectProgress,
     }}>
       {children}
     </StudyContext.Provider>
