@@ -99,7 +99,7 @@ const Timer = () => {
 
               // 🎉 Celebration!
               fireSessionComplete();
-              notifyTimerComplete("focus");
+              // Timer complete
               const currentStreak = getStreak();
               if (currentStreak > 0 && currentStreak % 3 === 0) {
                 setTimeout(() => fireStreakCelebration(currentStreak), 800);
