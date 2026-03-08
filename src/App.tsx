@@ -47,6 +47,7 @@ const App = () => (
         <Toaster />
         <Sonner />
         <NotificationPrompt />
+        <NotificationScheduler />
         <BrowserRouter>
           <AppLayout>
             <AnimatedRoutes />
