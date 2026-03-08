@@ -21,9 +21,9 @@ export default defineConfig(({ mode }) => ({
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
       },
       manifest: {
-        name: "Paideia — Smart Study Companion",
-        short_name: "Paideia",
-        description: "Your intelligent study companion inspired by the Greek ideal of education.",
+        name: "Manabu — Smart Study Companion",
+        short_name: "Manabu",
+        description: "Your intelligent study companion inspired by the Japanese art of learning.",
         theme_color: "#faf8f5",
         background_color: "#faf8f5",
         display: "standalone",

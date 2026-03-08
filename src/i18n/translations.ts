@@ -105,8 +105,10 @@ const translations: Record<Language, Record<string, string>> = {
     "settings.english": "English",
     "settings.bengali": "বাংলা",
     "settings.openSource": "Open Source",
-    "settings.openSourceDesc": "Paideia is 100% free and open source. No premium features, no locked content.",
-    "settings.version": "Paideia v1.0 · Παιδεία · Made for students everywhere",
+    "settings.openSourceDesc": "Manabu is 100% free and open source. No premium features, no locked content.",
+    "settings.version": "Manabu v1.0 · 学ぶ · Made for students everywhere",
+    "settings.restartTour": "Restart Tour",
+    "settings.restartTourDesc": "Re-trigger the onboarding walkthrough",
     "settings.pwa": "PWA · Works offline · 100% free",
 
     // Study Plan
@@ -336,8 +338,10 @@ const translations: Record<Language, Record<string, string>> = {
     "settings.english": "English",
     "settings.bengali": "বাংলা",
     "settings.openSource": "ওপেন সোর্স",
-    "settings.openSourceDesc": "Paideia সম্পূর্ণ বিনামূল্যে এবং ওপেন সোর্স। কোনো প্রিমিয়াম ফিচার নেই।",
-    "settings.version": "Paideia v1.0 · Παιδεία · সব ছাত্রদের জন্য তৈরি",
+    "settings.openSourceDesc": "Manabu সম্পূর্ণ বিনামূল্যে এবং ওপেন সোর্স। কোনো প্রিমিয়াম ফিচার নেই।",
+    "settings.version": "Manabu v1.0 · 学ぶ · সব ছাত্রদের জন্য তৈরি",
+    "settings.restartTour": "ট্যুর আবার শুরু",
+    "settings.restartTourDesc": "অনবোর্ডিং ওয়াকথ্রু আবার দেখুন",
     "settings.pwa": "PWA · অফলাইনে কাজ করে · ১০০% ফ্রি",
 
     // Study Plan
