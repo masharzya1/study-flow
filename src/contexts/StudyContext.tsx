@@ -13,6 +13,9 @@ const defaultState: AppState = {
   settings: DEFAULT_SETTINGS,
   streak: 0,
   todaySessionsCompleted: 0,
+  xp: 0,
+  level: 1,
+  totalTopicsCompleted: 0,
 };
 
 function loadState(): AppState {
