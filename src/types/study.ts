@@ -88,6 +88,10 @@ export interface AppState {
   lastStudyDate?: string;
   todaySessionsCompleted: number;
   todaySessionsDate?: string;
+  // Gamification
+  xp: number;
+  level: number;
+  totalTopicsCompleted: number;
 }
 
 export interface DifficultyLevel {
