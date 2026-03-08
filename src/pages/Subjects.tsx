@@ -245,7 +245,7 @@ const Subjects = () => {
                                     {chapterTopics.map(topic => (
                                       <button
                                         key={topic.id}
-                                        onClick={() => toggleTopicComplete(subject.id, chapter.id, topic.id)}
+                                        onClick={() => handleTopicToggle(subject.id, chapter.id, topic.id, topic.name, topic.difficulty)}
                                         className="w-full flex items-center gap-2 p-2 rounded-lg hover:bg-secondary/60 transition-colors text-left text-sm"
                                       >
                                         <div className={`w-4 h-4 rounded-full border-[1.5px] flex items-center justify-center flex-shrink-0 ${
