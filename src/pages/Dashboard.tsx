@@ -102,7 +102,21 @@ const Dashboard = () => {
   const today = new Date().toISOString().split("T")[0];
   const todaySessions = state.todaySessionsDate === today ? state.todaySessionsCompleted : 0;
 
-  return (
+  // Streak milestone celebration
+  const [showMilestone, setShowMilestone] = useState(false);
+  const celebrated = state.celebratedMilestones || [];
+
+  useEffect(() => {
+    if (streak > 0 && STREAK_MILESTONES.includes(streak) && !celebrated.includes(streak)) {
+      const timer = setTimeout(() => setShowMilestone(true), 800);
+      return () => clearTimeout(timer);
+    }
+  }, [streak, celebrated]);
+
+  const handleCloseMilestone = useCallback(() => {
+    setShowMilestone(false);
+    celebrateMilestone(streak);
+  }, [streak, celebrateMilestone]);
     <div className="p-5 md:p-8 max-w-3xl mx-auto space-y-6 pb-28 md:pb-8">
       {/* Header */}
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-1">
