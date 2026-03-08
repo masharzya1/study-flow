@@ -50,57 +50,6 @@ const SettingsPage = () => {
         <p className="text-muted-foreground text-sm mt-0.5">Customize your experience</p>
       </motion.div>
 
-      {/* Notifications */}
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.02 }} className="glass-card p-5 space-y-3">
-        <h2 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground">Notifications</h2>
-        {isNotificationSupported() ? (
-          <div className="space-y-2">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm font-medium">Browser Notifications</p>
-                <p className="text-xs text-muted-foreground">Timer শেষ হলে ও revision due হলে notify করবে</p>
-              </div>
-              <button
-                onClick={async () => {
-                  const granted = await requestNotificationPermission();
-                  setNotifPerm(getNotificationPermission());
-                }}
-                className={`flex items-center gap-2 px-3 py-2 rounded-xl text-sm font-medium transition-all ${
-                  notifPerm === "granted"
-                    ? "bg-foreground text-primary-foreground"
-                    : "bg-secondary text-muted-foreground"
-                }`}
-              >
-                {notifPerm === "granted" ? (
-                  <><Bell className="w-4 h-4" /> On</>
-                ) : (
-                  <><BellOff className="w-4 h-4" /> Off</>
-                )}
-              </button>
-            </div>
-            {notifPerm === "denied" && (
-              <p className="text-xs text-destructive">Notification blocked — browser settings থেকে allow করো</p>
-            )}
-            {notifPerm === "granted" && (
-              <button
-                onClick={() => {
-                  sendNotification("🔔 Test Notification!", {
-                    body: "Notification ঠিকমতো কাজ করছে! 🎉",
-                    tag: "test",
-                  });
-                }}
-                className="w-full py-2.5 rounded-xl bg-secondary text-sm font-medium hover:bg-secondary/80 transition-colors"
-              >
-                Test Notification পাঠাও
-              </button>
-            )}
-          </div>
-        ) : (
-          <p className="text-sm text-muted-foreground">তোমার browser notification support করে না</p>
-        )}
-      </motion.div>
-
-      {/* Theme */}
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.04 }} className="glass-card p-5 space-y-3">
         <h2 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground">Appearance</h2>
         <div className="flex gap-2">
