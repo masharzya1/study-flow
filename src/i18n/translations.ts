@@ -336,8 +336,8 @@ const translations: Record<Language, Record<string, string>> = {
     "settings.english": "English",
     "settings.bengali": "বাংলা",
     "settings.openSource": "ওপেন সোর্স",
-    "settings.openSourceDesc": "StudyForge সম্পূর্ণ বিনামূল্যে এবং ওপেন সোর্স। কোনো প্রিমিয়াম ফিচার নেই।",
-    "settings.version": "StudyForge v1.0.0 · সব ছাত্রদের জন্য তৈরি",
+    "settings.openSourceDesc": "Paideia সম্পূর্ণ বিনামূল্যে এবং ওপেন সোর্স। কোনো প্রিমিয়াম ফিচার নেই।",
+    "settings.version": "Paideia v1.0 · Παιδεία · সব ছাত্রদের জন্য তৈরি",
     "settings.pwa": "PWA · অফলাইনে কাজ করে · ১০০% ফ্রি",
 
     // Study Plan
