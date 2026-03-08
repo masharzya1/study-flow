@@ -77,6 +77,8 @@ export function AmbientSounds({ isPlaying, currentMode, onAudioStateChange }: Am
   const [isTrackPlaying, setIsTrackPlaying] = useState(false);
   const [musicCategory, setMusicCategory] = useState<"focus" | "break">("focus");
   const [isLoading, setIsLoading] = useState(false);
+  const [shuffle, setShuffle] = useState(false);
+  const [repeat, setRepeat] = useState(false);
   const ctxRef = useRef<AudioContext | null>(null);
   const nodeRef = useRef<AudioNode | null>(null);
   const gainRef = useRef<GainNode | null>(null);
