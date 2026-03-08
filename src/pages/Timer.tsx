@@ -115,6 +115,7 @@ const Timer = () => {
               setMode("break");
               return pomodoroBreak * 60;
             } else {
+              notifyTimerComplete("break");
               setMode("focus");
               sessionStartRef.current = null;
               return focusDuration * 60;
