@@ -124,7 +124,7 @@ export function AmbientSounds({ isPlaying, currentMode }: AmbientSoundsProps) {
     setCurrentTrackIndex(0);
     if (src === "music" || src === "quran") {
       setIsLoading(true);
-      setIsTrackPlaying(isPlaying);
+      setIsTrackPlaying(true); // Always start playing when user selects
     }
   };
 
@@ -137,7 +137,7 @@ export function AmbientSounds({ isPlaying, currentMode }: AmbientSoundsProps) {
   const selectTrack = (index: number) => {
     setIsLoading(true);
     setCurrentTrackIndex(index);
-    setIsTrackPlaying(isPlaying);
+    setIsTrackPlaying(true); // Always start playing when user selects
   };
 
   const sounds = [
