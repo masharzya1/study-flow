@@ -119,9 +119,9 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   // When a topic is toggled complete, also sync with plan tasks
-  const toggleTopicComplete = useCallback((subjectId: string, chapterId: string, topicId: string) => {
+  const toggleTopicComplete = useCallback((subjectId: string, chapterId: string, topicId: string): boolean => {
+    let willBeCompleted = false;
     setState(prev => {
-      // Find current completion state
       let wasCompleted = false;
       for (const s of prev.subjects) {
         if (s.id !== subjectId) continue;
@@ -132,9 +132,8 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
         }
       }
 
-      const willBeCompleted = !wasCompleted;
+      willBeCompleted = !wasCompleted;
 
-      // Update subject topics
       const newSubjects = prev.subjects.map(s =>
         s.id === subjectId
           ? {
@@ -155,7 +154,6 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
           : s
       );
 
-      // Sync with plan tasks: mark matching plan tasks as completed/uncompleted
       const newPlans = prev.studyPlans.map(plan => ({
         ...plan,
         tasks: plan.tasks.map(t =>
@@ -165,8 +163,40 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
         ),
       }));
 
-      return { ...prev, subjects: newSubjects, studyPlans: newPlans };
+      return {
+        ...prev,
+        subjects: newSubjects,
+        studyPlans: newPlans,
+        totalTopicsCompleted: willBeCompleted ? prev.totalTopicsCompleted + 1 : Math.max(0, prev.totalTopicsCompleted - 1),
+      };
     });
+    return willBeCompleted;
+  }, []);
+
+  // XP system: 100 XP per level, increasing
+  const gainXp = useCallback((amount: number) => {
+    let result = { newLevel: 0, isLevelUp: false };
+    setState(prev => {
+      const newXp = prev.xp + amount;
+      const xpPerLevel = (level: number) => level * 100;
+      let level = prev.level;
+      let remaining = newXp;
+      
+      // Calculate level from total XP
+      let totalXpForLevel = 0;
+      let calcLevel = 1;
+      let tempXp = newXp;
+      while (tempXp >= xpPerLevel(calcLevel)) {
+        tempXp -= xpPerLevel(calcLevel);
+        calcLevel++;
+      }
+      
+      const isLevelUp = calcLevel > prev.level;
+      result = { newLevel: calcLevel, isLevelUp };
+      
+      return { ...prev, xp: newXp, level: calcLevel };
+    });
+    return result;
   }, []);
 
   const updateTopicNotes = useCallback((subjectId: string, chapterId: string, topicId: string, notes: string) => {
