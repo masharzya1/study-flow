@@ -4,6 +4,7 @@ import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { HeaderControls } from "@/components/HeaderControls";
+import penzoLogo from "@/assets/penzo-logo.png";
 
 export function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
