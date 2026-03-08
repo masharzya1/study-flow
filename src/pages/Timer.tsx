@@ -390,7 +390,7 @@ const Timer = () => {
                   className="glass-card p-4 w-full text-center text-sm text-muted-foreground hover:text-foreground transition-colors"
                 >
                   <BookOpen className="w-5 h-5 mx-auto mb-1.5 opacity-50" />
-                  Topic বেছে নাও
+                  Pick a Topic
                 </button>
               )}
 
