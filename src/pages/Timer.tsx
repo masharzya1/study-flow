@@ -79,6 +79,7 @@ const Timer = () => {
 
   useEffect(() => {
     if (isRunning) {
+      requestNotificationPermission();
       if (!sessionStartRef.current) sessionStartRef.current = new Date().toISOString();
       intervalRef.current = setInterval(() => {
         setTimeLeft(prev => {
