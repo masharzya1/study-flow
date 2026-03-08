@@ -74,6 +74,18 @@ const Timer = () => {
     });
   }, [todayTasks, state.subjects]);
 
+  // Free topic: resolve selected free topic info
+  const freeTopicInfo = useMemo(() => {
+    if (!freeTopicId) return null;
+    for (const s of state.subjects) {
+      for (const c of s.chapters) {
+        const t = c.topics.find(tp => tp.id === freeTopicId);
+        if (t) return { topicName: t.name, subjectName: s.name, subjectColor: s.color, subjectIcon: s.icon, estimatedMinutes: t.estimatedMinutes, topicId: t.id, subjectId: s.id };
+      }
+    }
+    return null;
+  }, [freeTopicId, state.subjects]);
+
   useEffect(() => {
     if (!selectedTaskId && incompleteTasks.length > 0) {
       setSelectedTaskId(incompleteTasks[0].taskId);
