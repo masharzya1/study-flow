@@ -161,6 +161,8 @@ export function AmbientSounds({ isPlaying, currentMode, onAudioStateChange }: Am
   };
 
   const togglePlay = useCallback(() => setIsTrackPlaying(p => !p), []);
+  const toggleShuffle = useCallback(() => setShuffle(p => !p), []);
+  const toggleRepeat = useCallback(() => setRepeat(p => !p), []);
 
   // Report audio state to parent
   useEffect(() => {
