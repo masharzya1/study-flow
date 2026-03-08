@@ -1,16 +1,14 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useStudy } from "@/contexts/StudyContext";
 import { motion, AnimatePresence } from "framer-motion";
-import { Play, Pause, RotateCcw, Coffee, Brain, Settings2, BookOpen, ArrowRight } from "lucide-react";
+import { Play, Pause, RotateCcw, Coffee, Brain, Settings2 } from "lucide-react";
 import { AmbientSounds } from "@/components/AmbientSounds";
 import { SubjectIcon } from "@/components/SubjectIcon";
-import { useNavigate } from "react-router-dom";
 import type { StudySession } from "@/types/study";
 
 const Timer = () => {
-  const { state, addSession, updateSettings, incrementSessionsCompleted } = useStudy();
+  const { state, addSession, updateSettings, incrementSessionsCompleted, getTodayPlanTask } = useStudy();
   const { pomodoroFocus, pomodoroBreak } = state.settings;
-  const navigate = useNavigate();
   const today = new Date().toISOString().split("T")[0];
   const sessionsCompleted = state.todaySessionsDate === today ? state.todaySessionsCompleted : 0;
 
@@ -26,31 +24,34 @@ const Timer = () => {
   const totalTime = mode === "focus" ? pomodoroFocus * 60 : pomodoroBreak * 60;
   const progress = ((totalTime - timeLeft) / totalTime) * 100;
 
-  // Get suggested topic from today's plan
+  // Get current plan task context (if any plan exists)
+  const currentPlanTask = getTodayPlanTask();
+
+  // Get topic details for the plan task
   const suggestedTopic = useMemo(() => {
+    if (!currentPlanTask) return null;
+    const subject = state.subjects.find(s => s.id === currentPlanTask.subjectId);
+    if (!subject) return null;
+    let topicName = "Topic";
+    let taskType: "study" | "revision" = "study";
+    let minutes = 0;
     for (const plan of state.studyPlans) {
-      const todayTask = plan.tasks.find(t => t.date === today && !t.completed);
-      if (todayTask) {
-        const subject = state.subjects.find(s => s.id === todayTask.subjectId);
-        let topicName = "Topic";
-        for (const s of state.subjects) {
-          for (const c of s.chapters) {
-            const t = c.topics.find(tp => tp.id === todayTask.topicId);
-            if (t) { topicName = t.name; break; }
-          }
-        }
-        return {
-          topicName,
-          subjectName: subject?.name || "",
-          subjectColor: subject?.color || "220 15% 25%",
-          subjectIcon: subject?.icon || "book-open",
-          type: todayTask.type,
-          minutes: todayTask.estimatedMinutes,
-        };
-      }
+      const task = plan.tasks.find(t => t.id === currentPlanTask.taskId);
+      if (task) { taskType = task.type; minutes = task.estimatedMinutes; break; }
     }
-    return null;
-  }, [state.studyPlans, state.subjects, today]);
+    for (const c of subject.chapters) {
+      const t = c.topics.find(tp => tp.id === currentPlanTask.topicId);
+      if (t) { topicName = t.name; break; }
+    }
+    return {
+      topicName,
+      subjectName: subject.name,
+      subjectColor: subject.color,
+      subjectIcon: subject.icon,
+      type: taskType,
+      minutes,
+    };
+  }, [currentPlanTask, state.subjects, state.studyPlans]);
 
   const reset = useCallback(() => {
     setIsRunning(false);
@@ -67,13 +68,15 @@ const Timer = () => {
           if (prev <= 1) {
             setIsRunning(false);
             if (mode === "focus") {
+              // Build session — link to plan task if one exists
               const session: StudySession = {
                 id: crypto.randomUUID(),
                 startTime: sessionStartRef.current!,
                 endTime: new Date().toISOString(),
                 durationMinutes: pomodoroFocus,
-                type: "focus",
+                type: currentPlanTask ? (suggestedTopic?.type === "revision" ? "revision" : "focus") : "focus",
                 completed: true,
+                ...(currentPlanTask ? { topicId: currentPlanTask.topicId, subjectId: currentPlanTask.subjectId } : {}),
               };
               addSession(session);
               incrementSessionsCompleted();
@@ -89,7 +92,7 @@ const Timer = () => {
       }, 1000);
     }
     return () => { if (intervalRef.current) clearInterval(intervalRef.current); };
-  }, [isRunning, mode, pomodoroFocus, pomodoroBreak, addSession]);
+  }, [isRunning, mode, pomodoroFocus, pomodoroBreak, addSession, currentPlanTask, suggestedTopic]);
 
   useEffect(() => {
     if (!isRunning) setTimeLeft(mode === "focus" ? pomodoroFocus * 60 : pomodoroBreak * 60);
@@ -113,8 +116,8 @@ const Timer = () => {
         animate={{ opacity: 1, scale: 1 }}
         className="w-full max-w-sm space-y-8 text-center"
       >
-        {/* Suggested Topic Banner */}
-        {suggestedTopic && !isRunning && (
+        {/* Current Topic Context — only when a plan exists */}
+        {suggestedTopic && (
           <motion.div
             initial={{ opacity: 0, y: -8 }}
             animate={{ opacity: 1, y: 0 }}
@@ -128,7 +131,7 @@ const Timer = () => {
             </div>
             <div className="flex-1 min-w-0">
               <p className="text-[10px] text-muted-foreground uppercase tracking-wider">
-                {suggestedTopic.type === "revision" ? "Review" : "Up next"}
+                {isRunning ? "Studying" : suggestedTopic.type === "revision" ? "Review next" : "Up next"}
               </p>
               <p className="text-sm font-medium truncate">{suggestedTopic.topicName}</p>
               <p className="text-[10px] text-muted-foreground">{suggestedTopic.subjectName} · {suggestedTopic.minutes}m</p>

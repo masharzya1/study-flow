@@ -37,11 +37,13 @@ interface StudyContextValue {
   toggleTopicComplete: (subjectId: string, chapterId: string, topicId: string) => void;
   updateTopicNotes: (subjectId: string, chapterId: string, topicId: string, notes: string) => void;
   addStudyPlan: (plan: StudyPlan) => void;
+  completePlanTask: (topicId: string) => void;
   incrementSessionsCompleted: () => void;
   getTodayMinutes: () => number;
   getStreak: () => number;
   getHeatmapData: () => Record<string, number>;
   getSubjectProgress: (subjectId: string) => number;
+  getTodayPlanTask: () => { planId: string; taskId: string; topicId: string; subjectId: string } | null;
 }
 
 const StudyContext = createContext<StudyContextValue | null>(null);
@@ -85,17 +87,50 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const addSession = useCallback((session: StudySession) => {
-    setState(prev => ({ ...prev, sessions: [...prev.sessions, session] }));
+    setState(prev => {
+      let newState = { ...prev, sessions: [...prev.sessions, session] };
+
+      // Auto-sync: if session has a topicId and it matches a plan task, mark that task completed
+      if (session.topicId) {
+        newState = {
+          ...newState,
+          studyPlans: newState.studyPlans.map(plan => ({
+            ...plan,
+            tasks: plan.tasks.map(t =>
+              t.topicId === session.topicId && !t.completed
+                ? { ...t, completed: true }
+                : t
+            ),
+          })),
+        };
+      }
+
+      return newState;
+    });
   }, []);
 
   const updateSettings = useCallback((settings: Partial<AppSettings>) => {
     setState(prev => ({ ...prev, settings: { ...prev.settings, ...settings } }));
   }, []);
 
+  // When a topic is toggled complete, also sync with plan tasks
   const toggleTopicComplete = useCallback((subjectId: string, chapterId: string, topicId: string) => {
-    setState(prev => ({
-      ...prev,
-      subjects: prev.subjects.map(s =>
+    setState(prev => {
+      // Find current completion state
+      let wasCompleted = false;
+      for (const s of prev.subjects) {
+        if (s.id !== subjectId) continue;
+        for (const c of s.chapters) {
+          if (c.id !== chapterId) continue;
+          const topic = c.topics.find(t => t.id === topicId);
+          if (topic) wasCompleted = topic.completed;
+        }
+      }
+
+      const willBeCompleted = !wasCompleted;
+
+      // Update subject topics
+      const newSubjects = prev.subjects.map(s =>
         s.id === subjectId
           ? {
               ...s,
@@ -105,7 +140,7 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
                       ...c,
                       topics: c.topics.map(t =>
                         t.id === topicId
-                          ? { ...t, completed: !t.completed, completedAt: !t.completed ? new Date().toISOString() : undefined }
+                          ? { ...t, completed: willBeCompleted, completedAt: willBeCompleted ? new Date().toISOString() : undefined }
                           : t
                       ),
                     }
@@ -113,8 +148,20 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
               ),
             }
           : s
-      ),
-    }));
+      );
+
+      // Sync with plan tasks: mark matching plan tasks as completed/uncompleted
+      const newPlans = prev.studyPlans.map(plan => ({
+        ...plan,
+        tasks: plan.tasks.map(t =>
+          t.topicId === topicId && t.subjectId === subjectId
+            ? { ...t, completed: willBeCompleted }
+            : t
+        ),
+      }));
+
+      return { ...prev, subjects: newSubjects, studyPlans: newPlans };
+    });
   }, []);
 
   const updateTopicNotes = useCallback((subjectId: string, chapterId: string, topicId: string, notes: string) => {
@@ -137,6 +184,19 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
 
   const addStudyPlan = useCallback((plan: StudyPlan) => {
     setState(prev => ({ ...prev, studyPlans: [...prev.studyPlans, plan] }));
+  }, []);
+
+  // Manually complete a plan task by topicId
+  const completePlanTask = useCallback((topicId: string) => {
+    setState(prev => ({
+      ...prev,
+      studyPlans: prev.studyPlans.map(plan => ({
+        ...plan,
+        tasks: plan.tasks.map(t =>
+          t.topicId === topicId && !t.completed ? { ...t, completed: true } : t
+        ),
+      })),
+    }));
   }, []);
 
   const incrementSessionsCompleted = useCallback(() => {
@@ -175,11 +235,24 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
     return Math.round((allTopics.filter(t => t.completed).length / allTopics.length) * 100);
   }, [state.subjects]);
 
+  // Get the next incomplete plan task for today (used by timer)
+  const getTodayPlanTask = useCallback(() => {
+    const today = new Date().toISOString().split("T")[0];
+    for (const plan of state.studyPlans) {
+      const task = plan.tasks.find(t => t.date === today && !t.completed);
+      if (task) {
+        return { planId: plan.id, taskId: task.id, topicId: task.topicId, subjectId: task.subjectId };
+      }
+    }
+    return null;
+  }, [state.studyPlans]);
+
   return (
     <StudyContext.Provider value={{
       state, addSubject, updateSubject, deleteSubject, addSession, updateSettings,
-      toggleTopicComplete, updateTopicNotes, addStudyPlan, incrementSessionsCompleted,
-      getTodayMinutes, getStreak, getHeatmapData, getSubjectProgress,
+      toggleTopicComplete, updateTopicNotes, addStudyPlan, completePlanTask,
+      incrementSessionsCompleted,
+      getTodayMinutes, getStreak, getHeatmapData, getSubjectProgress, getTodayPlanTask,
     }}>
       {children}
     </StudyContext.Provider>
