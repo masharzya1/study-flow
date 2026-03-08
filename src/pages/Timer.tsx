@@ -113,11 +113,12 @@ const Timer = () => {
     if (intervalRef.current) clearInterval(intervalRef.current);
   }, [mode, focusDuration, pomodoroBreak]);
 
+  // Only reset timeLeft when mode or duration settings change, NOT when pausing
   useEffect(() => {
     if (!isRunning) {
       setTimeLeft(mode === "focus" ? focusDuration * 60 : pomodoroBreak * 60);
     }
-  }, [mode, focusDuration, pomodoroBreak, isRunning]);
+  }, [mode, focusDuration, pomodoroBreak]);
 
   useEffect(() => {
     if (isRunning) {
