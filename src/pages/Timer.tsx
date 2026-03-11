@@ -127,7 +127,7 @@ const Timer = () => {
       }
       if (!document.hidden && isRunning && mode === "focus" && distractionRef.current > 0 && state.settings.focusGuardAlerts) {
         setShowDistractedOverlay(true);
-        setTimeout(() => setShowDistractedOverlay(false), 2500);
+        setTimeout(() => setShowDistractedOverlay(false), 3000);
       }
     };
     document.addEventListener("visibilitychange", handleVisibility);

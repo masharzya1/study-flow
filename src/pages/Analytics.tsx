@@ -43,7 +43,7 @@ const Analytics = () => {
     const recentSessions = allFocusSessions.filter(s => new Date(s.startTime) >= weekAgo);
     const avgScore = recentSessions.length > 0
       ? Math.round(recentSessions.reduce((sum, s) => sum + (s.focusScore ?? 0), 0) / recentSessions.length)
-      : Math.round(allFocusSessions.reduce((sum, s) => sum + (s.focusScore ?? 0), 0) / allFocusSessions.length);
+      : 0;
     const totalDistractions = allFocusSessions.reduce((sum, s) => sum + (s.distractionCount ?? 0), 0);
     let bestStreak = 0;
     let currentStreak = 0;
