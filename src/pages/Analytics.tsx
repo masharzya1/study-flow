@@ -1,7 +1,7 @@
 import { useStudy } from "@/contexts/StudyContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { motion } from "framer-motion";
-import { Clock, BarChart3, TrendingUp, Target, Flame, ArrowRight } from "lucide-react";
+import { Clock, BarChart3, TrendingUp, Target, Flame, ArrowRight, ShieldCheck } from "lucide-react";
 import { useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { SubjectIcon } from "@/components/SubjectIcon";
@@ -35,6 +35,24 @@ const Analytics = () => {
     const completedTopics = allTopics.filter(t => t.completed).length;
     return { weekMinutes, dailyData, maxDaily, consistencyScore, completedTopics, totalTopics: allTopics.length };
   }, [state.sessions, state.subjects]);
+
+  const focusStats = useMemo(() => {
+    const focusSessions = state.sessions.filter(s => s.completed && s.type === "focus" && s.focusScore !== undefined);
+    if (focusSessions.length === 0) return null;
+    const avgScore = Math.round(focusSessions.reduce((sum, s) => sum + (s.focusScore ?? 0), 0) / focusSessions.length);
+    const totalDistractions = focusSessions.reduce((sum, s) => sum + (s.distractionCount ?? 0), 0);
+    let bestStreak = 0;
+    let currentStreak = 0;
+    focusSessions.forEach(s => {
+      if (s.focusScore === 100) { currentStreak++; bestStreak = Math.max(bestStreak, currentStreak); }
+      else { currentStreak = 0; }
+    });
+    const last7 = focusSessions.slice(-7).map(s => ({
+      score: s.focusScore ?? 0,
+      date: new Date(s.startTime).toLocaleDateString("en", { weekday: "short" }),
+    }));
+    return { avgScore, totalDistractions, bestStreak, last7, totalSessions: focusSessions.length };
+  }, [state.sessions]);
 
   const planStats = useMemo(() => {
     const activePlans = state.studyPlans.filter(p => new Date(p.examDate) >= new Date());
@@ -116,6 +134,54 @@ const Analytics = () => {
           </div>
         )}
       </motion.div>
+      {/* Focus Quality */}
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.22 }} className="glass-card p-5">
+        <h2 className="section-header mb-4 flex items-center gap-2">
+          <ShieldCheck className="w-4 h-4 text-muted-foreground" /> {t("focus.focusQuality")}
+        </h2>
+        {focusStats ? (
+          <div className="space-y-5">
+            <div className="grid grid-cols-3 gap-3">
+              <div className="text-center">
+                <p className="text-2xl font-bold" data-testid="text-avg-focus-score" style={{
+                  color: focusStats.avgScore >= 80 ? "hsl(152 60% 42%)" : focusStats.avgScore >= 50 ? "hsl(45 93% 58%)" : "hsl(0 70% 60%)",
+                }}>{focusStats.avgScore}%</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">{t("focus.avgScore")}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-bold">{focusStats.bestStreak}</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">{t("focus.perfectStreak")}</p>
+              </div>
+              <div className="text-center">
+                <p className="text-2xl font-bold">{focusStats.totalSessions}</p>
+                <p className="text-[10px] text-muted-foreground mt-0.5">{t("focus.sessions")}</p>
+              </div>
+            </div>
+            <div>
+              <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-2">{t("focus.scoreLabel")}</p>
+              <div className="flex items-end gap-1.5 h-20">
+                {focusStats.last7.map((s, i) => (
+                  <div key={i} className="flex-1 flex flex-col items-center gap-1">
+                    <motion.div
+                      initial={{ height: 0 }}
+                      animate={{ height: `${Math.max(s.score, 5)}%` }}
+                      transition={{ delay: 0.3 + i * 0.05, duration: 0.5 }}
+                      className="w-full rounded-md min-h-[3px]"
+                      style={{
+                        backgroundColor: s.score === 100 ? "hsl(152 60% 42%)" : s.score >= 70 ? "hsl(45 93% 58%)" : "hsl(0 70% 60%)",
+                      }}
+                    />
+                    <span className="text-[9px] text-muted-foreground">{s.date}</span>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        ) : (
+          <p className="text-sm text-muted-foreground text-center py-4">{t("focus.noData")}</p>
+        )}
+      </motion.div>
+
       {stats.weekMinutes > 25 * 60 && (
         <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="glass-card p-5 border-accent/40">
           <h2 className="font-semibold text-sm text-accent mb-1">{t("analytics.burnoutAlert")}</h2>

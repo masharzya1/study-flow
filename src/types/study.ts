@@ -37,6 +37,8 @@ export interface StudySession {
   durationMinutes: number;
   type: "focus" | "break" | "revision";
   completed: boolean;
+  distractionCount?: number;
+  focusScore?: number;
 }
 
 export interface DailyGoal {
@@ -110,6 +112,9 @@ export interface AppSettings {
   ambientSound: "none" | "rain" | "whitenoise" | "forest";
   youtubeUrl: string;
   difficultyLevels: DifficultyLevel[];
+  focusGuardFullscreen: boolean;
+  focusGuardPledge: boolean;
+  focusGuardAlerts: boolean;
 }
 
 export const DEFAULT_DIFFICULTY_LEVELS: DifficultyLevel[] = [
@@ -129,6 +134,9 @@ export const DEFAULT_SETTINGS: AppSettings = {
   ambientSound: "none",
   youtubeUrl: "",
   difficultyLevels: DEFAULT_DIFFICULTY_LEVELS,
+  focusGuardFullscreen: true,
+  focusGuardPledge: true,
+  focusGuardAlerts: true,
 };
 
 export const SUBJECT_COLORS = [

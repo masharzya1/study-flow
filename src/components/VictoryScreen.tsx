@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { fireSessionComplete } from "@/lib/confetti";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // Gaming victory texts inspired by popular games
 const VICTORY_TEXTS = [
@@ -54,9 +55,13 @@ interface VictoryScreenProps {
   xpGained: number;
   newLevel?: number;
   isLevelUp?: boolean;
+  focusScore?: number;
+  distractionCount?: number;
+  bonusXp?: number;
 }
 
-export const VictoryScreen = ({ show, onClose, topicName, xpGained, newLevel, isLevelUp }: VictoryScreenProps) => {
+export const VictoryScreen = ({ show, onClose, topicName, xpGained, newLevel, isLevelUp, focusScore, distractionCount, bonusXp }: VictoryScreenProps) => {
+  const { t } = useLanguage();
   const [victory] = useState(() => VICTORY_TEXTS[Math.floor(Math.random() * VICTORY_TEXTS.length)]);
   const [xpMsg] = useState(() => XP_MESSAGES[Math.floor(Math.random() * XP_MESSAGES.length)]);
 
@@ -163,7 +168,7 @@ export const VictoryScreen = ({ show, onClose, topicName, xpGained, newLevel, is
               className="space-y-2"
             >
               <p className="text-sm font-medium" style={{ color: "rgba(255,255,255,0.5)" }}>
-                TOPIC COMPLETED
+                {t("comp.topicCompleted")}
               </p>
               <p className="text-base font-semibold" style={{ color: "rgba(255,255,255,0.9)" }}>
                 {topicName}
@@ -193,6 +198,50 @@ export const VictoryScreen = ({ show, onClose, topicName, xpGained, newLevel, is
               </p>
             </motion.div>
 
+            {/* Focus Score */}
+            {focusScore !== undefined && (
+              <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: 1.3 }}
+                className="mt-4 space-y-2"
+              >
+                <div className="flex items-center justify-center gap-4">
+                  <div className="text-center">
+                    <p className="text-xs uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.4)" }}>
+                      {t("focus.scoreLabel")}
+                    </p>
+                    <p className="text-3xl font-black mt-1" data-testid="text-focus-score" style={{
+                      color: focusScore === 100 ? "hsl(152 60% 50%)" : focusScore >= 70 ? "hsl(45 93% 58%)" : "hsl(0 70% 60%)",
+                    }}>
+                      {focusScore}%
+                    </p>
+                  </div>
+                  {(distractionCount ?? 0) > 0 && (
+                    <div className="text-center">
+                      <p className="text-xs uppercase tracking-wider" style={{ color: "rgba(255,255,255,0.4)" }}>
+                        {t("focus.distractions")}
+                      </p>
+                      <p className="text-xl font-bold mt-1" style={{ color: "hsl(0 70% 60%)" }}>
+                        {distractionCount}
+                      </p>
+                    </div>
+                  )}
+                </div>
+                {bonusXp && bonusXp > 0 && (
+                  <motion.p
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ type: "spring", delay: 1.5, stiffness: 300 }}
+                    className="text-sm font-bold"
+                    style={{ color: "hsl(152 60% 50%)" }}
+                  >
+                    +{bonusXp} XP {t("focus.perfectBonus")}! 🎯
+                  </motion.p>
+                )}
+              </motion.div>
+            )}
+
             {/* Level Up */}
             {isLevelUp && newLevel && (
               <motion.div
@@ -220,7 +269,7 @@ export const VictoryScreen = ({ show, onClose, topicName, xpGained, newLevel, is
               className="mt-8 text-xs tracking-widest uppercase"
               style={{ color: "rgba(255,255,255,0.3)" }}
             >
-              Tap to continue
+              {t("comp.tapContinue")}
             </motion.p>
           </div>
         </motion.div>

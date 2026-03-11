@@ -2,7 +2,7 @@ import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { useStudy } from "@/contexts/StudyContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { motion, AnimatePresence } from "framer-motion";
-import { Play, Pause, RotateCcw, Coffee, Brain, Settings2, ChevronDown, Check, BookOpen, List } from "lucide-react";
+import { Play, Pause, RotateCcw, Coffee, Brain, Settings2, ChevronDown, Check, BookOpen, List, Maximize, Minimize, ShieldAlert } from "lucide-react";
 import { AmbientSounds, type AudioState } from "@/components/AmbientSounds";
 import { MiniPlayer } from "@/components/MiniPlayer";
 import { SubjectIcon } from "@/components/SubjectIcon";
@@ -40,7 +40,7 @@ function clearTimerState() {
 }
 
 const Timer = () => {
-  const { state, addSession, updateSettings, incrementSessionsCompleted, getTodayPlanTasks, getStreak } = useStudy();
+  const { state, addSession, updateSettings, incrementSessionsCompleted, getTodayPlanTasks, getStreak, gainXp } = useStudy();
   const { t } = useLanguage();
   const { pomodoroFocus, pomodoroBreak } = state.settings;
   const today = new Date().toISOString().split("T")[0];
@@ -61,9 +61,15 @@ const Timer = () => {
   const [showTopicSelector, setShowTopicSelector] = useState(false);
   const [selectedTaskId, setSelectedTaskId] = useState<string | null>(savedTimer.current?.selectedTaskId || null);
   const [useTopicTime, setUseTopicTime] = useState(true);
-  const [victoryData, setVictoryData] = useState<{ show: boolean; topicName: string; xpGained: number; newLevel?: number; isLevelUp: boolean }>({ show: false, topicName: "", xpGained: 0, isLevelUp: false });
+  const [victoryData, setVictoryData] = useState<{ show: boolean; topicName: string; xpGained: number; newLevel?: number; isLevelUp: boolean; focusScore?: number; distractionCount?: number; bonusXp?: number }>({ show: false, topicName: "", xpGained: 0, isLevelUp: false });
   const [celebrationStreak, setCelebrationStreak] = useState(0);
   const [audioState, setAudioState] = useState<AudioState | null>(null);
+  const [distractionCount, setDistractionCount] = useState(0);
+  const distractionRef = useRef(0);
+  const [showDistractedOverlay, setShowDistractedOverlay] = useState(false);
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showPledge, setShowPledge] = useState(false);
+  const [pledgeCountdown, setPledgeCountdown] = useState(3);
   const intervalRef = useRef<NodeJS.Timeout | null>(null);
   const sessionStartRef = useRef<string | null>(null);
 
@@ -110,6 +116,80 @@ const Timer = () => {
       clearTimerState();
     }
   }, [isRunning]);
+
+  useEffect(() => { distractionRef.current = distractionCount; }, [distractionCount]);
+
+  // Page Visibility API — distraction tracking
+  useEffect(() => {
+    if (!state.settings.focusGuardAlerts) return;
+    const handleVisibility = () => {
+      if (document.hidden && isRunning && mode === "focus") {
+        setDistractionCount(prev => prev + 1);
+      }
+      if (!document.hidden && isRunning && mode === "focus" && distractionCount > 0) {
+        setShowDistractedOverlay(true);
+        setTimeout(() => setShowDistractedOverlay(false), 2500);
+      }
+    };
+    document.addEventListener("visibilitychange", handleVisibility);
+    return () => document.removeEventListener("visibilitychange", handleVisibility);
+  }, [isRunning, mode, distractionCount, state.settings.focusGuardAlerts]);
+
+  // Fullscreen sync
+  useEffect(() => {
+    const handleFsChange = () => setIsFullscreen(!!document.fullscreenElement);
+    document.addEventListener("fullscreenchange", handleFsChange);
+    return () => document.removeEventListener("fullscreenchange", handleFsChange);
+  }, []);
+
+  const toggleFullscreen = useCallback(() => {
+    if (document.fullscreenElement) {
+      document.exitFullscreen?.();
+    } else {
+      document.documentElement.requestFullscreen?.();
+    }
+  }, []);
+
+  // Pledge countdown timer
+  useEffect(() => {
+    if (!showPledge) return;
+    setPledgeCountdown(3);
+    const interval = setInterval(() => {
+      setPledgeCountdown(prev => {
+        if (prev <= 1) { clearInterval(interval); return 0; }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => clearInterval(interval);
+  }, [showPledge]);
+
+  const handlePlayPress = useCallback(() => {
+    if (isRunning) {
+      setIsRunning(false);
+      return;
+    }
+    const isNewSession = !sessionStartRef.current;
+    if (state.settings.focusGuardPledge && mode === "focus" && isNewSession) {
+      setShowPledge(true);
+      return;
+    }
+    if (isNewSession) {
+      setDistractionCount(0);
+    }
+    setIsRunning(true);
+    if (state.settings.focusGuardFullscreen && mode === "focus" && isNewSession) {
+      document.documentElement.requestFullscreen?.().catch(() => {});
+    }
+  }, [isRunning, mode, state.settings.focusGuardPledge, state.settings.focusGuardFullscreen]);
+
+  const confirmPledge = useCallback(() => {
+    setShowPledge(false);
+    setDistractionCount(0);
+    setIsRunning(true);
+    if (state.settings.focusGuardFullscreen) {
+      document.documentElement.requestFullscreen?.().catch(() => {});
+    }
+  }, [state.settings.focusGuardFullscreen]);
 
   // Auto-select first plan, auto-switch to free mode if no plans
   useEffect(() => {
@@ -184,8 +264,10 @@ const Timer = () => {
     const dur = mode === "focus" ? focusDuration * 60 : pomodoroBreak * 60;
     setTimeLeft(dur);
     sessionStartRef.current = null;
+    setDistractionCount(0);
     clearTimerState();
     if (intervalRef.current) clearInterval(intervalRef.current);
+    if (document.fullscreenElement) document.exitFullscreen?.();
   }, [mode, focusDuration, pomodoroBreak]);
 
   useEffect(() => {
@@ -204,6 +286,8 @@ const Timer = () => {
             clearTimerState();
             if (mode === "focus") {
               const topicInfo = sourceMode === "free" ? freeTopicInfo : selectedTask;
+              const currentDistractions = distractionRef.current;
+              const sessionFocusScore = currentDistractions === 0 ? 100 : Math.max(0, Math.round(100 - currentDistractions * 15));
               const session: StudySession = {
                 id: crypto.randomUUID(),
                 startTime: sessionStartRef.current!,
@@ -211,24 +295,34 @@ const Timer = () => {
                 durationMinutes: focusDuration,
                 type: selectedTask?.type === "revision" ? "revision" : "focus",
                 completed: true,
+                distractionCount: currentDistractions,
+                focusScore: sessionFocusScore,
                 ...(topicInfo ? { topicId: topicInfo.topicId, subjectId: topicInfo.subjectId } : {}),
               };
               addSession(session);
               incrementSessionsCompleted();
               sessionStartRef.current = null;
+              if (document.fullscreenElement) document.exitFullscreen?.();
 
               const topicDisplayName = sourceMode === "free" && freeTopicInfo
                 ? freeTopicInfo.topicName
                 : (selectedTask ? selectedTask.topicName : t("timer.focus"));
               const currentStreak = getStreak();
               setCelebrationStreak(currentStreak);
+              const baseXp = Math.round(focusDuration * 2);
+              const bonusXp = sessionFocusScore === 100 ? 20 : 0;
+              const { newLevel: lvl, isLevelUp: isLvlUp } = gainXp(baseXp + bonusXp);
               setVictoryData({
                 show: true,
                 topicName: topicDisplayName,
-                xpGained: Math.round(focusDuration * 2),
-                newLevel: undefined,
-                isLevelUp: false,
+                xpGained: baseXp,
+                newLevel: isLvlUp ? lvl : undefined,
+                isLevelUp: isLvlUp,
+                focusScore: sessionFocusScore,
+                distractionCount: currentDistractions,
+                bonusXp,
               });
+              setDistractionCount(0);
 
               const nextTask = incompleteTasks.find(t => t.taskId !== selectedTaskId);
               if (nextTask) setSelectedTaskId(nextTask.taskId);
@@ -277,6 +371,9 @@ const Timer = () => {
         xpGained={victoryData.xpGained}
         newLevel={victoryData.newLevel}
         isLevelUp={victoryData.isLevelUp}
+        focusScore={victoryData.focusScore}
+        distractionCount={victoryData.distractionCount}
+        bonusXp={victoryData.bonusXp}
       />
 
       <motion.div
@@ -528,6 +625,13 @@ const Timer = () => {
           </button>
           <AmbientSounds isPlaying={isRunning} currentMode={mode} onAudioStateChange={setAudioState} />
           <button
+            onClick={toggleFullscreen}
+            data-testid="button-fullscreen"
+            className="p-2.5 rounded-xl text-muted-foreground hover:text-foreground transition-colors"
+          >
+            {isFullscreen ? <Minimize className="w-4 h-4" /> : <Maximize className="w-4 h-4" />}
+          </button>
+          <button
             onClick={() => setShowSettings(!showSettings)}
             className="p-2.5 rounded-xl text-muted-foreground hover:text-foreground transition-colors"
           >
@@ -609,15 +713,23 @@ const Timer = () => {
             <RotateCcw className="w-4 h-4 text-muted-foreground" />
           </button>
           <button
-            onClick={() => setIsRunning(!isRunning)}
+            onClick={handlePlayPress}
+            data-testid="button-play-pause"
             className={`w-16 h-16 rounded-full flex items-center justify-center hover-lift shadow-md transition-colors ${
               isRunning ? "bg-destructive text-destructive-foreground" : "bg-foreground text-primary-foreground"
             }`}
           >
             {isRunning ? <Pause className="w-6 h-6" /> : <Play className="w-6 h-6 ml-0.5" />}
           </button>
-          <div className="w-12 h-12 rounded-full bg-secondary flex flex-col items-center justify-center">
-            <span className="text-sm font-bold">{sessionsCompleted}</span>
+          <div className="flex flex-col items-center gap-1">
+            <div className="w-12 h-12 rounded-full bg-secondary flex flex-col items-center justify-center">
+              <span className="text-sm font-bold">{sessionsCompleted}</span>
+            </div>
+            {isRunning && mode === "focus" && distractionCount > 0 && (
+              <span className="text-[10px] text-destructive font-medium" data-testid="text-distraction-count">
+                {distractionCount} {t("focus.distractions")}
+              </span>
+            )}
           </div>
         </div>
 
@@ -628,6 +740,73 @@ const Timer = () => {
           <span>{useTopicTime && selectedTask ? `${selectedTask.estimatedMinutes}m ${t("timer.topic")}` : `${pomodoroFocus}m ${t("timer.focus")}`} / {pomodoroBreak}m {t("timer.break")}</span>
         </div>
       </motion.div>
+
+      {/* Distraction Overlay */}
+      <AnimatePresence>
+        {showDistractedOverlay && (
+          <motion.div
+            initial={{ opacity: 0, scale: 0.9 }}
+            animate={{ opacity: 1, scale: 1 }}
+            exit={{ opacity: 0, scale: 0.9 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-destructive/90 backdrop-blur-sm"
+            onClick={() => setShowDistractedOverlay(false)}
+          >
+            <div className="text-center text-white space-y-3">
+              <ShieldAlert className="w-16 h-16 mx-auto animate-pulse" />
+              <h2 className="text-2xl font-bold">{t("focus.distracted")}</h2>
+              <p className="text-sm opacity-80">{t("focus.getBack")} {mode === "focus" ? t("timer.focus") : t("timer.break")}</p>
+              <p className="text-3xl font-bold">{distractionCount} {t("focus.distractions")}</p>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+      {/* Focus Pledge Modal */}
+      <AnimatePresence>
+        {showPledge && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-50 flex items-center justify-center bg-background/95 backdrop-blur-md p-6"
+          >
+            <motion.div
+              initial={{ opacity: 0, y: 30 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: 30 }}
+              className="text-center space-y-6 max-w-sm"
+            >
+              <div className="w-16 h-16 mx-auto rounded-2xl bg-foreground/10 flex items-center justify-center">
+                <ShieldAlert className="w-8 h-8 text-foreground" />
+              </div>
+              <h2 className="text-xl font-bold" data-testid="text-pledge-title">{t("focus.pledgeTitle")}</h2>
+              <p className="text-sm text-muted-foreground">
+                {t("focus.pledgeMsg").replace("{min}", String(focusDuration))}
+                {(sourceMode === "free" && freeTopicInfo) ? ` "${freeTopicInfo.topicName}"` : selectedTask ? ` "${selectedTask.topicName}"` : ` ${t("timer.focus")}`}
+              </p>
+              <p className="text-xs text-muted-foreground italic">{t("focus.pledgeBody")}</p>
+              <button
+                onClick={confirmPledge}
+                disabled={pledgeCountdown > 0}
+                data-testid="button-pledge-confirm"
+                className={`w-full py-3 rounded-xl font-medium text-sm transition-all ${
+                  pledgeCountdown > 0
+                    ? "bg-secondary text-muted-foreground cursor-not-allowed"
+                    : "bg-foreground text-primary-foreground hover-lift shadow-md"
+                }`}
+              >
+                {pledgeCountdown > 0 ? `${t("focus.pledgeWait")} (${pledgeCountdown})` : t("focus.pledgeReady")}
+              </button>
+              <button
+                onClick={() => setShowPledge(false)}
+                className="text-xs text-muted-foreground hover:text-foreground transition-colors"
+              >
+                {t("subjects.cancel")}
+              </button>
+            </motion.div>
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* Mini Now Playing Bar */}
       <AnimatePresence>

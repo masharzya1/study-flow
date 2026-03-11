@@ -2,7 +2,7 @@ import { useState } from "react";
 import { useStudy } from "@/contexts/StudyContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { motion, AnimatePresence } from "framer-motion";
-import { Volume2, VolumeX, Clock, Target, Github, Heart, ExternalLink, Layers, Plus, Trash2, Check, RotateCcw } from "lucide-react";
+import { Volume2, VolumeX, Clock, Target, Github, Heart, ExternalLink, Layers, Plus, Trash2, Check, RotateCcw, ShieldCheck } from "lucide-react";
 import type { DifficultyLevel } from "@/types/study";
 import { DEFAULT_DIFFICULTY_LEVELS } from "@/types/study";
 
@@ -198,6 +198,36 @@ const SettingsPage = () => {
           >
             {settings.soundEnabled ? <Volume2 className="w-4 h-4" /> : <VolumeX className="w-4 h-4" />}
           </button>
+        </div>
+      </motion.div>
+
+      {/* Focus Guard */}
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.105 }} className="glass-card p-4 space-y-4">
+        <h2 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground flex items-center gap-2">
+          <ShieldCheck className="w-3.5 h-3.5" /> {t("focus.guardTitle")}
+        </h2>
+        <p className="text-[11px] text-muted-foreground">{t("focus.guardDesc")}</p>
+        <div className="space-y-3">
+          {([
+            { key: "focusGuardFullscreen" as const, label: t("focus.autoFullscreen") },
+            { key: "focusGuardPledge" as const, label: t("focus.prePledge") },
+            { key: "focusGuardAlerts" as const, label: t("focus.distractionAlerts") },
+          ]).map(item => (
+            <div key={item.key} className="flex items-center justify-between">
+              <label className="text-sm">{item.label}</label>
+              <button
+                onClick={() => updateSettings({ [item.key]: !settings[item.key] })}
+                data-testid={`toggle-${item.key}`}
+                className={`w-11 h-6 rounded-full transition-colors relative ${
+                  settings[item.key] ? "bg-foreground" : "bg-secondary"
+                }`}
+              >
+                <span className={`absolute top-0.5 w-5 h-5 rounded-full bg-primary-foreground shadow-sm transition-transform ${
+                  settings[item.key] ? "left-[22px]" : "left-0.5"
+                }`} />
+              </button>
+            </div>
+          ))}
         </div>
       </motion.div>
 
