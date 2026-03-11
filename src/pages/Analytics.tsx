@@ -37,21 +37,25 @@ const Analytics = () => {
   }, [state.sessions, state.subjects]);
 
   const focusStats = useMemo(() => {
-    const focusSessions = state.sessions.filter(s => s.completed && s.type === "focus" && s.focusScore !== undefined);
-    if (focusSessions.length === 0) return null;
-    const avgScore = Math.round(focusSessions.reduce((sum, s) => sum + (s.focusScore ?? 0), 0) / focusSessions.length);
-    const totalDistractions = focusSessions.reduce((sum, s) => sum + (s.distractionCount ?? 0), 0);
+    const allFocusSessions = state.sessions.filter(s => s.completed && s.type === "focus" && s.focusScore !== undefined);
+    if (allFocusSessions.length === 0) return null;
+    const weekAgo = new Date(Date.now() - 7 * 86400000);
+    const recentSessions = allFocusSessions.filter(s => new Date(s.startTime) >= weekAgo);
+    const avgScore = recentSessions.length > 0
+      ? Math.round(recentSessions.reduce((sum, s) => sum + (s.focusScore ?? 0), 0) / recentSessions.length)
+      : Math.round(allFocusSessions.reduce((sum, s) => sum + (s.focusScore ?? 0), 0) / allFocusSessions.length);
+    const totalDistractions = allFocusSessions.reduce((sum, s) => sum + (s.distractionCount ?? 0), 0);
     let bestStreak = 0;
     let currentStreak = 0;
-    focusSessions.forEach(s => {
+    allFocusSessions.forEach(s => {
       if (s.focusScore === 100) { currentStreak++; bestStreak = Math.max(bestStreak, currentStreak); }
       else { currentStreak = 0; }
     });
-    const last7 = focusSessions.slice(-7).map(s => ({
+    const last14 = allFocusSessions.slice(-14).map(s => ({
       score: s.focusScore ?? 0,
       date: new Date(s.startTime).toLocaleDateString("en", { weekday: "short" }),
     }));
-    return { avgScore, totalDistractions, bestStreak, last7, totalSessions: focusSessions.length };
+    return { avgScore, totalDistractions, bestStreak, last14, totalSessions: allFocusSessions.length };
   }, [state.sessions]);
 
   const planStats = useMemo(() => {
@@ -160,7 +164,7 @@ const Analytics = () => {
             <div>
               <p className="text-[10px] text-muted-foreground uppercase tracking-widest mb-2">{t("focus.scoreLabel")}</p>
               <div className="flex items-end gap-1.5 h-20">
-                {focusStats.last7.map((s, i) => (
+                {focusStats.last14.map((s, i) => (
                   <div key={i} className="flex-1 flex flex-col items-center gap-1">
                     <motion.div
                       initial={{ height: 0 }}

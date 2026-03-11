@@ -119,21 +119,20 @@ const Timer = () => {
 
   useEffect(() => { distractionRef.current = distractionCount; }, [distractionCount]);
 
-  // Page Visibility API — distraction tracking
+  // Page Visibility API — distraction tracking (always counts, overlay only if alerts enabled)
   useEffect(() => {
-    if (!state.settings.focusGuardAlerts) return;
     const handleVisibility = () => {
       if (document.hidden && isRunning && mode === "focus") {
         setDistractionCount(prev => prev + 1);
       }
-      if (!document.hidden && isRunning && mode === "focus" && distractionCount > 0) {
+      if (!document.hidden && isRunning && mode === "focus" && distractionRef.current > 0 && state.settings.focusGuardAlerts) {
         setShowDistractedOverlay(true);
         setTimeout(() => setShowDistractedOverlay(false), 2500);
       }
     };
     document.addEventListener("visibilitychange", handleVisibility);
     return () => document.removeEventListener("visibilitychange", handleVisibility);
-  }, [isRunning, mode, distractionCount, state.settings.focusGuardAlerts]);
+  }, [isRunning, mode, state.settings.focusGuardAlerts]);
 
   // Fullscreen sync
   useEffect(() => {
@@ -287,7 +286,7 @@ const Timer = () => {
             if (mode === "focus") {
               const topicInfo = sourceMode === "free" ? freeTopicInfo : selectedTask;
               const currentDistractions = distractionRef.current;
-              const sessionFocusScore = currentDistractions === 0 ? 100 : Math.max(0, Math.round(100 - currentDistractions * 15));
+              const sessionFocusScore = currentDistractions === 0 ? 100 : Math.max(0, Math.round(100 - currentDistractions * 10));
               const session: StudySession = {
                 id: crypto.randomUUID(),
                 startTime: sessionStartRef.current!,
@@ -754,7 +753,7 @@ const Timer = () => {
             <div className="text-center text-white space-y-3">
               <ShieldAlert className="w-16 h-16 mx-auto animate-pulse" />
               <h2 className="text-2xl font-bold">{t("focus.distracted")}</h2>
-              <p className="text-sm opacity-80">{t("focus.getBack")} {mode === "focus" ? t("timer.focus") : t("timer.break")}</p>
+              <p className="text-sm opacity-80">{t("focus.getBack")} {sourceMode === "free" && freeTopicInfo ? `"${freeTopicInfo.topicName}"` : selectedTask ? `"${selectedTask.topicName}"` : t("timer.focus")}</p>
               <p className="text-3xl font-bold">{distractionCount} {t("focus.distractions")}</p>
             </div>
           </motion.div>

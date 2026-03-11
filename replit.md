@@ -58,8 +58,8 @@ npm run build  # Production build
 
 - **StudySession** now includes optional `distractionCount` and `focusScore` fields
 - **AppSettings** has three Focus Guard toggles: `focusGuardFullscreen`, `focusGuardPledge`, `focusGuardAlerts` (all default true)
-- **Timer.tsx**: Page Visibility API tracks tab switches as distractions; distraction overlay shows on return; fullscreen toggle button; Focus Pledge modal with 3-second countdown before sessions start; focus score = 100 - (distractionCount × 15), minimum 0; bonus +20 XP for perfect (100%) focus score
+- **Timer.tsx**: Page Visibility API tracks tab switches as distractions (always counted, overlay only when alerts enabled); distraction overlay shows active topic name on return; fullscreen toggle button; Focus Pledge modal with 3-second countdown before sessions start; focus score = 100 - (distractionCount × 10), minimum 0; bonus +20 XP for perfect (100%) focus score
 - **VictoryScreen.tsx**: Shows focus score (color-coded green/yellow/red), distraction count, and perfect focus bonus XP
-- **Analytics.tsx**: Focus Quality section with average score, best perfect-focus streak, session count, and last-7-sessions bar chart
+- **Analytics.tsx**: Focus Quality section with avg score (last 7 days), best perfect-focus streak, session count, and last-14-sessions bar chart
 - **Settings.tsx**: Focus Guard toggle section with three switches (auto fullscreen, pre-session pledge, distraction alerts)
 - **translations.ts**: All new strings added to both `en` and `bn` under `focus.*` namespace
