@@ -64,9 +64,18 @@ app.post("/api/admin/notify", requireAuth, requireAdmin, async (req: any, res) =
       try {
         await adminMessaging.send({
           token: target.token,
-          data: { title, body },
+          notification: { title, body },
           webpush: {
             headers: { Urgency: "high", TTL: "86400" },
+            notification: {
+              title,
+              body,
+              icon: "/icon-192.png",
+              badge: "/icon-192.png",
+              vibrate: [200, 100, 200] as any,
+              requireInteraction: true,
+            },
+            fcmOptions: { link: "/" },
           },
         });
         successCount++;

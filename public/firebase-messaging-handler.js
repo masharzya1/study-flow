@@ -16,35 +16,35 @@ if (typeof firebase !== "undefined") {
   const messaging = firebase.messaging();
 
   messaging.onBackgroundMessage((payload) => {
-    console.log("[FCM handler] background message:", JSON.stringify(payload));
+    console.log("[FCM-SW] onBackgroundMessage:", JSON.stringify(payload));
 
-    const notif = payload.notification || {};
-    const data = payload.data || {};
-    const title = notif.title || data.title || "Penzó";
-    const body = notif.body || data.body || "";
+    if (payload.notification) {
+      console.log("[FCM-SW] notification payload present, browser will handle display");
+      return;
+    }
+
+    var data = payload.data || {};
+    var title = data.title || "Penzó";
+    var body = data.body || "";
 
     return self.registration.showNotification(title, {
-      body,
+      body: body,
       icon: "/icon-192.png",
       badge: "/icon-192.png",
       vibrate: [200, 100, 200],
       tag: "penzo-notif",
       renotify: true,
-      data: { url: "/" },
     });
   });
 }
 
-self.addEventListener("push", (event) => {
-  console.log("[FCM handler] push event received, data:", event.data?.text());
-});
-
-self.addEventListener("notificationclick", (event) => {
-  console.log("[FCM handler] notification clicked");
+self.addEventListener("notificationclick", function(event) {
+  console.log("[FCM-SW] notification clicked");
   event.notification.close();
   event.waitUntil(
-    clients.matchAll({ type: "window", includeUncontrolled: true }).then((windowClients) => {
-      for (const client of windowClients) {
+    clients.matchAll({ type: "window", includeUncontrolled: true }).then(function(windowClients) {
+      for (var i = 0; i < windowClients.length; i++) {
+        var client = windowClients[i];
         if (client.url.includes(self.location.origin) && "focus" in client) {
           return client.focus();
         }
