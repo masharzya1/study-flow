@@ -52,7 +52,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (!title || !body) return res.status(400).json({ error: "title and body required" });
 
   const siteOrigin = origin || req.headers.origin || req.headers.referer?.replace(/\/+$/, "") || "";
-  const iconUrl = siteOrigin ? `${siteOrigin}/icon-512.png` : "/icon-512.png";
+  const iconUrl = siteOrigin ? `${siteOrigin}/notification-icon.png` : "/notification-icon.png";
   const badgeUrl = siteOrigin ? `${siteOrigin}/notification-badge.png` : "/notification-badge.png";
 
   try {
