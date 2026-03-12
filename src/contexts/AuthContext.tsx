@@ -54,10 +54,35 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!user) return;
-    const interval = setInterval(() => {
+    let interval: ReturnType<typeof setInterval> | null = null;
+
+    const startHeartbeat = () => {
+      if (interval) return;
       firestoreService.updateLastActive().catch(() => {});
-    }, 120000);
-    return () => clearInterval(interval);
+      interval = setInterval(() => {
+        firestoreService.updateLastActive().catch(() => {});
+      }, 120000);
+    };
+
+    const stopHeartbeat = () => {
+      if (interval) { clearInterval(interval); interval = null; }
+    };
+
+    const handleVisibility = () => {
+      if (document.hidden) {
+        stopHeartbeat();
+      } else {
+        startHeartbeat();
+      }
+    };
+
+    startHeartbeat();
+    document.addEventListener("visibilitychange", handleVisibility);
+
+    return () => {
+      stopHeartbeat();
+      document.removeEventListener("visibilitychange", handleVisibility);
+    };
   }, [user]);
 
   const signInWithGoogle = async () => {

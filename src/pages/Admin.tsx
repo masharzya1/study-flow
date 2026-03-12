@@ -246,7 +246,7 @@ export default function Admin() {
                       </div>
                     )}
                     {(() => {
-                      const isOnline = u.lastActiveAt && (Date.now() - new Date(u.lastActiveAt).getTime()) < 300000;
+                      const isOnline = u.lastActiveAt && (Date.now() - new Date(u.lastActiveAt).getTime()) < 180000;
                       return (
                         <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-background ${isOnline ? "bg-green-500" : "bg-muted-foreground/30"}`} title={isOnline ? "Online now" : "Offline"} />
                       );
@@ -260,10 +260,12 @@ export default function Admin() {
                     <p className="text-[11px] text-muted-foreground truncate">{u.email}</p>
                   </div>
                   <div className="flex items-center gap-4 flex-shrink-0 mr-2">
-                    <div className="text-right hidden sm:block">
-                      <p className="text-sm font-semibold">{formatMinutes(u.totalMinutes)}</p>
-                      <p className="text-[10px] text-muted-foreground">{u.totalSessions} {t("admin.sessions")}</p>
-                    </div>
+                    {(u.totalMinutes > 0 || u.totalSessions > 0) && (
+                      <div className="text-right hidden sm:block">
+                        <p className="text-sm font-semibold">{formatMinutes(u.totalMinutes)}</p>
+                        <p className="text-[10px] text-muted-foreground">{u.totalSessions} {t("admin.sessions")}</p>
+                      </div>
+                    )}
                     <div className="text-right">
                       <p className="text-[10px] text-muted-foreground">{t("admin.lastActive")}</p>
                       <p className="text-xs font-medium">{timeAgo(u.lastActiveAt)}</p>
