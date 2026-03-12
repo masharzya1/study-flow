@@ -32,8 +32,12 @@ async function requireAdmin(req: any, res: any, next: any) {
 }
 
 app.post("/api/admin/notify", requireAuth, requireAdmin, async (req: any, res) => {
-  const { targetUid, title, body } = req.body;
+  const { targetUid, title, body, origin } = req.body;
   if (!title || !body) return res.status(400).json({ error: "title and body required" });
+
+  const siteOrigin = origin || req.headers.origin || req.headers.referer?.replace(/\/+$/, "") || "";
+  const iconUrl = siteOrigin ? `${siteOrigin}/icon-512.png` : "/icon-512.png";
+  const badgeUrl = siteOrigin ? `${siteOrigin}/notification-badge.png` : "/notification-badge.png";
 
   try {
     let tokenDocs: any[];
@@ -70,8 +74,8 @@ app.post("/api/admin/notify", requireAuth, requireAdmin, async (req: any, res) =
             notification: {
               title,
               body,
-              icon: "/icon-512.png",
-              badge: "/notification-badge.png",
+              icon: iconUrl,
+              badge: badgeUrl,
               vibrate: [200, 100, 200] as any,
             },
             fcmOptions: { link: "/" },

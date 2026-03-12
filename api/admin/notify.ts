@@ -48,8 +48,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(403).json({ error: "Not admin" });
   }
 
-  const { targetUid, title, body } = req.body;
+  const { targetUid, title, body, origin } = req.body;
   if (!title || !body) return res.status(400).json({ error: "title and body required" });
+
+  const siteOrigin = origin || req.headers.origin || req.headers.referer?.replace(/\/+$/, "") || "";
+  const iconUrl = siteOrigin ? `${siteOrigin}/icon-512.png` : "/icon-512.png";
+  const badgeUrl = siteOrigin ? `${siteOrigin}/notification-badge.png` : "/notification-badge.png";
 
   try {
     let tokenDocs: any[];
@@ -86,8 +90,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             notification: {
               title,
               body,
-              icon: "/icon-512.png",
-              badge: "/notification-badge.png",
+              icon: iconUrl,
+              badge: badgeUrl,
               vibrate: [200, 100, 200] as any,
             },
             fcmOptions: { link: "/" },

@@ -240,7 +240,7 @@ export const firestoreService = {
     const res = await fetch("/api/admin/notify", {
       method: "POST",
       headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
-      body: JSON.stringify(payload),
+      body: JSON.stringify({ ...payload, origin: window.location.origin }),
     });
     if (!res.ok) {
       const err = await res.json().catch(() => ({ error: res.statusText }));
