@@ -22,6 +22,7 @@ import Analytics from "@/pages/Analytics";
 import SettingsPage from "@/pages/Settings";
 import Files from "@/pages/Files";
 import Login from "@/pages/Login";
+import Landing from "@/pages/Landing";
 import Admin from "@/pages/Admin";
 import NotFound from "./pages/NotFound";
 
@@ -40,11 +41,12 @@ function AnimatedRoutes() {
   }
 
   if (!user) {
-    return <Login />;
+    return <Landing />;
   }
 
   return (
     <SwipeNavigation>
+      <SplashScreen />
       <OnboardingTour />
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<Dashboard />} />
@@ -72,7 +74,6 @@ const App = () => (
             <StudyProvider>
               <Toaster />
               <Sonner />
-              <SplashScreen />
               <BrowserRouter>
                 <InstallPrompt />
                 <AppLayout>
