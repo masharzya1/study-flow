@@ -1,7 +1,8 @@
 import { useStudy } from "@/contexts/StudyContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { motion } from "framer-motion";
-import { Clock, Flame, Target, BookOpen, ArrowRight, Sparkles, RotateCcw, AlertTriangle, CalendarDays, Zap, Quote, Trophy } from "lucide-react";
+import { Clock, Flame, Target, BookOpen, ArrowRight, Sparkles, RotateCcw, AlertTriangle, CalendarDays, Zap, Quote, Trophy, TrendingUp, Cloud, CloudOff, Timer, GraduationCap, BarChart3 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { StudyHeatmap } from "@/components/StudyHeatmap";
 import { QuickStats } from "@/components/QuickStats";
@@ -24,7 +25,8 @@ const MOTIVATIONAL_QUOTES = [
 ];
 
 const Dashboard = () => {
-  const { state, getTodayMinutes, getStreak, celebrateMilestone } = useStudy();
+  const { state, syncing, getTodayMinutes, getStreak, celebrateMilestone, getSubjectProgress } = useStudy();
+  const { user } = useAuth();
   const { t } = useLanguage();
   const navigate = useNavigate();
   const todayMinutes = getTodayMinutes();
@@ -43,6 +45,7 @@ const Dashboard = () => {
   ];
 
   const greeting = new Date().getHours() < 12 ? t("dash.goodMorning") : new Date().getHours() < 18 ? t("dash.goodAfternoon") : t("dash.goodEvening");
+  const displayName = user?.displayName?.split(" ")[0] || "";
 
   const dailyQuote = useMemo(() => {
     const dayOfYear = Math.floor((Date.now() - new Date(new Date().getFullYear(), 0, 0).getTime()) / 86400000);
@@ -84,6 +87,67 @@ const Dashboard = () => {
     return { name: upcoming[0].examName, days };
   }, [state.studyPlans]);
 
+  const weeklyStats = useMemo(() => {
+    const now = new Date();
+    const thisWeekStart = new Date(now);
+    thisWeekStart.setDate(now.getDate() - now.getDay());
+    thisWeekStart.setHours(0, 0, 0, 0);
+
+    const lastWeekStart = new Date(thisWeekStart);
+    lastWeekStart.setDate(lastWeekStart.getDate() - 7);
+
+    const thisWeekStr = thisWeekStart.toISOString().split("T")[0];
+    const lastWeekStr = lastWeekStart.toISOString().split("T")[0];
+
+    let thisWeekMins = 0, lastWeekMins = 0, thisWeekSessions = 0, lastWeekSessions = 0;
+
+    state.sessions.filter(s => s.completed).forEach(s => {
+      const d = s.startTime.split("T")[0];
+      if (d >= thisWeekStr) {
+        thisWeekMins += s.durationMinutes;
+        thisWeekSessions++;
+      } else if (d >= lastWeekStr && d < thisWeekStr) {
+        lastWeekMins += s.durationMinutes;
+        lastWeekSessions++;
+      }
+    });
+
+    const minsDiff = lastWeekMins > 0 ? Math.round(((thisWeekMins - lastWeekMins) / lastWeekMins) * 100) : thisWeekMins > 0 ? 100 : 0;
+
+    return { thisWeekMins, lastWeekMins, thisWeekSessions, lastWeekSessions, minsDiff };
+  }, [state.sessions]);
+
+  const recentSessions = useMemo(() => {
+    return [...state.sessions]
+      .filter(s => s.completed)
+      .sort((a, b) => b.startTime.localeCompare(a.startTime))
+      .slice(0, 5)
+      .map(s => {
+        const subject = state.subjects.find(sub => sub.id === s.subjectId);
+        let topicName = "";
+        if (s.topicId) {
+          for (const sub of state.subjects) {
+            for (const ch of sub.chapters) {
+              const tp = ch.topics.find(t => t.id === s.topicId);
+              if (tp) { topicName = tp.name; break; }
+            }
+          }
+        }
+        return { ...s, subjectName: subject?.name || "", subjectColor: subject?.color || "220 15% 25%", topicName };
+      });
+  }, [state.sessions, state.subjects]);
+
+  const overallProgress = useMemo(() => {
+    if (state.subjects.length === 0) return 0;
+    const total = state.subjects.reduce((sum, s) => sum + getSubjectProgress(s.id), 0);
+    return Math.round(total / state.subjects.length);
+  }, [state.subjects, getSubjectProgress]);
+
+  const totalStudyHours = useMemo(() => {
+    const mins = state.sessions.filter(s => s.completed).reduce((sum, s) => sum + s.durationMinutes, 0);
+    return { hours: Math.floor(mins / 60), minutes: mins % 60 };
+  }, [state.sessions]);
+
   const today = new Date().toISOString().split("T")[0];
   const todaySessions = state.todaySessionsDate === today ? state.todaySessionsCompleted : 0;
 
@@ -103,16 +167,27 @@ const Dashboard = () => {
   }, [streak, celebrateMilestone]);
 
   return (
-    <div className="p-5 md:p-8 max-w-3xl mx-auto space-y-6 pb-28 md:pb-8">
+    <div className="p-5 md:p-8 max-w-3xl mx-auto space-y-5 pb-28 md:pb-8">
       <StreakMilestone show={showMilestone} streak={streak} onClose={handleCloseMilestone} />
+
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} className="space-y-1">
-        <h1 className="text-2xl md:text-3xl font-semibold tracking-tight">{greeting}</h1>
+        <div className="flex items-center justify-between">
+          <h1 className="text-2xl md:text-3xl font-semibold tracking-tight" data-testid="text-greeting">
+            {greeting}{displayName ? `, ${displayName}` : ""}
+          </h1>
+          <div className="flex items-center gap-1.5 text-[10px] text-muted-foreground" data-testid="status-sync">
+            {syncing ? (
+              <><Cloud className="w-3 h-3 animate-pulse text-blue-400" /><span className="text-blue-400">Syncing...</span></>
+            ) : (
+              <><Cloud className="w-3 h-3 text-green-500" /><span className="text-green-500">Synced</span></>
+            )}
+          </div>
+        </div>
         <p className="text-muted-foreground text-sm">
           {streak > 0 ? t("dash.streakMsg", { n: streak }) : t("dash.noStreak")}
         </p>
       </motion.div>
 
-      {/* XP / Level Bar — always visible */}
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.02 }} className="glass-card p-4">
           <div className="flex items-center justify-between mb-2">
             <div className="flex items-center gap-2">
@@ -153,7 +228,6 @@ const Dashboard = () => {
         </div>
       </motion.div>
 
-      {/* Daily Progress */}
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }} className="glass-card-elevated p-5">
         <div className="flex items-center gap-5">
           <div className="relative w-16 h-16 flex-shrink-0">
@@ -174,16 +248,16 @@ const Dashboard = () => {
           </div>
         </div>
         <div className="flex gap-2 mt-4 pt-4 border-t border-border/50">
-          <button data-tour="focus-btn" onClick={() => navigate("/timer")} className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-foreground text-primary-foreground text-xs font-medium hover-lift">
+          <button data-tour="focus-btn" data-testid="button-start-focus" onClick={() => navigate("/timer")} className="flex-1 flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-foreground text-primary-foreground text-xs font-medium hover-lift">
             <Sparkles className="w-3.5 h-3.5" /> {t("dash.startFocus")}
           </button>
           {revisionDue > 0 && (
-            <button onClick={() => navigate("/revision")} className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-destructive/10 text-destructive text-xs font-medium hover-lift">
+            <button data-testid="button-revision-due" onClick={() => navigate("/revision")} className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-destructive/10 text-destructive text-xs font-medium hover-lift">
               <RotateCcw className="w-3.5 h-3.5" /> {revisionDue} {t("dash.due")}
             </button>
           )}
           {nextExam && (
-            <button onClick={() => navigate("/calendar")} className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-accent/10 text-accent-foreground text-xs font-medium hover-lift">
+            <button data-testid="button-next-exam" onClick={() => navigate("/calendar")} className="flex items-center gap-1.5 px-3 py-2.5 rounded-xl bg-accent/10 text-accent-foreground text-xs font-medium hover-lift">
               <CalendarDays className="w-3.5 h-3.5" /> {nextExam.days}d
             </button>
           )}
@@ -192,17 +266,43 @@ const Dashboard = () => {
 
       <QuickStats stats={stats} />
 
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.09 }}
+        className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="glass-card p-3 text-center">
+          <GraduationCap className="w-4 h-4 mx-auto text-muted-foreground mb-1" />
+          <p className="text-lg font-bold">{overallProgress}%</p>
+          <p className="text-[10px] text-muted-foreground">Overall Progress</p>
+        </div>
+        <div className="glass-card p-3 text-center">
+          <Timer className="w-4 h-4 mx-auto text-muted-foreground mb-1" />
+          <p className="text-lg font-bold">{totalStudyHours.hours}h {totalStudyHours.minutes}m</p>
+          <p className="text-[10px] text-muted-foreground">Total Study Time</p>
+        </div>
+        <div className="glass-card p-3 text-center">
+          <BarChart3 className="w-4 h-4 mx-auto text-muted-foreground mb-1" />
+          <p className="text-lg font-bold">{state.sessions.filter(s => s.completed).length}</p>
+          <p className="text-[10px] text-muted-foreground">Total Sessions</p>
+        </div>
+        <div className="glass-card p-3 text-center">
+          <TrendingUp className="w-4 h-4 mx-auto text-muted-foreground mb-1" />
+          <p className={`text-lg font-bold ${weeklyStats.minsDiff > 0 ? "text-green-500" : weeklyStats.minsDiff < 0 ? "text-red-500" : ""}`}>
+            {weeklyStats.minsDiff > 0 ? "+" : ""}{weeklyStats.minsDiff}%
+          </p>
+          <p className="text-[10px] text-muted-foreground">vs Last Week</p>
+        </div>
+      </motion.div>
+
       {(revisionDue > 0 || nextExam) && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           {revisionDue > 0 && (
-            <motion.button initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }} onClick={() => navigate("/revision")} className="glass-card p-4 flex items-center gap-3 hover-lift text-left">
+            <motion.button initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }} onClick={() => navigate("/revision")} className="glass-card p-4 flex items-center gap-3 hover-lift text-left" data-testid="button-reviews-due">
               <div className="w-9 h-9 rounded-xl bg-destructive/10 flex items-center justify-center"><AlertTriangle className="w-4 h-4 text-destructive" /></div>
               <div className="flex-1"><p className="text-sm font-medium">{revisionDue} {t("dash.reviewsDue")}</p><p className="text-[10px] text-muted-foreground">{t("dash.spacedRepetition")}</p></div>
               <ArrowRight className="w-3.5 h-3.5 text-muted-foreground" />
             </motion.button>
           )}
           {nextExam && (
-            <motion.button initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.14 }} onClick={() => navigate("/calendar")} className="glass-card p-4 flex items-center gap-3 hover-lift text-left">
+            <motion.button initial={{ opacity: 0, y: 8 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.14 }} onClick={() => navigate("/calendar")} className="glass-card p-4 flex items-center gap-3 hover-lift text-left" data-testid="button-upcoming-exam">
               <div className="w-9 h-9 rounded-xl bg-accent/12 flex items-center justify-center"><Zap className="w-4 h-4 text-accent" /></div>
               <div className="flex-1"><p className="text-sm font-medium">{nextExam.name}</p><p className="text-[10px] text-muted-foreground">{nextExam.days} {t("dash.daysRemaining")}</p></div>
               <ArrowRight className="w-3.5 h-3.5 text-muted-foreground" />
@@ -211,16 +311,123 @@ const Dashboard = () => {
         </div>
       )}
 
+      {state.studyPlans.length > 0 && (
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.13 }} className="glass-card p-4">
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="section-header">Study Plans</h2>
+            <button onClick={() => navigate("/plan")} className="text-[10px] text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors" data-testid="link-view-plans">
+              View All <ArrowRight className="w-3 h-3" />
+            </button>
+          </div>
+          <div className="space-y-2">
+            {state.studyPlans.slice(0, 3).map(plan => {
+              const totalTasks = plan.tasks.length;
+              const completedTasks = plan.tasks.filter(t => t.completed).length;
+              const planProgress = totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
+              const daysLeft = Math.ceil((new Date(plan.examDate).getTime() - Date.now()) / 86400000);
+              return (
+                <button key={plan.id} onClick={() => navigate("/plan")} className="w-full flex items-center gap-3 p-3 rounded-xl hover:bg-secondary/60 transition-colors text-left" data-testid={`button-plan-${plan.id}`}>
+                  <div className="w-8 h-8 rounded-lg bg-accent/12 flex items-center justify-center flex-shrink-0">
+                    <CalendarDays className="w-4 h-4 text-accent" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{plan.examName}</p>
+                    <div className="flex items-center gap-2 mt-1">
+                      <div className="flex-1 h-1 rounded-full bg-secondary overflow-hidden">
+                        <div className="h-full rounded-full bg-accent transition-all duration-500" style={{ width: `${planProgress}%` }} />
+                      </div>
+                      <span className="text-[10px] text-muted-foreground font-mono">{planProgress}%</span>
+                    </div>
+                  </div>
+                  <div className="text-right flex-shrink-0">
+                    <p className={`text-xs font-medium ${daysLeft <= 7 ? "text-destructive" : "text-muted-foreground"}`}>
+                      {daysLeft > 0 ? `${daysLeft}d left` : "Past due"}
+                    </p>
+                    <p className="text-[10px] text-muted-foreground">{completedTasks}/{totalTasks}</p>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+        </motion.div>
+      )}
+
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-5">
         <TodayTasks />
         <SubjectCards />
       </div>
+
+      {recentSessions.length > 0 && (
+        <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.22 }} className="glass-card p-5">
+          <div className="flex items-center justify-between mb-4">
+            <h2 className="section-header">Recent Sessions</h2>
+            <button onClick={() => navigate("/analytics")} className="text-[10px] text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors" data-testid="link-view-analytics">
+              View All <ArrowRight className="w-3 h-3" />
+            </button>
+          </div>
+          <div className="space-y-1.5">
+            {recentSessions.map(s => {
+              const timeAgo = (() => {
+                const diff = Date.now() - new Date(s.startTime).getTime();
+                const mins = Math.floor(diff / 60000);
+                if (mins < 60) return `${mins}m ago`;
+                const hrs = Math.floor(mins / 60);
+                if (hrs < 24) return `${hrs}h ago`;
+                return `${Math.floor(hrs / 24)}d ago`;
+              })();
+              return (
+                <div key={s.id} className="flex items-center gap-3 p-2.5 rounded-xl hover:bg-secondary/40 transition-colors" data-testid={`session-${s.id}`}>
+                  <div className="w-1.5 h-1.5 rounded-full flex-shrink-0" style={{ backgroundColor: `hsl(${s.subjectColor})` }} />
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-medium truncate">{s.topicName || s.subjectName || s.type}</p>
+                    <p className="text-[10px] text-muted-foreground">{s.subjectName}</p>
+                  </div>
+                  <span className="text-xs font-medium">{s.durationMinutes}m</span>
+                  {s.focusScore != null && (
+                    <span className={`text-[10px] font-medium px-1.5 py-0.5 rounded-md ${s.focusScore >= 80 ? "bg-green-500/10 text-green-500" : s.focusScore >= 50 ? "bg-yellow-500/10 text-yellow-500" : "bg-red-500/10 text-red-500"}`}>
+                      {s.focusScore}%
+                    </span>
+                  )}
+                  <span className="text-[10px] text-muted-foreground">{timeAgo}</span>
+                </div>
+              );
+            })}
+          </div>
+        </motion.div>
+      )}
+
+      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.16 }}
+        className="glass-card p-4">
+        <div className="flex items-center justify-between mb-3">
+          <h2 className="section-header">This Week</h2>
+          <button onClick={() => navigate("/analytics")} className="text-[10px] text-muted-foreground hover:text-foreground flex items-center gap-0.5 transition-colors" data-testid="link-weekly-analytics">
+            Details <ArrowRight className="w-3 h-3" />
+          </button>
+        </div>
+        <div className="grid grid-cols-3 gap-3">
+          <div className="text-center p-2 rounded-xl bg-secondary/40">
+            <p className="text-lg font-bold">{weeklyStats.thisWeekMins}m</p>
+            <p className="text-[10px] text-muted-foreground">Study Time</p>
+          </div>
+          <div className="text-center p-2 rounded-xl bg-secondary/40">
+            <p className="text-lg font-bold">{weeklyStats.thisWeekSessions}</p>
+            <p className="text-[10px] text-muted-foreground">Sessions</p>
+          </div>
+          <div className="text-center p-2 rounded-xl bg-secondary/40">
+            <p className={`text-lg font-bold ${weeklyStats.minsDiff > 0 ? "text-green-500" : weeklyStats.minsDiff < 0 ? "text-red-500" : ""}`}>
+              {weeklyStats.minsDiff > 0 ? "+" : ""}{weeklyStats.minsDiff}%
+            </p>
+            <p className="text-[10px] text-muted-foreground">vs Last Week</p>
+          </div>
+        </div>
+      </motion.div>
 
       <StudyHeatmap />
 
       <motion.button
         initial={{ scale: 0 }} animate={{ scale: 1 }} transition={{ delay: 0.4, type: "spring" }}
         onClick={() => navigate("/timer")}
+        data-testid="button-fab-focus"
         className="md:hidden fixed bottom-20 right-5 w-14 h-14 rounded-full bg-foreground text-primary-foreground shadow-lg flex items-center justify-center z-50 active:scale-90 transition-transform"
       >
         <Sparkles className="w-5 h-5" />

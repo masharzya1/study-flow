@@ -106,8 +106,8 @@ export const firestoreService = {
         photoURL: u.photoURL,
         isAdmin: u.isAdmin || false,
         fcmToken,
-        createdAt: u.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
-        lastActiveAt: u.lastActiveAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+        createdAt: u.createdAt?.toDate?.()?.toISOString() || null,
+        lastActiveAt: u.lastActiveAt?.toDate?.()?.toISOString() || null,
         totalSessions,
         totalMinutes,
         lastSession,
@@ -179,8 +179,8 @@ export const firestoreService = {
           photoURL: u.photoURL,
           isAdmin: u.isAdmin || false,
           fcmToken,
-          createdAt: u.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
-          lastActiveAt: u.lastActiveAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+          createdAt: u.createdAt?.toDate?.()?.toISOString() || null,
+          lastActiveAt: u.lastActiveAt?.toDate?.()?.toISOString() || null,
           totalSessions,
           totalMinutes,
           lastSession,
@@ -227,6 +227,12 @@ export const firestoreService = {
         callback([]);
       }
     );
+  },
+
+  async updateLastActive() {
+    const user = auth.currentUser;
+    if (!user) return;
+    await updateDoc(doc(db, "users", user.uid), { lastActiveAt: serverTimestamp() });
   },
 
   async setAdmin(targetUid: string, isAdmin: boolean) {

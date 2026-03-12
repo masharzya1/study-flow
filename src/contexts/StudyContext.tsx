@@ -116,15 +116,30 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
       const user = auth.currentUser;
       if (!user) return;
       try {
+        setSyncing(true);
         await firestoreService.saveStudyData(user.uid, state);
       } catch (e) {
-        console.warn("Could not save to Firestore:", e);
+        console.error("Failed to save to Firestore:", e);
+      } finally {
+        setSyncing(false);
       }
     }, 2000);
 
     return () => {
       if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
     };
+  }, [state]);
+
+  useEffect(() => {
+    const handleBeforeUnload = () => {
+      const user = auth.currentUser;
+      if (!user || isFirstLoad.current) return;
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+      } catch {}
+    };
+    window.addEventListener("beforeunload", handleBeforeUnload);
+    return () => window.removeEventListener("beforeunload", handleBeforeUnload);
   }, [state]);
 
   useEffect(() => {

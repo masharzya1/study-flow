@@ -52,6 +52,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return unsubscribe;
   }, []);
 
+  useEffect(() => {
+    if (!user) return;
+    const interval = setInterval(() => {
+      firestoreService.updateLastActive().catch(() => {});
+    }, 120000);
+    return () => clearInterval(interval);
+  }, [user]);
+
   const signInWithGoogle = async () => {
     await signInWithPopup(auth, googleProvider);
   };

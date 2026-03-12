@@ -45,6 +45,7 @@ function AnimatedRoutes() {
 
   return (
     <SwipeNavigation>
+      <OnboardingTour />
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<Dashboard />} />
         <Route path="/subjects" element={<Subjects />} />
@@ -73,7 +74,6 @@ const App = () => (
               <Sonner />
               <SplashScreen />
               <BrowserRouter>
-                <OnboardingTour />
                 <InstallPrompt />
                 <AppLayout>
                   <AnimatedRoutes />

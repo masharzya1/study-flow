@@ -17,8 +17,8 @@ interface AdminUser {
   photoURL: string | null;
   isAdmin: boolean;
   fcmToken: string | null;
-  createdAt: string;
-  lastActiveAt: string;
+  createdAt: string | null;
+  lastActiveAt: string | null;
   totalSessions: number;
   totalMinutes: number;
   lastSession: string | null;
@@ -245,9 +245,12 @@ export default function Admin() {
                         {u.displayName?.[0] || u.email?.[0] || "?"}
                       </div>
                     )}
-                    {u.fcmToken && (
-                      <div className="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full bg-green-500 border-2 border-background" title="Notifications enabled" />
-                    )}
+                    {(() => {
+                      const isOnline = u.lastActiveAt && (Date.now() - new Date(u.lastActiveAt).getTime()) < 300000;
+                      return (
+                        <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-background ${isOnline ? "bg-green-500" : "bg-muted-foreground/30"}`} title={isOnline ? "Online now" : "Offline"} />
+                      );
+                    })()}
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center gap-2">
