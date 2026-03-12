@@ -1,5 +1,5 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutDashboard, BookOpen, Timer, BarChart3, Settings, CalendarDays, Sparkles, RotateCcw, MoreHorizontal, FolderOpen, LogOut, Shield, Bell } from "lucide-react";
+import { LayoutDashboard, BookOpen, Timer, BarChart3, Settings, CalendarDays, Sparkles, RotateCcw, MoreHorizontal, FolderOpen, LogOut, Shield, Bell, BellOff } from "lucide-react";
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -88,6 +88,15 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               <span className="hidden lg:block">{t("notif.enable")}</span>
             </button>
           )}
+          {permission === "denied" && (
+            <div
+              className="flex items-center gap-2 w-full px-3 py-2 rounded-xl text-xs font-medium bg-red-500/10 border border-red-500/20 text-red-500"
+              title={t("notif.denied")}
+            >
+              <BellOff className="w-4 h-4 flex-shrink-0" />
+              <span className="hidden lg:block">{t("notif.denied")}</span>
+            </div>
+          )}
           {permission === "granted" && (
             <div className="flex items-center gap-2 px-3 py-1.5">
               <Bell className="w-3.5 h-3.5 flex-shrink-0 text-green-500" />
@@ -137,6 +146,15 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
               <Bell className="w-3.5 h-3.5" />
               <span className="text-[10px] font-semibold">{t("notif.enable")}</span>
             </button>
+          )}
+          {permission === "denied" && (
+            <div
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-red-500/10 border border-red-500/20 text-red-500"
+              title={t("notif.denied")}
+            >
+              <BellOff className="w-3.5 h-3.5" />
+              <span className="text-[10px] font-semibold">{t("notif.denied")}</span>
+            </div>
           )}
           <HeaderControls compact />
           {user.photoURL ? (
