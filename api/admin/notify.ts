@@ -70,14 +70,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       try {
         await adminMessaging.send({
           token: target.token,
-          notification: { title, body },
+          data: { title, body },
           webpush: {
-            notification: { title, body, icon: "/icon-192.png", badge: "/icon-192.png" },
-            fcmOptions: { link: "/" },
+            headers: { Urgency: "high", TTL: "86400" },
           },
         });
         successCount++;
-      } catch {
+      } catch (err: any) {
+        console.error("FCM send error for", target.uid, err?.message);
         failureCount++;
       }
     }

@@ -24,21 +24,26 @@ export function useFCM() {
     try {
       if (!user) return;
       if (!VAPID_KEY) {
-        console.warn("FCM: VAPID key not set");
+        console.warn("FCM: VAPID key not configured");
         return;
       }
 
       const messaging = await getMessagingInstance();
       if (!messaging) {
-        console.warn("FCM: messaging not supported");
+        console.warn("FCM: messaging not supported on this browser");
         return;
       }
 
-      const swRegistration = await navigator.serviceWorker.ready;
+      const fcmSwRegistration = await navigator.serviceWorker.register(
+        "/firebase-messaging-sw.js",
+        { scope: "/firebase-cloud-messaging-push-scope" }
+      );
+
+      await fcmSwRegistration.update();
 
       const token = await getToken(messaging, {
         vapidKey: VAPID_KEY,
-        serviceWorkerRegistration: swRegistration,
+        serviceWorkerRegistration: fcmSwRegistration,
       });
 
       if (token) {
@@ -50,19 +55,13 @@ export function useFCM() {
       }
 
       onMessage(messaging, (payload) => {
-        const { title, body } = payload.notification || {};
-        if (title) {
-          toast({
-            title,
-            description: body,
-          });
+        const notif = payload.notification || {};
+        const data = payload.data || {};
+        const title = notif.title || data.title;
+        const body = notif.body || data.body;
 
-          if (Notification.permission === "granted") {
-            new Notification(title, {
-              body: body || "",
-              icon: "/icon-192.png",
-            });
-          }
+        if (title) {
+          toast({ title, description: body });
         }
       });
     } catch (e) {
