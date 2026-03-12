@@ -22,6 +22,7 @@ import Analytics from "@/pages/Analytics";
 import SettingsPage from "@/pages/Settings";
 import Files from "@/pages/Files";
 import Login from "@/pages/Login";
+import Admin from "@/pages/Admin";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -53,6 +54,7 @@ function AnimatedRoutes() {
         <Route path="/revision" element={<Revision />} />
         <Route path="/analytics" element={<Analytics />} />
         <Route path="/files" element={<Files />} />
+        <Route path="/admin" element={<Admin />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="*" element={<NotFound />} />
       </Routes>

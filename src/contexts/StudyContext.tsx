@@ -1,6 +1,9 @@
-import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback, useRef } from "react";
 import type { AppState, Subject, StudySession, DailyGoal, StudyPlan, AppSettings } from "@/types/study";
 import { DEFAULT_SETTINGS } from "@/types/study";
+import { auth } from "@/lib/firebase";
+import { firestoreService } from "@/lib/firestoreService";
+import { onAuthStateChanged } from "firebase/auth";
 
 const STORAGE_KEY = "studyforge_data";
 
@@ -19,27 +22,34 @@ const defaultState: AppState = {
   celebratedMilestones: [],
 };
 
-function loadState(): AppState {
+function mergeState(base: AppState, override: Partial<AppState>): AppState {
+  return {
+    ...base,
+    ...override,
+    settings: { ...DEFAULT_SETTINGS, ...(override.settings || {}) },
+  };
+}
+
+function loadLocalState(): AppState {
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) {
       const parsed = JSON.parse(raw);
-      return {
-        ...defaultState,
-        ...parsed,
-        settings: { ...DEFAULT_SETTINGS, ...(parsed.settings || {}) },
-      };
+      return mergeState(defaultState, parsed);
     }
   } catch {}
   return defaultState;
 }
 
-function saveState(state: AppState) {
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+function saveLocal(state: AppState) {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch {}
 }
 
 interface StudyContextValue {
   state: AppState;
+  syncing: boolean;
   addSubject: (subject: Subject) => void;
   updateSubject: (subject: Subject) => void;
   deleteSubject: (id: string) => void;
@@ -63,16 +73,64 @@ interface StudyContextValue {
 const StudyContext = createContext<StudyContextValue | null>(null);
 
 export function StudyProvider({ children }: { children: React.ReactNode }) {
-  const [state, setState] = useState<AppState>(loadState);
+  const [state, setState] = useState<AppState>(loadLocalState);
+  const [syncing, setSyncing] = useState(false);
+  const saveTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const isFirstLoad = useRef(true);
 
-  useEffect(() => { saveState(state); }, [state]);
+  useEffect(() => {
+    const unsub = onAuthStateChanged(auth, async (user) => {
+      if (!user) {
+        setState(loadLocalState());
+        return;
+      }
+      try {
+        setSyncing(true);
+        const remoteData = await firestoreService.getStudyData(user.uid);
+        if (remoteData) {
+          const remoteState = mergeState(defaultState, remoteData);
+          setState(remoteState);
+          saveLocal(remoteState);
+        } else {
+          const localState = loadLocalState();
+          await firestoreService.saveStudyData(user.uid, localState);
+          setState(localState);
+        }
+      } catch (e) {
+        console.warn("Could not load from Firestore, using local:", e);
+        setState(loadLocalState());
+      } finally {
+        setSyncing(false);
+        isFirstLoad.current = false;
+      }
+    });
+    return unsub;
+  }, []);
 
-  // Apply theme
+  useEffect(() => {
+    if (isFirstLoad.current) return;
+    saveLocal(state);
+
+    if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = setTimeout(async () => {
+      const user = auth.currentUser;
+      if (!user) return;
+      try {
+        await firestoreService.saveStudyData(user.uid, state);
+      } catch (e) {
+        console.warn("Could not save to Firestore:", e);
+      }
+    }, 2000);
+
+    return () => {
+      if (saveTimerRef.current) clearTimeout(saveTimerRef.current);
+    };
+  }, [state]);
+
   useEffect(() => {
     document.documentElement.classList.toggle("dark", state.settings.theme === "dark");
   }, [state.settings.theme]);
 
-  // Calculate streak
   useEffect(() => {
     const today = new Date().toISOString().split("T")[0];
     const todaySessions = state.sessions.filter(s => s.startTime.startsWith(today) && s.completed);
@@ -103,31 +161,37 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
   const addSession = useCallback((session: StudySession) => {
     setState(prev => {
       let newState = { ...prev, sessions: [...prev.sessions, session] };
-
-      // Auto-sync: if session has a topicId and it matches a plan task, mark that task completed
       if (session.topicId) {
         newState = {
           ...newState,
           studyPlans: newState.studyPlans.map(plan => ({
             ...plan,
             tasks: plan.tasks.map(t =>
-              t.topicId === session.topicId && !t.completed
-                ? { ...t, completed: true }
-                : t
+              t.topicId === session.topicId && !t.completed ? { ...t, completed: true } : t
             ),
           })),
         };
       }
-
       return newState;
     });
+
+    if (session.completed && auth.currentUser) {
+      firestoreService.logSession(auth.currentUser.uid, {
+        sessionId: session.id,
+        subjectId: session.subjectId,
+        topicId: session.topicId,
+        durationMinutes: session.durationMinutes,
+        sessionType: session.type,
+        focusScore: session.focusScore,
+        distractionCount: session.distractionCount,
+      }).catch(() => {});
+    }
   }, []);
 
   const updateSettings = useCallback((settings: Partial<AppSettings>) => {
     setState(prev => ({ ...prev, settings: { ...prev.settings, ...settings } }));
   }, []);
 
-  // When a topic is toggled complete, also sync with plan tasks
   const toggleTopicComplete = useCallback((subjectId: string, chapterId: string, topicId: string): boolean => {
     let willBeCompleted = false;
     setState(prev => {
@@ -140,9 +204,7 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
           if (topic) wasCompleted = topic.completed;
         }
       }
-
       willBeCompleted = !wasCompleted;
-
       const newSubjects = prev.subjects.map(s =>
         s.id === subjectId
           ? {
@@ -162,16 +224,12 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
             }
           : s
       );
-
       const newPlans = prev.studyPlans.map(plan => ({
         ...plan,
         tasks: plan.tasks.map(t =>
-          t.topicId === topicId && t.subjectId === subjectId
-            ? { ...t, completed: willBeCompleted }
-            : t
+          t.topicId === topicId && t.subjectId === subjectId ? { ...t, completed: willBeCompleted } : t
         ),
       }));
-
       return {
         ...prev,
         subjects: newSubjects,
@@ -182,27 +240,19 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
     return willBeCompleted;
   }, []);
 
-  // XP system: 100 XP per level, increasing
   const gainXp = useCallback((amount: number) => {
     let result = { newLevel: 0, isLevelUp: false };
     setState(prev => {
       const newXp = prev.xp + amount;
       const xpPerLevel = (level: number) => level * 100;
-      let level = prev.level;
-      let remaining = newXp;
-      
-      // Calculate level from total XP
-      let totalXpForLevel = 0;
       let calcLevel = 1;
       let tempXp = newXp;
       while (tempXp >= xpPerLevel(calcLevel)) {
         tempXp -= xpPerLevel(calcLevel);
         calcLevel++;
       }
-      
       const isLevelUp = calcLevel > prev.level;
       result = { newLevel: calcLevel, isLevelUp };
-      
       return { ...prev, xp: newXp, level: calcLevel };
     });
     return result;
@@ -230,7 +280,6 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
     setState(prev => ({ ...prev, studyPlans: [...prev.studyPlans, plan] }));
   }, []);
 
-  // Manually complete a plan task by topicId
   const completePlanTask = useCallback((topicId: string) => {
     setState(prev => ({
       ...prev,
@@ -286,19 +335,15 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
     return Math.round((allTopics.filter(t => t.completed).length / allTopics.length) * 100);
   }, [state.subjects]);
 
-  // Get the next incomplete plan task for today (used by timer)
   const getTodayPlanTask = useCallback(() => {
     const today = new Date().toISOString().split("T")[0];
     for (const plan of state.studyPlans) {
       const task = plan.tasks.find(t => t.date === today && !t.completed);
-      if (task) {
-        return { planId: plan.id, taskId: task.id, topicId: task.topicId, subjectId: task.subjectId };
-      }
+      if (task) return { planId: plan.id, taskId: task.id, topicId: task.topicId, subjectId: task.subjectId };
     }
     return null;
   }, [state.studyPlans]);
 
-  // Get ALL today's plan tasks (for timer topic selector)
   const getTodayPlanTasks = useCallback(() => {
     const today = new Date().toISOString().split("T")[0];
     const tasks: { planId: string; taskId: string; topicId: string; subjectId: string; estimatedMinutes: number; type: "study" | "revision"; completed: boolean }[] = [];
@@ -314,7 +359,7 @@ export function StudyProvider({ children }: { children: React.ReactNode }) {
 
   return (
     <StudyContext.Provider value={{
-      state, addSubject, updateSubject, deleteSubject, addSession, updateSettings,
+      state, syncing, addSubject, updateSubject, deleteSubject, addSession, updateSettings,
       toggleTopicComplete, updateTopicNotes, addStudyPlan, completePlanTask,
       incrementSessionsCompleted, celebrateMilestone, gainXp,
       getTodayMinutes, getStreak, getHeatmapData, getSubjectProgress, getTodayPlanTask, getTodayPlanTasks,

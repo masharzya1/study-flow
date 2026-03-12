@@ -6,10 +6,12 @@ import {
   onAuthStateChanged,
 } from "firebase/auth";
 import { auth, googleProvider } from "@/lib/firebase";
+import { firestoreService } from "@/lib/firestoreService";
 
 interface AuthContextType {
   user: User | null;
   loading: boolean;
+  isAdmin: boolean;
   signInWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
 }
@@ -17,6 +19,7 @@ interface AuthContextType {
 const AuthContext = createContext<AuthContextType>({
   user: null,
   loading: true,
+  isAdmin: false,
   signInWithGoogle: async () => {},
   logout: async () => {},
 });
@@ -24,11 +27,27 @@ const AuthContext = createContext<AuthContextType>({
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (firebaseUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
       setUser(firebaseUser);
       setLoading(false);
+
+      if (firebaseUser) {
+        try {
+          const profile = await firestoreService.syncUser({
+            displayName: firebaseUser.displayName,
+            photoURL: firebaseUser.photoURL,
+            email: firebaseUser.email,
+          });
+          setIsAdmin(profile?.isAdmin || false);
+        } catch (e) {
+          console.warn("Could not sync user to Firestore:", e);
+        }
+      } else {
+        setIsAdmin(false);
+      }
     });
     return unsubscribe;
   }, []);
@@ -42,7 +61,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, loading, signInWithGoogle, logout }}>
+    <AuthContext.Provider value={{ user, loading, isAdmin, signInWithGoogle, logout }}>
       {children}
     </AuthContext.Provider>
   );

@@ -1,9 +1,10 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutDashboard, BookOpen, Timer, BarChart3, Settings, CalendarDays, Sparkles, RotateCcw, MoreHorizontal, FolderOpen, LogOut } from "lucide-react";
+import { LayoutDashboard, BookOpen, Timer, BarChart3, Settings, CalendarDays, Sparkles, RotateCcw, MoreHorizontal, FolderOpen, LogOut, Shield, Bell } from "lucide-react";
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useFCM } from "@/hooks/useFCM";
 import { HeaderControls } from "@/components/HeaderControls";
 import penzoLogo from "@/assets/penzo-logo.png";
 
@@ -11,9 +12,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const [showMore, setShowMore] = useState(false);
   const { t } = useLanguage();
-  const { user, logout } = useAuth();
+  const { user, logout, isAdmin } = useAuth();
+  const { permission, requestPermission } = useFCM();
 
-  const navItems = [
+  const baseNavItems = [
     { to: "/", icon: LayoutDashboard, labelKey: "nav.home", tourId: undefined },
     { to: "/subjects", icon: BookOpen, labelKey: "nav.subjects", tourId: "nav-subjects" },
     { to: "/timer", icon: Timer, labelKey: "nav.focus", tourId: "nav-focus" },
@@ -24,6 +26,10 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     { to: "/files", icon: FolderOpen, labelKey: "nav.files", tourId: undefined },
     { to: "/settings", icon: Settings, labelKey: "nav.settings", tourId: undefined },
   ];
+
+  const navItems = isAdmin
+    ? [...baseNavItems, { to: "/admin", icon: Shield, labelKey: "nav.admin", tourId: undefined }]
+    : baseNavItems;
 
   const mobileMainItems = navItems.slice(0, 4);
   const mobileMoreItems = navItems.slice(4);
@@ -70,8 +76,26 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
         </nav>
 
         {/* User section at bottom */}
-        <div className="p-3 border-t border-border">
-          <div className="flex items-center gap-2 mb-2 px-1">
+        <div className="p-3 border-t border-border space-y-1">
+          {/* Notification button */}
+          {permission === "default" && (
+            <button
+              onClick={requestPermission}
+              data-testid="button-enable-notifications"
+              className="flex items-center gap-2 w-full px-3 py-2 rounded-xl text-xs text-muted-foreground hover:text-foreground hover:bg-secondary transition-all"
+              title={t("notif.enable")}
+            >
+              <Bell className="w-3.5 h-3.5 flex-shrink-0 text-yellow-500" />
+              <span className="hidden lg:block">{t("notif.enable")}</span>
+            </button>
+          )}
+          {permission === "granted" && (
+            <div className="flex items-center gap-2 px-3 py-1.5">
+              <Bell className="w-3.5 h-3.5 flex-shrink-0 text-green-500" />
+              <span className="hidden lg:block text-[10px] text-green-500">{t("notif.enabled")}</span>
+            </div>
+          )}
+          <div className="flex items-center gap-2 mb-1 px-1">
             {user.photoURL ? (
               <img src={user.photoURL} alt={user.displayName || ""} className="w-6 h-6 rounded-full flex-shrink-0" />
             ) : (
