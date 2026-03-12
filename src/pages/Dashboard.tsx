@@ -9,6 +9,7 @@ import { QuickStats } from "@/components/QuickStats";
 import { TodayTasks } from "@/components/TodayTasks";
 import { SubjectCards } from "@/components/SubjectCards";
 import { StreakMilestone, STREAK_MILESTONES } from "@/components/StreakMilestone";
+import { NotificationPrompt } from "@/components/NotificationPrompt";
 import { useMemo, useState, useEffect, useCallback } from "react";
 
 const MOTIVATIONAL_QUOTES = [
@@ -187,6 +188,8 @@ const Dashboard = () => {
           {streak > 0 ? t("dash.streakMsg", { n: streak }) : t("dash.noStreak")}
         </p>
       </motion.div>
+
+      <NotificationPrompt />
 
       <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.02 }} className="glass-card p-4">
           <div className="flex items-center justify-between mb-2">

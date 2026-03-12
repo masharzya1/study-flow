@@ -77,15 +77,14 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
 
         {/* User section at bottom */}
         <div className="p-3 border-t border-border space-y-1">
-          {/* Notification button */}
           {permission === "default" && (
             <button
               onClick={requestPermission}
               data-testid="button-enable-notifications"
-              className="flex items-center gap-2 w-full px-3 py-2 rounded-xl text-xs text-muted-foreground hover:text-foreground hover:bg-secondary transition-all"
+              className="flex items-center gap-2 w-full px-3 py-2 rounded-xl text-xs font-medium bg-yellow-500/10 border border-yellow-500/20 text-yellow-600 dark:text-yellow-400 hover:bg-yellow-500/20 transition-all"
               title={t("notif.enable")}
             >
-              <Bell className="w-3.5 h-3.5 flex-shrink-0 text-yellow-500" />
+              <Bell className="w-4 h-4 flex-shrink-0" />
               <span className="hidden lg:block">{t("notif.enable")}</span>
             </button>
           )}
@@ -132,10 +131,11 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             <button
               onClick={requestPermission}
               data-testid="button-enable-notifications-mobile"
-              className="w-7 h-7 rounded-full bg-secondary flex items-center justify-center"
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-full bg-yellow-500/15 border border-yellow-500/30 text-yellow-600 dark:text-yellow-400"
               title={t("notif.enable")}
             >
-              <Bell className="w-3.5 h-3.5 text-yellow-500" />
+              <Bell className="w-3.5 h-3.5" />
+              <span className="text-[10px] font-semibold">{t("notif.enable")}</span>
             </button>
           )}
           <HeaderControls compact />
