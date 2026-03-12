@@ -128,6 +128,16 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           <span className="font-semibold text-sm tracking-tight">Penzó</span>
         </div>
         <div className="flex items-center gap-2">
+          {permission === "default" && (
+            <button
+              onClick={requestPermission}
+              data-testid="button-enable-notifications-mobile"
+              className="w-7 h-7 rounded-full bg-secondary flex items-center justify-center"
+              title={t("notif.enable")}
+            >
+              <Bell className="w-3.5 h-3.5 text-yellow-500" />
+            </button>
+          )}
           <HeaderControls compact />
           {user.photoURL ? (
             <button onClick={logout} data-testid="button-sign-out-mobile" title={t("auth.signOut")}>
