@@ -13,17 +13,25 @@ firebase.initializeApp({
 const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
+  console.log("[firebase-messaging-sw] background message:", JSON.stringify(payload));
+
+  const notif = payload.notification || {};
   const data = payload.data || {};
-  const title = data.title || payload.notification?.title || "Penzó";
-  const body = data.body || payload.notification?.body || "";
+  const title = notif.title || data.title || "Penzó";
+  const body = notif.body || data.body || "";
 
   return self.registration.showNotification(title, {
     body,
     icon: "/icon-192.png",
     badge: "/icon-192.png",
     vibrate: [200, 100, 200],
-    tag: "penzo-" + Date.now(),
+    tag: "penzo-notif",
+    renotify: true,
   });
+});
+
+self.addEventListener("push", (event) => {
+  console.log("[firebase-messaging-sw] push event received");
 });
 
 self.addEventListener("notificationclick", (event) => {

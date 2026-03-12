@@ -64,7 +64,12 @@ export const firestoreService = {
   },
 
   async saveFcmToken(uid: string, token: string) {
-    await setDoc(doc(db, "fcmTokens", uid), {
+    const ref = doc(db, "fcmTokens", uid);
+    const existing = await getDoc(ref);
+    if (existing.exists() && existing.data()?.token === token) {
+      return;
+    }
+    await setDoc(ref, {
       uid,
       token,
       updatedAt: serverTimestamp(),

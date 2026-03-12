@@ -15,6 +15,11 @@ const adminAuth = getAuth(adminApp);
 const adminMessaging = getMessaging(adminApp);
 const adminFirestore = getFirestore(adminApp);
 
+const STALE_TOKEN_ERRORS = [
+  "messaging/registration-token-not-registered",
+  "messaging/invalid-registration-token",
+];
+
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (req.method === "OPTIONS") {
     res.setHeader("Access-Control-Allow-Origin", "*");
@@ -64,9 +69,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     let successCount = 0;
     let failureCount = 0;
+    const errors: string[] = [];
 
     for (const target of targets) {
-      if (!target.token) { failureCount++; continue; }
+      if (!target.token) {
+        failureCount++;
+        errors.push(`${target.uid}: no token stored`);
+        continue;
+      }
       try {
         await adminMessaging.send({
           token: target.token,
@@ -76,9 +86,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           },
         });
         successCount++;
+        console.log(`FCM: sent to ${target.uid} OK`);
       } catch (err: any) {
-        console.error("FCM send error for", target.uid, err?.message);
+        const code = err?.code || err?.errorInfo?.code || "";
+        const msg = err?.message || String(err);
+        console.error(`FCM send error for ${target.uid}: [${code}] ${msg}`);
+        errors.push(`${target.uid}: ${code || msg}`);
         failureCount++;
+
+        if (STALE_TOKEN_ERRORS.some((e) => code.includes(e) || msg.includes(e))) {
+          console.log(`FCM: deleting stale token for ${target.uid}`);
+          try {
+            await adminFirestore.collection("fcmTokens").doc(target.uid).delete();
+          } catch (delErr: any) {
+            console.error(`FCM: failed to delete stale token for ${target.uid}:`, delErr?.message);
+          }
+        }
       }
     }
 
@@ -90,10 +113,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       sentAt: new Date(),
       successCount,
       failureCount,
+      errors: errors.length > 0 ? errors : null,
     });
 
-    return res.status(200).json({ ok: true, successCount, failureCount });
+    return res.status(200).json({ ok: true, successCount, failureCount, errors });
   } catch (e: any) {
+    console.error("Notify handler error:", e);
     return res.status(500).json({ error: e.message });
   }
 }

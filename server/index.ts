@@ -6,6 +6,11 @@ const app = express();
 app.use(cors({ origin: true, credentials: true }));
 app.use(express.json());
 
+const STALE_TOKEN_ERRORS = [
+  "messaging/registration-token-not-registered",
+  "messaging/invalid-registration-token",
+];
+
 async function requireAuth(req: any, res: any, next: any) {
   const token = req.headers.authorization?.replace("Bearer ", "");
   if (!token) return res.status(401).json({ error: "No token" });
@@ -31,7 +36,7 @@ app.post("/api/admin/notify", requireAuth, requireAdmin, async (req: any, res) =
   if (!title || !body) return res.status(400).json({ error: "title and body required" });
 
   try {
-    let tokenDocs: FirebaseFirestore.QuerySnapshot | FirebaseFirestore.DocumentSnapshot[];
+    let tokenDocs: any[];
 
     if (targetUid) {
       const doc = await adminFirestore.collection("fcmTokens").doc(targetUid).get();
@@ -41,16 +46,21 @@ app.post("/api/admin/notify", requireAuth, requireAdmin, async (req: any, res) =
       tokenDocs = snap.docs;
     }
 
-    const targets = (Array.isArray(tokenDocs) ? tokenDocs : tokenDocs).map((d: any) => ({
+    const targets = tokenDocs.map((d: any) => ({
       uid: d.id,
       token: d.data()?.token || null,
     }));
 
     let successCount = 0;
     let failureCount = 0;
+    const errors: string[] = [];
 
     for (const target of targets) {
-      if (!target.token) { failureCount++; continue; }
+      if (!target.token) {
+        failureCount++;
+        errors.push(`${target.uid}: no token stored`);
+        continue;
+      }
       try {
         await adminMessaging.send({
           token: target.token,
@@ -60,8 +70,22 @@ app.post("/api/admin/notify", requireAuth, requireAdmin, async (req: any, res) =
           },
         });
         successCount++;
-      } catch {
+        console.log(`FCM: sent to ${target.uid} OK`);
+      } catch (err: any) {
+        const code = err?.code || err?.errorInfo?.code || "";
+        const msg = err?.message || String(err);
+        console.error(`FCM send error for ${target.uid}: [${code}] ${msg}`);
+        errors.push(`${target.uid}: ${code || msg}`);
         failureCount++;
+
+        if (STALE_TOKEN_ERRORS.some((e) => code.includes(e) || msg.includes(e))) {
+          console.log(`FCM: deleting stale token for ${target.uid}`);
+          try {
+            await adminFirestore.collection("fcmTokens").doc(target.uid).delete();
+          } catch (delErr: any) {
+            console.error(`FCM: failed to delete stale token for ${target.uid}:`, delErr?.message);
+          }
+        }
       }
     }
 
@@ -73,10 +97,12 @@ app.post("/api/admin/notify", requireAuth, requireAdmin, async (req: any, res) =
       sentAt: new Date(),
       successCount,
       failureCount,
+      errors: errors.length > 0 ? errors : null,
     });
 
-    res.json({ ok: true, successCount, failureCount });
+    res.json({ ok: true, successCount, failureCount, errors });
   } catch (e: any) {
+    console.error("Notify handler error:", e);
     res.status(500).json({ error: e.message });
   }
 });
