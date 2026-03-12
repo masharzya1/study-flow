@@ -24,6 +24,8 @@ export default defineConfig({
       workbox: {
         navigateFallbackDenylist: [/^\/~oauth/, /^\/api/],
         globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        globIgnores: ["**/firebase-messaging-*.js"],
+        importScripts: ["/firebase-messaging-handler.js"],
       },
       manifest: {
         name: "Penzó — Smart Study Companion",

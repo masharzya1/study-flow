@@ -7,30 +7,29 @@ import { useToast } from "@/hooks/use-toast";
 
 const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY;
 
-function waitForSwActive(reg: ServiceWorkerRegistration): Promise<ServiceWorkerRegistration> {
-  return new Promise((resolve, reject) => {
-    if (reg.active) {
-      resolve(reg);
-      return;
-    }
+async function getOrRegisterSW(): Promise<ServiceWorkerRegistration> {
+  const existing = await navigator.serviceWorker.getRegistration("/");
+  if (existing?.active) {
+    console.log("FCM: using existing SW at /", existing.active.scriptURL);
+    return existing;
+  }
+
+  console.log("FCM: no active SW at /, registering firebase-messaging-sw.js");
+  const reg = await navigator.serviceWorker.register("/firebase-messaging-sw.js", { scope: "/" });
+
+  if (reg.active) return reg;
+
+  await new Promise<void>((resolve, reject) => {
     const sw = reg.installing || reg.waiting;
-    if (!sw) {
-      resolve(reg);
-      return;
-    }
-    const timeout = setTimeout(() => {
-      resolve(reg);
-    }, 10000);
+    if (!sw) { resolve(); return; }
+    const timeout = setTimeout(() => resolve(), 10000);
     sw.addEventListener("statechange", () => {
-      if (sw.state === "activated") {
-        clearTimeout(timeout);
-        resolve(reg);
-      } else if (sw.state === "redundant") {
-        clearTimeout(timeout);
-        reject(new Error("Service worker became redundant"));
-      }
+      if (sw.state === "activated") { clearTimeout(timeout); resolve(); }
+      else if (sw.state === "redundant") { clearTimeout(timeout); reject(new Error("SW redundant")); }
     });
   });
+
+  return reg;
 }
 
 export function useFCM() {
@@ -51,7 +50,7 @@ export function useFCM() {
     try {
       if (!user) return;
       if (!VAPID_KEY) {
-        console.warn("FCM: VAPID key not configured");
+        console.warn("FCM: VAPID key not configured (VITE_FIREBASE_VAPID_KEY)");
         return;
       }
 
@@ -61,37 +60,30 @@ export function useFCM() {
         return;
       }
 
-      const rawReg = await navigator.serviceWorker.register(
-        "/firebase-messaging-sw.js",
-        { scope: "/firebase-cloud-messaging-push-scope" }
-      );
-
-      await rawReg.update();
-      const fcmSwRegistration = await waitForSwActive(rawReg);
-      console.log("FCM: service worker active, state:", fcmSwRegistration.active?.state);
+      console.log("FCM: getting service worker registration...");
+      const swReg = await getOrRegisterSW();
+      console.log("FCM: SW ready, scope:", swReg.scope, "active:", !!swReg.active);
 
       let token: string | null = null;
       try {
         token = await getToken(messaging, {
           vapidKey: VAPID_KEY,
-          serviceWorkerRegistration: fcmSwRegistration,
+          serviceWorkerRegistration: swReg,
         });
       } catch (e: any) {
-        console.warn("FCM: initial getToken failed, force-refreshing:", e?.message);
-        try {
-          await deleteToken(messaging);
-        } catch {}
+        console.warn("FCM: initial getToken failed:", e?.message, "— force-refreshing");
+        try { await deleteToken(messaging); } catch {}
         token = await getToken(messaging, {
           vapidKey: VAPID_KEY,
-          serviceWorkerRegistration: fcmSwRegistration,
+          serviceWorkerRegistration: swReg,
         });
       }
 
       if (token) {
-        console.log("FCM: token obtained:", token.slice(0, 20) + "...");
+        console.log("FCM: token obtained:", token.slice(0, 20) + "..." + token.slice(-10));
         await firestoreService.saveFcmToken(user.uid, token);
         setFcmReady(true);
-        console.log("FCM: token saved to Firestore for uid:", user.uid);
+        console.log("FCM: token saved for uid:", user.uid);
       } else {
         console.warn("FCM: no token received — check VAPID key and browser support");
       }
@@ -99,12 +91,11 @@ export function useFCM() {
       if (!listenerSet.current) {
         listenerSet.current = true;
         onMessage(messaging, (payload) => {
-          console.log("FCM: foreground message received:", payload);
+          console.log("FCM: foreground message:", JSON.stringify(payload));
           const notif = payload.notification || {};
           const data = payload.data || {};
           const title = notif.title || data.title;
           const body = notif.body || data.body;
-
           if (title) {
             toast({ title, description: body });
           }
