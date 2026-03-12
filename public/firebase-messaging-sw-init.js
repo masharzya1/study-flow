@@ -14,13 +14,15 @@ const messaging = firebase.messaging();
 
 messaging.onBackgroundMessage((payload) => {
   const { title, body } = payload.notification || {};
-  self.registration.showNotification(title || "Penzó", {
-    body: body || "",
-    icon: "/icon-192.png",
-    badge: "/icon-192.png",
-    vibrate: [200, 100, 200],
-    data: payload.data,
-  });
+  if (title) {
+    self.registration.showNotification(title, {
+      body: body || "",
+      icon: "/icon-192.png",
+      badge: "/icon-192.png",
+      vibrate: [200, 100, 200],
+      data: payload.data,
+    });
+  }
 });
 
 self.addEventListener("notificationclick", (event) => {
