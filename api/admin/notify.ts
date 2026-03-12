@@ -86,10 +86,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
             notification: {
               title,
               body,
-              icon: "/icon-192.png",
-              badge: "/icon-192.png",
+              icon: "/icon-512.png",
+              badge: "/notification-badge.png",
               vibrate: [200, 100, 200] as any,
-              requireInteraction: true,
             },
             fcmOptions: { link: "/" },
           },

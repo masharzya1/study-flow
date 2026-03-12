@@ -70,10 +70,9 @@ app.post("/api/admin/notify", requireAuth, requireAdmin, async (req: any, res) =
             notification: {
               title,
               body,
-              icon: "/icon-192.png",
-              badge: "/icon-192.png",
+              icon: "/icon-512.png",
+              badge: "/notification-badge.png",
               vibrate: [200, 100, 200] as any,
-              requireInteraction: true,
             },
             fcmOptions: { link: "/" },
           },

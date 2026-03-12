@@ -1,9 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Users, Bell, Clock, TrendingUp, Send, Search,
   ChevronDown, ChevronUp, Shield, X, CheckCircle,
-  BarChart2, Calendar, Zap, Loader2
+  BarChart2, Calendar, Zap, Loader2, RefreshCw
 } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -65,6 +65,7 @@ export default function Admin() {
   const [search, setSearch] = useState("");
   const [expandedUser, setExpandedUser] = useState<string | null>(null);
   const [userSessions, setUserSessions] = useState<Record<string, any[]>>({});
+  const [sessionsLoading, setSessionsLoading] = useState<Record<string, boolean>>({});
   const [tab, setTab] = useState<"users" | "notify" | "history">("users");
 
   const [notifTarget, setNotifTarget] = useState<"all" | string>("all");
@@ -73,41 +74,42 @@ export default function Admin() {
   const [sending, setSending] = useState(false);
   const [sendResult, setSendResult] = useState<{ success: number; failure: number } | null>(null);
 
+  const sessionUnsubs = useRef<Record<string, () => void>>({});
+
   useEffect(() => {
     if (!isAdmin) { navigate("/"); return; }
-    loadData();
+
+    const unsubUsers = firestoreService.onUsersSnapshot((usersData) => {
+      setUsers(usersData);
+      setLoading(false);
+    });
+
+    const unsubNotifs = firestoreService.onNotificationsSnapshot((notifsData) => {
+      setNotifications(notifsData as NotificationRecord[]);
+    });
+
+    return () => {
+      unsubUsers();
+      unsubNotifs();
+      Object.values(sessionUnsubs.current).forEach(unsub => unsub());
+    };
   }, [isAdmin]);
 
-  const loadData = async () => {
-    setLoading(true);
-    try {
-      const [usersData, notifsData] = await Promise.all([
-        firestoreService.getAllUsers(),
-        firestoreService.getNotifications(),
-      ]);
-      setUsers(usersData);
-      setNotifications(notifsData as NotificationRecord[]);
-    } catch (e) {
-      console.error(e);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const loadUserSessions = async (uid: string) => {
-    if (userSessions[uid]) return;
-    try {
-      const sessions = await firestoreService.getUserSessions(uid);
+  const subscribeToSessions = (uid: string) => {
+    if (sessionUnsubs.current[uid]) return;
+    setSessionsLoading(prev => ({ ...prev, [uid]: true }));
+    sessionUnsubs.current[uid] = firestoreService.onUserSessionsSnapshot(uid, (sessions) => {
       setUserSessions(prev => ({ ...prev, [uid]: sessions }));
-    } catch {}
+      setSessionsLoading(prev => ({ ...prev, [uid]: false }));
+    });
   };
 
-  const toggleUser = async (uid: string) => {
+  const toggleUser = (uid: string) => {
     if (expandedUser === uid) {
       setExpandedUser(null);
     } else {
       setExpandedUser(uid);
-      await loadUserSessions(uid);
+      subscribeToSessions(uid);
     }
   };
 
@@ -124,7 +126,6 @@ export default function Admin() {
       setSendResult({ success: res.successCount, failure: res.failureCount });
       setNotifTitle("");
       setNotifBody("");
-      loadData();
     } catch (e: any) {
       alert(e.message);
     } finally {
@@ -135,7 +136,6 @@ export default function Admin() {
   const toggleAdmin = async (uid: string, current: boolean) => {
     try {
       await firestoreService.setAdmin(uid, !current);
-      setUsers(prev => prev.map(u => u.uid === uid ? { ...u, isAdmin: !current } : u));
     } catch (e: any) {
       alert(e.message);
     }
@@ -163,6 +163,10 @@ export default function Admin() {
         <div className="flex items-center gap-2">
           <Shield className="w-5 h-5" />
           <h1 className="text-2xl font-semibold tracking-tight">{t("admin.title")}</h1>
+          <div className="ml-auto flex items-center gap-1.5 text-[10px] text-green-500 bg-green-500/10 px-2 py-1 rounded-full">
+            <span className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
+            Live
+          </div>
         </div>
         <p className="text-muted-foreground text-sm mt-0.5">{t("admin.subtitle")}</p>
       </motion.div>
@@ -177,7 +181,7 @@ export default function Admin() {
         ].map(item => (
           <div key={item.label} className="glass-card p-4">
             <item.icon className={`w-4 h-4 ${item.color} mb-2`} />
-            <p className="text-xl font-bold">{item.value}</p>
+            <p className="text-xl font-bold">{loading ? "—" : item.value}</p>
             <p className="text-[11px] text-muted-foreground">{item.label}</p>
           </div>
         ))}
@@ -291,11 +295,11 @@ export default function Admin() {
 
                         <div>
                           <p className="text-xs font-medium text-muted-foreground mb-2">{t("admin.recentSessions")}</p>
-                          {!userSessions[u.uid] ? (
+                          {sessionsLoading[u.uid] ? (
                             <div className="flex items-center gap-2 text-muted-foreground text-xs py-2">
-                              <Loader2 className="w-3 h-3 animate-spin" /> Loading...
+                              <Loader2 className="w-3 h-3 animate-spin" /> {t("admin.loading")}
                             </div>
-                          ) : userSessions[u.uid].length === 0 ? (
+                          ) : !userSessions[u.uid] || userSessions[u.uid].length === 0 ? (
                             <p className="text-xs text-muted-foreground">{t("admin.noSessions")}</p>
                           ) : (
                             <div className="space-y-1.5 max-h-48 overflow-y-auto">
@@ -321,6 +325,7 @@ export default function Admin() {
                         <div className="flex gap-2">
                           <button
                             onClick={() => { setNotifTarget(u.uid); setTab("notify"); }}
+                            data-testid={`button-notify-${u.uid}`}
                             className="flex-1 flex items-center justify-center gap-2 py-2 rounded-xl bg-secondary text-xs font-medium hover:bg-secondary/80 transition-colors"
                           >
                             <Bell className="w-3.5 h-3.5" /> {t("admin.sendNotifToUser")}
@@ -328,6 +333,7 @@ export default function Admin() {
                           {u.uid !== user?.uid && (
                             <button
                               onClick={() => toggleAdmin(u.uid, u.isAdmin)}
+                              data-testid={`button-admin-toggle-${u.uid}`}
                               className={`px-4 py-2 rounded-xl text-xs font-medium transition-colors ${
                                 u.isAdmin
                                   ? "bg-yellow-500/20 text-yellow-600 hover:bg-yellow-500/30"

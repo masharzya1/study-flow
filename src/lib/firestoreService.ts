@@ -1,6 +1,7 @@
 import {
   doc, setDoc, getDoc, getDocs, collection, query,
-  where, orderBy, limit, serverTimestamp, addDoc, updateDoc, Timestamp
+  where, orderBy, limit, serverTimestamp, addDoc, updateDoc, Timestamp,
+  onSnapshot
 } from "firebase/firestore";
 import { db, auth } from "./firebase";
 
@@ -142,6 +143,90 @@ export const firestoreService = {
         sentAt: data.sentAt?.toDate?.()?.toISOString() || null,
       };
     });
+  },
+
+  onUsersSnapshot(callback: (users: any[]) => void) {
+    return onSnapshot(collection(db, "users"), async (snap) => {
+      const users: any[] = [];
+      for (const d of snap.docs) {
+        const u = d.data();
+        const tokenSnap = await getDoc(doc(db, "fcmTokens", d.id));
+        const fcmToken = tokenSnap.exists() ? tokenSnap.data()?.token || null : null;
+
+        const sessionsSnap = await getDocs(
+          query(collection(db, "studySessions"), where("uid", "==", d.id))
+        );
+        const sessions = sessionsSnap.docs.map(s => s.data());
+        const totalSessions = sessions.length;
+        const totalMinutes = sessions.reduce((sum, s) => sum + (s.durationMinutes || 0), 0);
+        const focusScores = sessions.filter(s => s.focusScore != null).map(s => s.focusScore);
+        const avgFocusScore = focusScores.length > 0
+          ? Math.round(focusScores.reduce((a: number, b: number) => a + b, 0) / focusScores.length)
+          : 0;
+
+        const lastSession = sessions.length > 0
+          ? sessions.sort((a, b) => {
+              const ta = a.completedAt?.toDate?.() || new Date(0);
+              const tb = b.completedAt?.toDate?.() || new Date(0);
+              return tb.getTime() - ta.getTime();
+            })[0]?.completedAt?.toDate?.()?.toISOString() || null
+          : null;
+
+        users.push({
+          uid: d.id,
+          email: u.email,
+          displayName: u.displayName,
+          photoURL: u.photoURL,
+          isAdmin: u.isAdmin || false,
+          fcmToken,
+          createdAt: u.createdAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+          lastActiveAt: u.lastActiveAt?.toDate?.()?.toISOString() || new Date().toISOString(),
+          totalSessions,
+          totalMinutes,
+          lastSession,
+          avgFocusScore: String(avgFocusScore),
+        });
+      }
+      callback(users);
+    });
+  },
+
+  onNotificationsSnapshot(callback: (notifs: any[]) => void) {
+    return onSnapshot(
+      query(collection(db, "notifications"), orderBy("sentAt", "desc"), limit(50)),
+      (snap) => {
+        const notifs = snap.docs.map(d => {
+          const data = d.data();
+          return {
+            id: d.id,
+            ...data,
+            sentAt: data.sentAt?.toDate?.()?.toISOString() || null,
+          };
+        });
+        callback(notifs);
+      }
+    );
+  },
+
+  onUserSessionsSnapshot(uid: string, callback: (sessions: any[]) => void) {
+    return onSnapshot(
+      query(collection(db, "studySessions"), where("uid", "==", uid), orderBy("completedAt", "desc"), limit(20)),
+      (snap) => {
+        const sessions = snap.docs.map(d => {
+          const data = d.data();
+          return {
+            id: d.id,
+            ...data,
+            completedAt: data.completedAt?.toDate?.()?.toISOString() || null,
+          };
+        });
+        callback(sessions);
+      },
+      (error) => {
+        console.error("Sessions snapshot error:", error);
+        callback([]);
+      }
+    );
   },
 
   async setAdmin(targetUid: string, isAdmin: boolean) {
