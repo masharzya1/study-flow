@@ -7,31 +7,6 @@ import { useToast } from "@/hooks/use-toast";
 
 const VAPID_KEY = import.meta.env.VITE_FIREBASE_VAPID_KEY;
 
-async function getOrRegisterSW(): Promise<ServiceWorkerRegistration> {
-  const existing = await navigator.serviceWorker.getRegistration("/");
-  if (existing?.active) {
-    console.log("FCM: using existing SW at /", existing.active.scriptURL);
-    return existing;
-  }
-
-  console.log("FCM: no active SW at /, registering firebase-messaging-sw.js");
-  const reg = await navigator.serviceWorker.register("/firebase-messaging-sw.js", { scope: "/" });
-
-  if (reg.active) return reg;
-
-  await new Promise<void>((resolve, reject) => {
-    const sw = reg.installing || reg.waiting;
-    if (!sw) { resolve(); return; }
-    const timeout = setTimeout(() => resolve(), 10000);
-    sw.addEventListener("statechange", () => {
-      if (sw.state === "activated") { clearTimeout(timeout); resolve(); }
-      else if (sw.state === "redundant") { clearTimeout(timeout); reject(new Error("SW redundant")); }
-    });
-  });
-
-  return reg;
-}
-
 export function useFCM() {
   const { user } = useAuth();
   const { toast } = useToast();
@@ -49,49 +24,84 @@ export function useFCM() {
   const registerFCM = useCallback(async () => {
     try {
       if (!user) return;
+
       if (!VAPID_KEY) {
-        console.warn("FCM: VAPID key not configured (VITE_FIREBASE_VAPID_KEY)");
+        console.error("FCM: VAPID key missing. Set VITE_FIREBASE_VAPID_KEY in env.");
         return;
       }
+      console.log("FCM: VAPID key present, length:", VAPID_KEY.length);
 
       const messaging = await getMessagingInstance();
       if (!messaging) {
-        console.warn("FCM: messaging not supported on this browser");
+        console.error("FCM: messaging not supported in this browser");
         return;
       }
 
-      console.log("FCM: getting service worker registration...");
-      const swReg = await getOrRegisterSW();
-      console.log("FCM: SW ready, scope:", swReg.scope, "active:", !!swReg.active);
+      console.log("FCM: waiting for service worker...");
 
-      let token: string | null = null;
-      try {
-        token = await getToken(messaging, {
-          vapidKey: VAPID_KEY,
-          serviceWorkerRegistration: swReg,
-        });
-      } catch (e: any) {
-        console.warn("FCM: initial getToken failed:", e?.message, "— force-refreshing");
-        try { await deleteToken(messaging); } catch {}
-        token = await getToken(messaging, {
-          vapidKey: VAPID_KEY,
-          serviceWorkerRegistration: swReg,
-        });
+      let swReg: ServiceWorkerRegistration;
+
+      const existingRegs = await navigator.serviceWorker.getRegistrations();
+      console.log("FCM: found", existingRegs.length, "SW registrations:", existingRegs.map(r => r.scope));
+
+      for (const reg of existingRegs) {
+        if (reg.scope.includes("firebase-cloud-messaging-push-scope")) {
+          console.log("FCM: unregistering old Firebase SW at scope:", reg.scope);
+          await reg.unregister();
+        }
       }
 
+      const rootReg = await navigator.serviceWorker.getRegistration("/");
+      if (rootReg?.active) {
+        console.log("FCM: reusing active SW at /:", rootReg.active.scriptURL);
+        swReg = rootReg;
+      } else {
+        console.log("FCM: registering firebase-messaging-sw.js at /");
+        swReg = await navigator.serviceWorker.register("/firebase-messaging-sw.js", { scope: "/" });
+
+        if (!swReg.active) {
+          console.log("FCM: waiting for SW to activate...");
+          await new Promise<void>((resolve) => {
+            const sw = swReg.installing || swReg.waiting;
+            if (!sw) { resolve(); return; }
+            const timeout = setTimeout(() => {
+              console.log("FCM: SW activation timeout, continuing anyway");
+              resolve();
+            }, 10000);
+            sw.addEventListener("statechange", () => {
+              if (sw.state === "activated") { clearTimeout(timeout); resolve(); }
+              else if (sw.state === "redundant") { clearTimeout(timeout); resolve(); }
+            });
+          });
+        }
+      }
+
+      console.log("FCM: SW ready. scope:", swReg.scope, "active:", swReg.active?.state);
+
+      console.log("FCM: deleting old token to force fresh subscription...");
+      try { await deleteToken(messaging); } catch (e) {
+        console.log("FCM: no old token to delete (this is fine)");
+      }
+
+      console.log("FCM: requesting fresh token...");
+      const token = await getToken(messaging, {
+        vapidKey: VAPID_KEY,
+        serviceWorkerRegistration: swReg,
+      });
+
       if (token) {
-        console.log("FCM: token obtained:", token.slice(0, 20) + "..." + token.slice(-10));
+        console.log("FCM: ✅ token obtained:", token);
         await firestoreService.saveFcmToken(user.uid, token);
         setFcmReady(true);
-        console.log("FCM: token saved for uid:", user.uid);
+        console.log("FCM: ✅ token saved to Firestore for uid:", user.uid);
       } else {
-        console.warn("FCM: no token received — check VAPID key and browser support");
+        console.error("FCM: ❌ no token returned. Check VAPID key and Firebase console Web Push cert.");
       }
 
       if (!listenerSet.current) {
         listenerSet.current = true;
         onMessage(messaging, (payload) => {
-          console.log("FCM: foreground message:", JSON.stringify(payload));
+          console.log("FCM: foreground message received:", payload);
           const notif = payload.notification || {};
           const data = payload.data || {};
           const title = notif.title || data.title;
@@ -100,9 +110,10 @@ export function useFCM() {
             toast({ title, description: body });
           }
         });
+        console.log("FCM: foreground message listener registered");
       }
     } catch (e) {
-      console.error("FCM registration error:", e);
+      console.error("FCM: registration failed:", e);
     }
   }, [user, toast]);
 
