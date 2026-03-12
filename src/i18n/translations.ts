@@ -262,6 +262,34 @@ const translations: Record<Language, Record<string, string>> = {
     "notFound.desc": "The page you're looking for has been moved or doesn't exist.",
     "notFound.home": "Go Home",
     "notFound.back": "Go Back",
+
+    // Auth
+    "auth.tagline": "Your smart study companion",
+    "auth.welcome": "Welcome back",
+    "auth.signInDesc": "Sign in to sync your files and study data across devices.",
+    "auth.continueWithGoogle": "Continue with Google",
+    "auth.signingIn": "Signing in...",
+    "auth.error": "Sign in failed. Please try again.",
+    "auth.freeForever": "Free forever — no credit card needed",
+    "auth.signOut": "Sign out",
+    "auth.signedInAs": "Signed in as",
+    "auth.profile": "Profile",
+    "auth.signIn": "Sign In",
+
+    // Files
+    "files.title": "My Files",
+    "files.subtitle": "Upload and manage your study images",
+    "nav.files": "Files",
+    "files.dropOrClick": "Drop images here or click to upload",
+    "files.supportedFormats": "Supports JPG, PNG, GIF, WEBP — max 32 MB",
+    "files.noFiles": "No files yet. Upload your first image!",
+    "files.file": "file",
+    "files.files": "files",
+    "files.uploading": "Uploading",
+    "files.uploadError": "Upload failed. Please try again.",
+    "files.fileTooLarge": "File too large",
+    "files.imagesOnly": "Only image files are supported.",
+    "files.openOriginal": "Open original",
   },
 
   bn: {
@@ -525,6 +553,34 @@ const translations: Record<Language, Record<string, string>> = {
     "notFound.desc": "তুমি যে পেজটি খুঁজছো সেটি সরানো হয়েছে বা এটির অস্তিত্ব নেই।",
     "notFound.home": "হোমে ফিরে যাও",
     "notFound.back": "আগের পেজে যাও",
+
+    // Auth
+    "auth.tagline": "তোমার স্মার্ট পড়াশোনার সঙ্গী",
+    "auth.welcome": "স্বাগতম",
+    "auth.signInDesc": "ফাইল ও পড়াশোনার ডেটা সব ডিভাইসে সিঙ্ক করতে সাইন ইন করো।",
+    "auth.continueWithGoogle": "Google দিয়ে চালিয়ে যাও",
+    "auth.signingIn": "সাইন ইন হচ্ছে...",
+    "auth.error": "সাইন ইন ব্যর্থ হয়েছে। আবার চেষ্টা করো।",
+    "auth.freeForever": "সম্পূর্ণ বিনামূল্যে — কোনো ক্রেডিট কার্ড লাগবে না",
+    "auth.signOut": "সাইন আউট",
+    "auth.signedInAs": "সাইন ইন করা আছেন",
+    "auth.profile": "প্রোফাইল",
+    "auth.signIn": "সাইন ইন",
+
+    // Files
+    "files.title": "আমার ফাইলস",
+    "files.subtitle": "পড়াশোনার ছবি আপলোড ও ম্যানেজ করো",
+    "nav.files": "ফাইলস",
+    "files.dropOrClick": "ছবি ড্র্যাগ করো বা ক্লিক করে আপলোড করো",
+    "files.supportedFormats": "JPG, PNG, GIF, WEBP সাপোর্টেড — সর্বোচ্চ 32 MB",
+    "files.noFiles": "এখনো কোনো ফাইল নেই। প্রথম ছবি আপলোড করো!",
+    "files.file": "টি ফাইল",
+    "files.files": "টি ফাইল",
+    "files.uploading": "আপলোড হচ্ছে",
+    "files.uploadError": "আপলোড ব্যর্থ হয়েছে। আবার চেষ্টা করো।",
+    "files.fileTooLarge": "ফাইল অনেক বড়",
+    "files.imagesOnly": "শুধুমাত্র ছবি ফাইল সাপোর্টেড।",
+    "files.openOriginal": "মূল ছবি খুলুন",
   },
 };
 

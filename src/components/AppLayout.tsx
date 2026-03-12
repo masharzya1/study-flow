@@ -1,8 +1,9 @@
 import { NavLink, useLocation } from "react-router-dom";
-import { LayoutDashboard, BookOpen, Timer, BarChart3, Settings, CalendarDays, Sparkles, RotateCcw, MoreHorizontal } from "lucide-react";
+import { LayoutDashboard, BookOpen, Timer, BarChart3, Settings, CalendarDays, Sparkles, RotateCcw, MoreHorizontal, FolderOpen, LogOut } from "lucide-react";
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useAuth } from "@/contexts/AuthContext";
 import { HeaderControls } from "@/components/HeaderControls";
 import penzoLogo from "@/assets/penzo-logo.png";
 
@@ -10,6 +11,7 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
   const location = useLocation();
   const [showMore, setShowMore] = useState(false);
   const { t } = useLanguage();
+  const { user, logout } = useAuth();
 
   const navItems = [
     { to: "/", icon: LayoutDashboard, labelKey: "nav.home", tourId: undefined },
@@ -19,12 +21,17 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
     { to: "/calendar", icon: CalendarDays, labelKey: "nav.calendar", tourId: undefined },
     { to: "/revision", icon: RotateCcw, labelKey: "nav.revision", tourId: undefined },
     { to: "/analytics", icon: BarChart3, labelKey: "nav.stats", tourId: "nav-analytics" },
+    { to: "/files", icon: FolderOpen, labelKey: "nav.files", tourId: undefined },
     { to: "/settings", icon: Settings, labelKey: "nav.settings", tourId: undefined },
   ];
 
   const mobileMainItems = navItems.slice(0, 4);
   const mobileMoreItems = navItems.slice(4);
   const isMoreActive = mobileMoreItems.some(item => item.to === location.pathname);
+
+  if (!user) {
+    return <>{children}</>;
+  }
 
   return (
     <div className="min-h-screen flex flex-col md:flex-row">
@@ -61,8 +68,30 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
             );
           })}
         </nav>
-        <div className="p-4 hidden lg:block">
-          <p className="text-[11px] text-muted-foreground">{t("nav.freeOpenSource")}</p>
+
+        {/* User section at bottom */}
+        <div className="p-3 border-t border-border">
+          <div className="flex items-center gap-2 mb-2 px-1">
+            {user.photoURL ? (
+              <img src={user.photoURL} alt={user.displayName || ""} className="w-6 h-6 rounded-full flex-shrink-0" />
+            ) : (
+              <div className="w-6 h-6 rounded-full bg-secondary flex items-center justify-center flex-shrink-0 text-[10px] font-semibold">
+                {user.displayName?.[0] || user.email?.[0] || "U"}
+              </div>
+            )}
+            <div className="hidden lg:block min-w-0">
+              <p className="text-xs font-medium truncate">{user.displayName || user.email}</p>
+              <p className="text-[10px] text-muted-foreground truncate">{user.email}</p>
+            </div>
+          </div>
+          <button
+            onClick={logout}
+            data-testid="button-sign-out"
+            className="flex items-center gap-2 w-full px-3 py-2 rounded-xl text-xs text-muted-foreground hover:text-foreground hover:bg-secondary transition-all"
+          >
+            <LogOut className="w-3.5 h-3.5 flex-shrink-0" />
+            <span className="hidden lg:block">{t("auth.signOut")}</span>
+          </button>
         </div>
       </aside>
 
@@ -74,7 +103,23 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
           </div>
           <span className="font-semibold text-sm tracking-tight">Penzó</span>
         </div>
-        <HeaderControls compact />
+        <div className="flex items-center gap-2">
+          <HeaderControls compact />
+          {user.photoURL ? (
+            <button onClick={logout} data-testid="button-sign-out-mobile" title={t("auth.signOut")}>
+              <img src={user.photoURL} alt={user.displayName || ""} className="w-7 h-7 rounded-full" />
+            </button>
+          ) : (
+            <button
+              onClick={logout}
+              data-testid="button-sign-out-mobile"
+              className="w-7 h-7 rounded-full bg-secondary flex items-center justify-center text-xs font-semibold"
+              title={t("auth.signOut")}
+            >
+              {user.displayName?.[0] || user.email?.[0] || "U"}
+            </button>
+          )}
+        </div>
       </header>
 
       {/* Main Content */}
@@ -116,6 +161,13 @@ export function AppLayout({ children }: { children: React.ReactNode }) {
                   </NavLink>
                 );
               })}
+              <button
+                onClick={logout}
+                className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium text-muted-foreground hover:text-foreground hover:bg-secondary w-full transition-all"
+              >
+                <LogOut className="w-[18px] h-[18px]" />
+                <span>{t("auth.signOut")}</span>
+              </button>
             </motion.div>
           </>
         )}
