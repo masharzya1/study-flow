@@ -28,15 +28,15 @@ export function StudyHeatmap() {
 
   const getColor = (minutes: number) => {
     if (minutes === 0) return "bg-secondary";
-    if (minutes < 30) return "bg-foreground/15";
-    if (minutes < 60) return "bg-foreground/30";
-    if (minutes < 120) return "bg-foreground/55";
-    return "bg-foreground/85";
+    if (minutes < 30) return "bg-emerald-300/40 dark:bg-emerald-500/20";
+    if (minutes < 60) return "bg-emerald-400/60 dark:bg-emerald-500/40";
+    if (minutes < 120) return "bg-emerald-500/80 dark:bg-emerald-500/60";
+    return "bg-emerald-600 dark:bg-emerald-400";
   };
 
   return (
     <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.25 }} className="glass-card p-5">
-      <h2 className="font-semibold text-sm uppercase tracking-wider text-muted-foreground mb-4">{t("comp.activity")}</h2>
+      <h2 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-4">{t("comp.activity")}</h2>
       <div className="overflow-x-auto scrollbar-hide">
         <div className="flex gap-[3px] min-w-[700px]">
           {weeks.map((week, wi) => (
@@ -51,10 +51,10 @@ export function StudyHeatmap() {
       <div className="flex items-center gap-1.5 mt-3 text-[10px] text-muted-foreground">
         <span>{t("comp.less")}</span>
         <div className="w-[10px] h-[10px] rounded-[2px] bg-secondary" />
-        <div className="w-[10px] h-[10px] rounded-[2px] bg-foreground/15" />
-        <div className="w-[10px] h-[10px] rounded-[2px] bg-foreground/30" />
-        <div className="w-[10px] h-[10px] rounded-[2px] bg-foreground/55" />
-        <div className="w-[10px] h-[10px] rounded-[2px] bg-foreground/85" />
+        <div className="w-[10px] h-[10px] rounded-[2px] bg-emerald-300/40 dark:bg-emerald-500/20" />
+        <div className="w-[10px] h-[10px] rounded-[2px] bg-emerald-400/60 dark:bg-emerald-500/40" />
+        <div className="w-[10px] h-[10px] rounded-[2px] bg-emerald-500/80 dark:bg-emerald-500/60" />
+        <div className="w-[10px] h-[10px] rounded-[2px] bg-emerald-600 dark:bg-emerald-400" />
         <span>{t("comp.more")}</span>
       </div>
     </motion.div>
